@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
+  "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
   "name": "HyperMid",
   "logo": {
@@ -12,12 +12,15 @@
     "light": "#9B6FE8",
     "dark": "#5B1FD4"
   },
-  "topbarLinks": [
-    { "name": "API Status", "url": "https://api.hypermid.io/v1/ping" }
-  ],
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://app.hypermid.io"
+  "navbar": {
+    "links": [
+      { "label": "API Status", "href": "https://api.hypermid.io/v1/ping" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.hypermid.io"
+    }
   },
   "navigation": {
     "tabs": [
@@ -119,9 +122,11 @@
       }
     ]
   },
-  "footerSocials": {
-    "x": "https://x.com/hypermid",
-    "github": "https://github.com/Hypermid"
+  "footer": {
+    "socials": {
+      "x": "https://x.com/hypermid",
+      "github": "https://github.com/Hypermid"
+    }
   },
   "api": {
     "baseUrl": "https://api.hypermid.io",
@@ -130,8 +135,8 @@
       "name": "X-API-Key"
     },
     "playground": {
-      "mode": "simple"
-    }
-  },
-  "openapi": "https://api.hypermid.io/v1/openapi.json"
+      "display": "interactive"
+    },
+    "openapi": "https://api.hypermid.io/v1/openapi.json"
+  }
 }
