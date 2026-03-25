@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "aspen",
+  "theme": "mint",
   "name": "HyperMid",
   "logo": {
     "dark": "/logo/dark.svg",
