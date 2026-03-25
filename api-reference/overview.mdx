@@ -1,0 +1,91 @@
+---
+title: "API Reference"
+sidebarTitle: "Overview"
+description: "Complete reference for the HyperMid Partner API"
+---
+
+# API Reference
+
+The HyperMid API provides programmatic access to cross-chain swaps, bridges, fiat on-ramp, and partner management functionality.
+
+## Base URL
+
+```
+https://api.hypermid.io
+```
+
+All endpoints are versioned under `/v1/`.
+
+## Authentication
+
+Include your API key in the `X-API-Key` header. See [Authentication](/authentication) for details.
+
+```bash
+curl https://api.hypermid.io/v1/chains \
+  -H "X-API-Key: your-api-key"
+```
+
+## Response Format
+
+All responses use the standard [envelope format](/response-format):
+
+```json
+{
+  "data": { ... },
+  "error": null,
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": 1711234567,
+    "rateLimit": { "limit": 2000, "remaining": 1999, "reset": 1711234627 }
+  }
+}
+```
+
+## Endpoint Groups
+
+<CardGroup cols={2}>
+  <Card title="Swap" icon="arrows-rotate" href="/api-reference/chains">
+    Chains, tokens, quotes, routes, and status tracking for cross-chain swaps.
+  </Card>
+  <Card title="Execute" icon="play" href="/api-reference/execute">
+    Execute swaps and manage Near Intents deposits.
+  </Card>
+  <Card title="On-Ramp" icon="credit-card" href="/api-reference/onramp-quote">
+    Fiat-to-crypto quotes, checkout sessions, and order tracking.
+  </Card>
+  <Card title="Partner" icon="handshake" href="/api-reference/partner-me">
+    Partner profile, analytics, transaction history, and webhook management.
+  </Card>
+  <Card title="System" icon="server" href="/api-reference/ping">
+    Health checks and system status.
+  </Card>
+</CardGroup>
+
+## Quick Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/chains` | GET | List supported blockchains |
+| `/v1/tokens` | GET | List tokens for specified chains |
+| `/v1/connections` | GET | List available chain-to-chain connections |
+| `/v1/tools` | GET | List available swap/bridge tools |
+| `/v1/gas-prices` | GET | Get current gas prices |
+| `/v1/quote` | GET | Get a swap quote |
+| `/v1/routes` | GET/POST | Get multiple swap routes |
+| `/v1/status` | GET | Check swap transaction status |
+| `/v1/execute` | POST | Execute a swap |
+| `/v1/execute/deposit/submit` | POST | Submit a manual deposit |
+| `/v1/execute/deposit/status` | GET | Check deposit status |
+| `/v1/onramp/quote` | POST | Get fiat-to-crypto quote |
+| `/v1/onramp/checkout` | POST | Create checkout session |
+| `/v1/onramp/status` | GET | Check on-ramp order status |
+| `/v1/onramp/config` | GET | Get on-ramp configuration |
+| `/v1/onramp/assets` | GET | List purchasable assets |
+| `/v1/partner/me` | GET | Get partner profile |
+| `/v1/partner/stats` | GET | Get partner statistics |
+| `/v1/partner/transactions` | GET | List partner transactions |
+| `/v1/partner/webhooks` | POST | Create a webhook |
+| `/v1/partner/webhooks` | GET | List webhooks |
+| `/v1/partner/webhooks/{id}` | DELETE | Delete a webhook |
+| `/v1/swap-event` | POST | Submit a swap event |
+| `/v1/ping` | GET | Health check |

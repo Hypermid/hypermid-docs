@@ -1,0 +1,121 @@
+---
+title: "Get Deposit Status"
+api: "GET /v1/execute/deposit/status"
+description: "Check the status of a Near Intents deposit"
+---
+
+Returns the current status of a Near Intents deposit and its associated swap. Use this endpoint for all Near Intents swaps instead of `/v1/status`.
+
+<ParamField query="depositId" type="string" required>
+  The deposit ID returned from the `/v1/execute` endpoint.
+</ParamField>
+
+<ResponseExample>
+```json 200 Completed
+{
+  "data": {
+    "depositId": "dep_abc123def456",
+    "status": "DONE",
+    "subStatus": "COMPLETED",
+    "depositAddress": "0xDepositAddress",
+    "depositAmount": "1000000000000000000",
+    "depositTxHash": "0xDepositTxHash",
+    "depositChainId": 1,
+    "destinationAddress": "rRecipientXRPAddress",
+    "destinationAmount": "3240000000",
+    "destinationTxHash": "txDestinationHash",
+    "destinationChainId": 900000004,
+    "createdAt": 1711234576,
+    "updatedAt": 1711234666
+  },
+  "error": null,
+  "meta": {
+    "requestId": "o5d6e7f8-a9b0-1234-8901-345678901234",
+    "timestamp": 1711234670,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1985,
+      "reset": 1711234727
+    }
+  }
+}
+```
+
+```json 200 Pending
+{
+  "data": {
+    "depositId": "dep_abc123def456",
+    "status": "PENDING",
+    "subStatus": "WAITING_FOR_DEPOSIT",
+    "depositAddress": "0xDepositAddress",
+    "depositAmount": null,
+    "depositTxHash": null,
+    "depositChainId": 1,
+    "destinationAddress": "rRecipientXRPAddress",
+    "destinationAmount": null,
+    "destinationTxHash": null,
+    "destinationChainId": 900000004,
+    "createdAt": 1711234576,
+    "updatedAt": 1711234576
+  },
+  "error": null,
+  "meta": {
+    "requestId": "p6e7f8a9-b0c1-2345-9012-456789012345",
+    "timestamp": 1711234580,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1984,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `PENDING` | Waiting for the user's deposit |
+| `DEPOSIT_RECEIVED` | Deposit confirmed, swap in progress |
+| `DONE` | Swap completed successfully |
+| `FAILED` | Swap failed |
+| `EXPIRED` | Deposit address expired before funds were received |
+
+### Sub-Status Values
+
+| Sub-Status | Description |
+|------------|-------------|
+| `WAITING_FOR_DEPOSIT` | Waiting for the user to send funds |
+| `CONFIRMING_DEPOSIT` | Deposit detected, waiting for confirmations |
+| `PROCESSING_SWAP` | Swap is being executed |
+| `COMPLETED` | Swap finished successfully |
+| `DEPOSIT_EXPIRED` | Deposit window has expired |
+
+<CodeGroup>
+```typescript TypeScript
+const status = await client.getDepositStatus({
+  depositId: "dep_abc123def456",
+});
+
+console.log("Status:", status.data.status);
+console.log("Sub-status:", status.data.subStatus);
+
+if (status.data.status === "DONE") {
+  console.log("Destination tx:", status.data.destinationTxHash);
+  console.log("Amount received:", status.data.destinationAmount);
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/execute/deposit/status?depositId=dep_abc123def456" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/execute/deposit/status?depositId=dep_abc123def456", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

@@ -1,0 +1,111 @@
+---
+title: "Get Partner Transactions"
+api: "GET /v1/partner/transactions"
+description: "List transactions for your partner account"
+---
+
+Returns a paginated list of transactions associated with your partner account.
+
+<ParamField query="page" type="number">
+  Page number (1-based). Default: `1`.
+</ParamField>
+
+<ParamField query="limit" type="number">
+  Results per page (max 100). Default: `20`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by status: `PENDING`, `DONE`, `FAILED`.
+</ParamField>
+
+<ParamField query="fromChain" type="number">
+  Filter by source chain ID.
+</ParamField>
+
+<ParamField query="toChain" type="number">
+  Filter by destination chain ID.
+</ParamField>
+
+<ParamField query="fromDate" type="string">
+  Filter by start date (ISO 8601 format).
+</ParamField>
+
+<ParamField query="toDate" type="string">
+  Filter by end date (ISO 8601 format).
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "transactions": [
+      {
+        "id": "txn_abc123",
+        "type": "swap",
+        "status": "DONE",
+        "fromChain": 1,
+        "toChain": 42161,
+        "fromToken": { "symbol": "ETH", "address": "0x0000000000000000000000000000000000000000" },
+        "toToken": { "symbol": "USDC", "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
+        "fromAmount": "1000000000000000000",
+        "toAmount": "3237500000",
+        "fromAmountUSD": "3250.00",
+        "toAmountUSD": "3237.50",
+        "fromAddress": "0xSenderAddress",
+        "toAddress": "0xReceiverAddress",
+        "sourceTxHash": "0xSourceTxHash",
+        "destinationTxHash": "0xDestTxHash",
+        "tool": "stargate",
+        "feeUSD": "4.88",
+        "createdAt": "2024-03-25T10:30:00Z",
+        "completedAt": "2024-03-25T10:32:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 4523,
+      "totalPages": 227
+    }
+  },
+  "error": null,
+  "meta": {
+    "requestId": "y5b6c7d8-e9f0-1234-8901-345678901234",
+    "timestamp": 1711234583,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1975,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const txns = await client.getPartnerTransactions({
+  page: 1,
+  limit: 20,
+  status: "DONE",
+  fromChain: 1,
+});
+
+console.log(`Page 1 of ${txns.data.pagination.totalPages}`);
+for (const tx of txns.data.transactions) {
+  console.log(`${tx.id}: ${tx.fromAmountUSD} USD via ${tx.tool} — ${tx.status}`);
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/partner/transactions?page=1&limit=20&status=DONE" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/partner/transactions?page=1&limit=20&status=DONE", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

@@ -1,0 +1,76 @@
+---
+title: "Submit Deposit"
+api: "POST /v1/execute/deposit/submit"
+description: "Notify HyperMid that a Near Intents deposit has been made"
+---
+
+Submits a notification that a manual deposit has been made for a Near Intents swap. This helps speed up deposit detection for chains where HyperMid cannot automatically monitor for incoming transactions.
+
+<ParamField body="depositId" type="string" required>
+  The deposit ID returned from the `/v1/execute` endpoint.
+</ParamField>
+
+<ParamField body="txHash" type="string">
+  The transaction hash of the deposit on the source chain. Optional but recommended for faster processing.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "depositId": "dep_abc123def456",
+    "status": "SUBMITTED",
+    "message": "Deposit notification received. Processing will begin shortly."
+  },
+  "error": null,
+  "meta": {
+    "requestId": "n4c5d6e7-f8a9-0123-7890-234567890123",
+    "timestamp": 1711234578,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1986,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const result = await client.submitDeposit({
+  depositId: "dep_abc123def456",
+  txHash: "0xUserDepositTxHash",
+});
+
+console.log("Submission status:", result.data.status);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/execute/deposit/submit" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "depositId": "dep_abc123def456",
+    "txHash": "0xUserDepositTxHash"
+  }'
+```
+
+```go Go
+body := `{
+  "depositId": "dep_abc123def456",
+  "txHash": "0xUserDepositTxHash"
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/execute/deposit/submit",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Note>
+  Submitting the deposit notification is optional — HyperMid monitors deposit addresses automatically. However, calling this endpoint can reduce processing time, especially for chains with longer confirmation times.
+</Note>

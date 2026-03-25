@@ -1,0 +1,73 @@
+---
+title: "Get Gas Prices"
+api: "GET /v1/gas-prices"
+description: "Get current gas prices for supported chains"
+---
+
+Returns the current gas prices for the specified chain, useful for estimating transaction costs.
+
+<ParamField query="chainId" type="number" required>
+  The chain ID to get gas prices for (e.g., `1` for Ethereum).
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "chainId": 1,
+    "speed": {
+      "slow": {
+        "gasPrice": "15000000000",
+        "maxFeePerGas": "15000000000",
+        "maxPriorityFeePerGas": "1000000000",
+        "estimatedTime": 120
+      },
+      "standard": {
+        "gasPrice": "20000000000",
+        "maxFeePerGas": "20000000000",
+        "maxPriorityFeePerGas": "1500000000",
+        "estimatedTime": 30
+      },
+      "fast": {
+        "gasPrice": "30000000000",
+        "maxFeePerGas": "30000000000",
+        "maxPriorityFeePerGas": "2500000000",
+        "estimatedTime": 15
+      }
+    },
+    "lastUpdated": 1711234567
+  },
+  "error": null,
+  "meta": {
+    "requestId": "e5f6a7b8-c9d0-1234-ef01-345678901234",
+    "timestamp": 1711234571,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1995,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const gas = await client.getGasPrices({ chainId: 1 });
+
+console.log("Standard gas price:", gas.data.speed.standard.gasPrice);
+console.log("Estimated time:", gas.data.speed.standard.estimatedTime, "seconds");
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/gas-prices?chainId=1" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/gas-prices?chainId=1", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

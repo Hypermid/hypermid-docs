@@ -1,0 +1,117 @@
+---
+title: "Submit Swap Event"
+api: "POST /v1/swap-event"
+description: "Submit a swap lifecycle event for tracking"
+---
+
+Submits a swap lifecycle event to HyperMid for analytics and tracking purposes. Use this to report when users interact with your swap UI or when swap steps are completed.
+
+<ParamField body="event" type="string" required>
+  The event type. Possible values: `quote_requested`, `quote_received`, `swap_started`, `swap_signed`, `swap_completed`, `swap_failed`, `swap_cancelled`.
+</ParamField>
+
+<ParamField body="transactionId" type="string">
+  The transaction ID or quote ID associated with this event.
+</ParamField>
+
+<ParamField body="fromChain" type="number">
+  Source chain ID.
+</ParamField>
+
+<ParamField body="toChain" type="number">
+  Destination chain ID.
+</ParamField>
+
+<ParamField body="fromToken" type="string">
+  Source token address.
+</ParamField>
+
+<ParamField body="toToken" type="string">
+  Destination token address.
+</ParamField>
+
+<ParamField body="fromAmount" type="string">
+  Amount being swapped.
+</ParamField>
+
+<ParamField body="txHash" type="string">
+  Transaction hash (for signed/completed/failed events).
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Additional metadata to attach to the event.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "eventId": "evt_abc123",
+    "received": true
+  },
+  "error": null,
+  "meta": {
+    "requestId": "c9f0a1b2-c3d4-5678-2345-789012345678",
+    "timestamp": 1711234587,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1971,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+await client.submitSwapEvent({
+  event: "swap_completed",
+  transactionId: "txn_abc123",
+  fromChain: 1,
+  toChain: 42161,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAmount: "1000000000000000000",
+  txHash: "0xCompletedTxHash",
+  metadata: {
+    userAgent: "MyDeFiApp/1.0",
+    sessionId: "sess_xyz",
+  },
+});
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/swap-event" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "event": "swap_completed",
+    "transactionId": "txn_abc123",
+    "fromChain": 1,
+    "toChain": 42161,
+    "txHash": "0xCompletedTxHash"
+  }'
+```
+
+```go Go
+body := `{
+  "event": "swap_completed",
+  "transactionId": "txn_abc123",
+  "fromChain": 1,
+  "toChain": 42161,
+  "txHash": "0xCompletedTxHash"
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/swap-event",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Tip>
+  Submitting swap events improves your analytics in the Partner Dashboard and helps HyperMid optimize route selection for your users.
+</Tip>

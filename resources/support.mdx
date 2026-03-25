@@ -1,0 +1,98 @@
+---
+title: "Support"
+sidebarTitle: "Support"
+description: "Getting help with the HyperMid API"
+---
+
+# Support
+
+Need help with your HyperMid integration? Here are the best ways to get assistance.
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Documentation" icon="book" href="/introduction">
+    You're already here! Browse the docs for guides, API reference, and SDK documentation.
+  </Card>
+  <Card title="API Status" icon="signal" href="https://api.hypermid.io/v1/ping">
+    Check if the API is operational.
+  </Card>
+  <Card title="GitHub" icon="github" href="https://github.com/Hypermid">
+    Report bugs, request features, and browse example code.
+  </Card>
+  <Card title="Examples" icon="code" href="https://github.com/Hypermid/hypermid-examples">
+    Working code examples for common integration patterns.
+  </Card>
+</CardGroup>
+
+## Contact Us
+
+### Partner Support
+
+If you're a partner with an API key, you have access to priority support:
+
+- **Email:** partner-support@hypermid.io
+- **Response time:** Within 4 business hours
+
+When contacting support, always include:
+1. Your **partner ID** or API key prefix (first 10 characters)
+2. The **request ID** (`meta.requestId`) from the error response
+3. The **endpoint** you're calling and the **request parameters**
+4. The **full error response** (JSON)
+5. **Timestamp** of when the issue occurred
+
+### General Support
+
+For general questions and community support:
+
+- **Email:** support@hypermid.io
+- **X (Twitter):** [@hypermid](https://x.com/hypermid)
+
+## Common Issues
+
+### "No route found" for a token pair
+
+This means no provider has a viable route for your specific parameters. Try:
+- Increasing the swap amount (some routes have minimum amounts)
+- Widening the slippage tolerance
+- Checking that both tokens exist on the specified chains via `GET /v1/tokens`
+- Using a popular intermediate token (like USDC) for a two-hop swap
+
+### Rate limit exceeded
+
+- Anonymous users: 100 requests/min
+- Partners: 2,000 requests/min
+- Implement exponential backoff using the `meta.rateLimit.reset` timestamp
+- Consider caching responses for `GET /v1/chains` and `GET /v1/tokens` (they don't change frequently)
+
+### Transaction failed after signing
+
+If a user signed the transaction but the swap ultimately failed:
+1. Check the status via `GET /v1/status` — it may still be processing
+2. Some bridges have delays of 10-30 minutes
+3. If status shows `FAILED`, check the source chain explorer for the transaction receipt
+4. Contact support with the `requestId` and transaction hash
+
+### Deposit not detected
+
+For Near Intents manual deposits:
+1. Verify the user sent to the correct address
+2. Verify the user included the correct memo (for XRP, Stellar, etc.)
+3. Call `POST /v1/execute/deposit/submit` with the deposit ID and transaction hash
+4. Check `GET /v1/execute/deposit/status` — deposits may take a few minutes to detect
+
+## Feature Requests
+
+We welcome feature requests! Submit them via:
+- [GitHub Issues](https://github.com/Hypermid/hypermid-api/issues) with the `feature-request` label
+- Email to feedback@hypermid.io
+
+## API Versioning
+
+The current API version is `v1`. All endpoints are prefixed with `/v1/`. We follow semantic versioning:
+
+- **Patch releases** — backward-compatible bug fixes (no action needed)
+- **Minor releases** — backward-compatible new features (no action needed)
+- **Major releases** — breaking changes (advance notice given, migration guide provided)
+
+We will not make breaking changes to `v1` endpoints without at least 90 days of advance notice.

@@ -1,0 +1,232 @@
+---
+title: "Webhooks"
+sidebarTitle: "Webhooks"
+description: "Receive real-time status updates for swaps and on-ramp orders"
+---
+
+# Webhooks
+
+Instead of polling for status updates, you can configure webhooks to receive real-time notifications when swap or on-ramp order statuses change.
+
+## Setting Up Webhooks
+
+<Steps>
+  <Step title="Create a Webhook Endpoint">
+    Set up an HTTPS endpoint on your server to receive webhook payloads.
+  </Step>
+  <Step title="Register the Webhook">
+    Use the Partner API to register your webhook URL.
+  </Step>
+  <Step title="Verify Signatures">
+    Validate incoming webhook signatures to ensure authenticity.
+  </Step>
+  <Step title="Process Events">
+    Handle the webhook payload and update your application state.
+  </Step>
+</Steps>
+
+## Registering a Webhook
+
+<CodeGroup>
+```typescript TypeScript
+const webhook = await client.createWebhook({
+  url: "https://yourapp.com/webhooks/hypermid",
+  events: ["swap.completed", "swap.failed", "onramp.completed", "onramp.failed"],
+  secret: "whsec_your_signing_secret",
+});
+
+console.log("Webhook ID:", webhook.data.id);
+console.log("Created:", webhook.data.createdAt);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/partner/webhooks" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "url": "https://yourapp.com/webhooks/hypermid",
+    "events": ["swap.completed", "swap.failed", "onramp.completed", "onramp.failed"],
+    "secret": "whsec_your_signing_secret"
+  }'
+```
+</CodeGroup>
+
+## Webhook Events
+
+| Event | Description |
+|-------|-------------|
+| `swap.pending` | Swap transaction is being processed |
+| `swap.completed` | Swap completed successfully |
+| `swap.failed` | Swap failed |
+| `deposit.received` | Near Intents deposit was received |
+| `deposit.completed` | Near Intents deposit swap completed |
+| `deposit.failed` | Near Intents deposit swap failed |
+| `onramp.payment_received` | Fiat payment received |
+| `onramp.crypto_sent` | Crypto has been sent to the user's wallet |
+| `onramp.completed` | On-ramp order completed |
+| `onramp.failed` | On-ramp order failed |
+| `onramp.refunded` | On-ramp payment was refunded |
+
+## Webhook Payload
+
+Each webhook delivery includes a JSON payload with the event details:
+
+```json
+{
+  "event": "swap.completed",
+  "timestamp": 1711234567,
+  "data": {
+    "transactionId": "txn_abc123",
+    "fromChain": 1,
+    "toChain": 42161,
+    "fromToken": "0x0000000000000000000000000000000000000000",
+    "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "fromAmount": "1000000000000000000",
+    "toAmount": "3250000000",
+    "fromAddress": "0xSenderAddress",
+    "toAddress": "0xReceiverAddress",
+    "sourceTxHash": "0xSourceTxHash",
+    "destinationTxHash": "0xDestinationTxHash",
+    "status": "DONE",
+    "tool": "stargate",
+    "executionDuration": 120
+  }
+}
+```
+
+## Signature Verification
+
+Every webhook request includes a `X-HyperMid-Signature` header containing an HMAC-SHA256 signature of the request body, signed with your webhook secret.
+
+<CodeGroup>
+```typescript TypeScript (Express)
+import crypto from "crypto";
+import express from "express";
+
+const app = express();
+app.use(express.raw({ type: "application/json" }));
+
+const WEBHOOK_SECRET = "whsec_your_signing_secret";
+
+app.post("/webhooks/hypermid", (req, res) => {
+  const signature = req.headers["x-hypermid-signature"] as string;
+  const body = req.body;
+
+  // Compute expected signature
+  const expectedSignature = crypto
+    .createHmac("sha256", WEBHOOK_SECRET)
+    .update(body)
+    .digest("hex");
+
+  // Verify signature
+  if (!crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  )) {
+    console.error("Invalid webhook signature");
+    return res.status(401).send("Invalid signature");
+  }
+
+  // Parse and process the event
+  const event = JSON.parse(body.toString());
+  console.log("Received event:", event.event);
+
+  switch (event.event) {
+    case "swap.completed":
+      handleSwapCompleted(event.data);
+      break;
+    case "swap.failed":
+      handleSwapFailed(event.data);
+      break;
+    case "onramp.completed":
+      handleOnrampCompleted(event.data);
+      break;
+    default:
+      console.log("Unhandled event:", event.event);
+  }
+
+  res.status(200).send("OK");
+});
+```
+
+```go Go
+package main
+
+import (
+    "crypto/hmac"
+    "crypto/sha256"
+    "encoding/hex"
+    "encoding/json"
+    "io"
+    "log"
+    "net/http"
+)
+
+const webhookSecret = "whsec_your_signing_secret"
+
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+    body, err := io.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Bad request", http.StatusBadRequest)
+        return
+    }
+
+    signature := r.Header.Get("X-HyperMid-Signature")
+
+    mac := hmac.New(sha256.New, []byte(webhookSecret))
+    mac.Write(body)
+    expectedSignature := hex.EncodeToString(mac.Sum(nil))
+
+    if !hmac.Equal([]byte(signature), []byte(expectedSignature)) {
+        http.Error(w, "Invalid signature", http.StatusUnauthorized)
+        return
+    }
+
+    var event struct {
+        Event     string          `json:"event"`
+        Timestamp int64           `json:"timestamp"`
+        Data      json.RawMessage `json:"data"`
+    }
+    json.Unmarshal(body, &event)
+
+    log.Printf("Received event: %s", event.Event)
+
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte("OK"))
+}
+```
+</CodeGroup>
+
+<Warning>
+  Always verify the webhook signature before processing the payload. Never trust incoming webhooks without signature validation, as anyone could send requests to your endpoint.
+</Warning>
+
+## Managing Webhooks
+
+### List Webhooks
+
+```bash
+curl https://api.hypermid.io/v1/partner/webhooks \
+  -H "X-API-Key: your-api-key"
+```
+
+### Delete a Webhook
+
+```bash
+curl -X DELETE "https://api.hypermid.io/v1/partner/webhooks/whk_abc123" \
+  -H "X-API-Key: your-api-key"
+```
+
+## Best Practices
+
+1. **Respond quickly** — Return a `200` status within 5 seconds. Process the event asynchronously if needed.
+
+2. **Handle duplicates** — Webhooks may be delivered more than once. Use the `transactionId` or `orderUid` to deduplicate.
+
+3. **Use HTTPS** — Webhook URLs must use HTTPS for security.
+
+4. **Implement retry logic** — If your endpoint returns a non-2xx status, HyperMid will retry the delivery with exponential backoff.
+
+5. **Log everything** — Store the raw webhook payload for debugging purposes.
+
+6. **Keep your secret safe** — Store the webhook signing secret securely and rotate it periodically.

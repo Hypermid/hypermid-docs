@@ -1,0 +1,67 @@
+---
+title: "List Webhooks"
+api: "GET /v1/partner/webhooks"
+description: "List all registered webhook endpoints"
+---
+
+Returns all webhook endpoints registered for your partner account.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "webhooks": [
+      {
+        "id": "whk_abc123def456",
+        "url": "https://yourapp.com/webhooks/hypermid",
+        "events": ["swap.completed", "swap.failed", "onramp.completed"],
+        "active": true,
+        "createdAt": "2024-03-25T10:30:00Z",
+        "lastDeliveredAt": "2024-03-25T14:22:00Z"
+      },
+      {
+        "id": "whk_xyz789ghi012",
+        "url": "https://staging.yourapp.com/webhooks/hypermid",
+        "events": ["swap.completed"],
+        "active": true,
+        "createdAt": "2024-02-10T08:00:00Z",
+        "lastDeliveredAt": null
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "a7d8e9f0-a1b2-3456-0123-567890123456",
+    "timestamp": 1711234585,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1973,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const webhooks = await client.listWebhooks();
+
+for (const wh of webhooks.data.webhooks) {
+  console.log(`${wh.id}: ${wh.url} (${wh.active ? "active" : "inactive"})`);
+  console.log(`  Events: ${wh.events.join(", ")}`);
+}
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/partner/webhooks \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/partner/webhooks", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

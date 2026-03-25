@@ -1,0 +1,218 @@
+---
+title: "Execute Swap"
+api: "POST /v1/execute"
+description: "Execute a cross-chain swap"
+---
+
+Initiates a cross-chain swap execution. Returns either a `transactionRequest` to be signed and sent by the user's wallet (LI.FI routes), or a `depositAddress` for the user to send tokens to (Near Intents routes).
+
+<ParamField body="fromChain" type="number" required>
+  Source chain ID.
+</ParamField>
+
+<ParamField body="toChain" type="number" required>
+  Destination chain ID.
+</ParamField>
+
+<ParamField body="fromToken" type="string" required>
+  Source token contract address.
+</ParamField>
+
+<ParamField body="toToken" type="string" required>
+  Destination token contract address.
+</ParamField>
+
+<ParamField body="fromAmount" type="string" required>
+  Amount to swap in the smallest unit.
+</ParamField>
+
+<ParamField body="fromAddress" type="string" required>
+  Sender wallet address on the source chain.
+</ParamField>
+
+<ParamField body="toAddress" type="string" required>
+  Recipient wallet address on the destination chain.
+</ParamField>
+
+<ParamField body="slippage" type="number">
+  Maximum slippage tolerance. Default: `0.03`.
+</ParamField>
+
+<ParamField body="tool" type="string">
+  Specific tool to use (e.g., `stargate`). If omitted, the best tool is selected automatically.
+</ParamField>
+
+<ParamField body="depositMode" type="string">
+  Override deposit mode for Near Intents routes. Set to `"manual"` to force manual deposit flow even when wallet mode is available.
+</ParamField>
+
+<ResponseExample>
+```json 200 LI.FI Route
+{
+  "data": {
+    "type": "lifi",
+    "tool": "stargate",
+    "transactionRequest": {
+      "to": "0xBridgeContractAddress",
+      "data": "0x2646478b...",
+      "value": "1000000000000000000",
+      "gasLimit": "350000",
+      "gasPrice": "20000000000",
+      "chainId": 1
+    },
+    "estimate": {
+      "fromAmount": "1000000000000000000",
+      "fromAmountUSD": "3250.00",
+      "toAmount": "3237500000",
+      "toAmountUSD": "3237.50",
+      "executionDuration": 120
+    }
+  },
+  "error": null,
+  "meta": {
+    "requestId": "k1f2a3b4-c5d6-7890-4567-901234567890",
+    "timestamp": 1711234575,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1989,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+```json 200 Near Intents Route
+{
+  "data": {
+    "type": "near-intents",
+    "tool": "near-intents",
+    "depositId": "dep_abc123def456",
+    "depositAddress": "0xDepositContractAddress",
+    "depositMode": "wallet",
+    "memo": null,
+    "transactionRequest": {
+      "to": "0xDepositContractAddress",
+      "data": "0xa9059cbb...",
+      "value": "1000000000000000000",
+      "gasLimit": "100000",
+      "gasPrice": "20000000000",
+      "chainId": 1
+    },
+    "estimate": {
+      "fromAmount": "1000000000000000000",
+      "fromAmountUSD": "3250.00",
+      "toAmount": "3240000000",
+      "toAmountUSD": "3240.00",
+      "executionDuration": 90
+    },
+    "expiresAt": 1711235475
+  },
+  "error": null,
+  "meta": {
+    "requestId": "l2a3b4c5-d6e7-8901-5678-012345678901",
+    "timestamp": 1711234576,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1988,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+```json 200 Near Intents (Manual Mode)
+{
+  "data": {
+    "type": "near-intents",
+    "tool": "near-intents",
+    "depositId": "dep_xyz789",
+    "depositAddress": "rDepositXRPAddress",
+    "depositMode": "manual",
+    "memo": "12345678",
+    "transactionRequest": null,
+    "estimate": {
+      "fromAmount": "50000000",
+      "toAmount": "120000000",
+      "toAmountUSD": "120.00",
+      "executionDuration": 180
+    },
+    "expiresAt": 1711235475
+  },
+  "error": null,
+  "meta": {
+    "requestId": "m3b4c5d6-e7f8-9012-6789-123456789012",
+    "timestamp": 1711234577,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1987,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const exec = await client.execute({
+  fromChain: 1,
+  toChain: 42161,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAmount: "1000000000000000000",
+  fromAddress: "0xYourAddress",
+  toAddress: "0xYourAddress",
+  slippage: 0.03,
+});
+
+if (exec.data.transactionRequest) {
+  // LI.FI or Near Intents wallet mode: sign and send
+  const tx = await wallet.sendTransaction(exec.data.transactionRequest);
+  console.log("Tx hash:", tx.hash);
+} else if (exec.data.depositAddress) {
+  // Near Intents manual mode: show deposit info
+  console.log("Send to:", exec.data.depositAddress);
+  console.log("Memo:", exec.data.memo);
+}
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/execute" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fromChain": 1,
+    "toChain": 42161,
+    "fromToken": "0x0000000000000000000000000000000000000000",
+    "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "fromAmount": "1000000000000000000",
+    "fromAddress": "0xYourAddress",
+    "toAddress": "0xYourAddress",
+    "slippage": 0.03
+  }'
+```
+
+```go Go
+body := `{
+  "fromChain": 1,
+  "toChain": 42161,
+  "fromToken": "0x0000000000000000000000000000000000000000",
+  "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  "fromAmount": "1000000000000000000",
+  "fromAddress": "0xYourAddress",
+  "toAddress": "0xYourAddress",
+  "slippage": 0.03
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/execute",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Warning>
+  The `transactionRequest` data is time-sensitive. Execute the transaction within a few minutes of receiving the response, as prices and gas estimates may change.
+</Warning>

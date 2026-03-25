@@ -1,0 +1,148 @@
+---
+title: "Get Routes"
+api: "GET /v1/routes"
+description: "Get multiple swap routes for comparison"
+---
+
+Returns multiple available routes for a swap, allowing you to compare options and let the user choose. Unlike `/v1/quote` which returns only the best route, this endpoint returns all viable routes.
+
+You can also use `POST /v1/routes` with a JSON body for complex queries.
+
+<ParamField query="fromChain" type="number" required>
+  Source chain ID.
+</ParamField>
+
+<ParamField query="toChain" type="number" required>
+  Destination chain ID.
+</ParamField>
+
+<ParamField query="fromToken" type="string" required>
+  Source token contract address.
+</ParamField>
+
+<ParamField query="toToken" type="string" required>
+  Destination token contract address.
+</ParamField>
+
+<ParamField query="fromAmount" type="string" required>
+  Amount to swap in the smallest unit.
+</ParamField>
+
+<ParamField query="fromAddress" type="string" required>
+  Sender wallet address.
+</ParamField>
+
+<ParamField query="toAddress" type="string">
+  Recipient wallet address. Defaults to `fromAddress`.
+</ParamField>
+
+<ParamField query="slippage" type="number">
+  Maximum slippage tolerance. Default: `0.03`.
+</ParamField>
+
+<ParamField query="maxRoutes" type="number">
+  Maximum number of routes to return. Default: `5`.
+</ParamField>
+
+<ParamField query="sortBy" type="string">
+  Sort routes by `output` (highest output first), `speed` (fastest first), or `gas` (lowest gas first). Default: `output`.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "routes": [
+      {
+        "id": "route_1",
+        "tool": "stargate",
+        "estimate": {
+          "toAmount": "3237500000",
+          "toAmountUSD": "3237.50",
+          "gasCosts": [{ "amountUSD": "16.25" }],
+          "executionDuration": 120
+        },
+        "tags": ["BEST_OUTPUT"]
+      },
+      {
+        "id": "route_2",
+        "tool": "across",
+        "estimate": {
+          "toAmount": "3235000000",
+          "toAmountUSD": "3235.00",
+          "gasCosts": [{ "amountUSD": "12.50" }],
+          "executionDuration": 60
+        },
+        "tags": ["FASTEST"]
+      },
+      {
+        "id": "route_3",
+        "tool": "hop",
+        "estimate": {
+          "toAmount": "3230000000",
+          "toAmountUSD": "3230.00",
+          "gasCosts": [{ "amountUSD": "10.00" }],
+          "executionDuration": 180
+        },
+        "tags": ["CHEAPEST"]
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "h8c9d0e1-f2a3-4567-1234-678901234567",
+    "timestamp": 1711234574,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1992,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const routes = await client.getRoutes({
+  fromChain: 1,
+  toChain: 42161,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAmount: "1000000000000000000",
+  fromAddress: "0xYourAddress",
+  sortBy: "output",
+  maxRoutes: 3,
+});
+
+for (const route of routes.data.routes) {
+  console.log(`${route.tool}: ${route.estimate.toAmountUSD} USD, ` +
+    `${route.estimate.executionDuration}s, ` +
+    `gas: ${route.estimate.gasCosts[0].amountUSD} USD`);
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/routes?\
+fromChain=1&toChain=42161&\
+fromToken=0x0000000000000000000000000000000000000000&\
+toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831&\
+fromAmount=1000000000000000000&\
+fromAddress=0xYourAddress&\
+maxRoutes=3" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+url := "https://api.hypermid.io/v1/routes?" +
+    "fromChain=1&toChain=42161" +
+    "&fromToken=0x0000000000000000000000000000000000000000" +
+    "&toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831" +
+    "&fromAmount=1000000000000000000" +
+    "&fromAddress=0xYourAddress"
+
+req, _ := http.NewRequest("GET", url, nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

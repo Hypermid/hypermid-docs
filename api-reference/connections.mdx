@@ -1,0 +1,94 @@
+---
+title: "Get Connections"
+api: "GET /v1/connections"
+description: "List available chain-to-chain swap connections"
+---
+
+Returns the available connections between chains, showing which chain pairs support direct swaps and which tools are available for each connection.
+
+<ParamField query="fromChain" type="number">
+  Filter connections by source chain ID.
+</ParamField>
+
+<ParamField query="toChain" type="number">
+  Filter connections by destination chain ID.
+</ParamField>
+
+<ParamField query="fromToken" type="string">
+  Filter by source token address.
+</ParamField>
+
+<ParamField query="toToken" type="string">
+  Filter by destination token address.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "connections": [
+      {
+        "fromChainId": 1,
+        "toChainId": 42161,
+        "fromTokens": [
+          {
+            "address": "0x0000000000000000000000000000000000000000",
+            "symbol": "ETH"
+          },
+          {
+            "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "symbol": "USDC"
+          }
+        ],
+        "toTokens": [
+          {
+            "address": "0x0000000000000000000000000000000000000000",
+            "symbol": "ETH"
+          },
+          {
+            "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+            "symbol": "USDC"
+          }
+        ],
+        "tools": ["stargate", "hop", "across"]
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "timestamp": 1711234569,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1997,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const connections = await client.getConnections({
+  fromChain: 1,
+  toChain: 42161,
+});
+
+for (const conn of connections.data.connections) {
+  console.log(`${conn.fromChainId} -> ${conn.toChainId}: ${conn.tools.join(", ")}`);
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/connections?fromChain=1&toChain=42161" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/connections?fromChain=1&toChain=42161", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

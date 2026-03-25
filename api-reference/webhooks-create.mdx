@@ -1,0 +1,87 @@
+---
+title: "Create Webhook"
+api: "POST /v1/partner/webhooks"
+description: "Register a new webhook endpoint"
+---
+
+Creates a new webhook endpoint to receive real-time notifications for swap and on-ramp events. Requires a valid API key.
+
+<ParamField body="url" type="string" required>
+  The HTTPS URL to receive webhook payloads.
+</ParamField>
+
+<ParamField body="events" type="string[]" required>
+  List of event types to subscribe to. See [Webhooks Guide](/guides/webhooks) for available events.
+</ParamField>
+
+<ParamField body="secret" type="string">
+  A signing secret for HMAC-SHA256 signature verification. If not provided, one will be generated.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "whk_abc123def456",
+    "url": "https://yourapp.com/webhooks/hypermid",
+    "events": ["swap.completed", "swap.failed", "onramp.completed"],
+    "secret": "whsec_generated_or_provided_secret",
+    "active": true,
+    "createdAt": "2024-03-25T10:30:00Z"
+  },
+  "error": null,
+  "meta": {
+    "requestId": "z6c7d8e9-f0a1-2345-9012-456789012345",
+    "timestamp": 1711234584,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1974,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const webhook = await client.createWebhook({
+  url: "https://yourapp.com/webhooks/hypermid",
+  events: ["swap.completed", "swap.failed", "onramp.completed", "onramp.failed"],
+  secret: "whsec_my_signing_secret",
+});
+
+console.log("Webhook ID:", webhook.data.id);
+console.log("Secret:", webhook.data.secret);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/partner/webhooks" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "url": "https://yourapp.com/webhooks/hypermid",
+    "events": ["swap.completed", "swap.failed", "onramp.completed"],
+    "secret": "whsec_my_signing_secret"
+  }'
+```
+
+```go Go
+body := `{
+  "url": "https://yourapp.com/webhooks/hypermid",
+  "events": ["swap.completed", "swap.failed", "onramp.completed"],
+  "secret": "whsec_my_signing_secret"
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/partner/webhooks",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Warning>
+  Store the webhook `secret` securely. You will need it to verify webhook signatures. If you lose it, delete the webhook and create a new one.
+</Warning>

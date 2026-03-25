@@ -1,0 +1,164 @@
+---
+title: "Get Status"
+api: "GET /v1/status"
+description: "Check the status of a swap transaction"
+---
+
+Returns the current status of a cross-chain swap transaction. Use this to track the progress of LI.FI-routed swaps after the user has signed and submitted the transaction.
+
+<ParamField query="txHash" type="string" required>
+  The transaction hash on the source chain.
+</ParamField>
+
+<ParamField query="fromChain" type="number" required>
+  Source chain ID.
+</ParamField>
+
+<ParamField query="toChain" type="number" required>
+  Destination chain ID.
+</ParamField>
+
+<ParamField query="bridge" type="string">
+  The bridge/tool used. If not provided, HyperMid will auto-detect.
+</ParamField>
+
+<ResponseExample>
+```json 200 DONE
+{
+  "data": {
+    "status": "DONE",
+    "subStatus": "COMPLETED",
+    "sending": {
+      "txHash": "0xSourceTransactionHash",
+      "chainId": 1,
+      "amount": "1000000000000000000",
+      "token": {
+        "symbol": "ETH",
+        "address": "0x0000000000000000000000000000000000000000"
+      },
+      "gasUsed": "150000",
+      "gasPrice": "20000000000",
+      "timestamp": 1711234500
+    },
+    "receiving": {
+      "txHash": "0xDestinationTransactionHash",
+      "chainId": 42161,
+      "amount": "3237500000",
+      "token": {
+        "symbol": "USDC",
+        "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      },
+      "timestamp": 1711234620
+    },
+    "tool": "stargate",
+    "fromAddress": "0xSenderAddress",
+    "toAddress": "0xReceiverAddress"
+  },
+  "error": null,
+  "meta": {
+    "requestId": "i9d0e1f2-a3b4-5678-2345-789012345678",
+    "timestamp": 1711234625,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1991,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+```json 200 PENDING
+{
+  "data": {
+    "status": "PENDING",
+    "subStatus": "BRIDGE_IN_PROGRESS",
+    "sending": {
+      "txHash": "0xSourceTransactionHash",
+      "chainId": 1,
+      "amount": "1000000000000000000",
+      "token": { "symbol": "ETH" },
+      "timestamp": 1711234500
+    },
+    "receiving": null,
+    "tool": "stargate"
+  },
+  "error": null,
+  "meta": {
+    "requestId": "j0e1f2a3-b4c5-6789-3456-890123456789",
+    "timestamp": 1711234560,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1990,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `NOT_FOUND` | Transaction not found or not yet indexed |
+| `PENDING` | Transaction is being processed |
+| `DONE` | Swap completed successfully |
+| `FAILED` | Swap failed |
+
+### Sub-Status Values
+
+| Sub-Status | Description |
+|------------|-------------|
+| `WAIT_SOURCE_CONFIRMATIONS` | Waiting for source chain confirmations |
+| `BRIDGE_IN_PROGRESS` | Bridge transfer is in progress |
+| `WAIT_DESTINATION_TRANSACTION` | Waiting for destination chain transaction |
+| `COMPLETED` | Fully completed |
+| `PARTIAL` | Partially completed (refund may follow) |
+| `REFUNDED` | Transaction was refunded |
+
+<CodeGroup>
+```typescript TypeScript
+const status = await client.getStatus({
+  txHash: "0xSourceTransactionHash",
+  fromChain: 1,
+  toChain: 42161,
+});
+
+switch (status.data.status) {
+  case "DONE":
+    console.log("Complete! Received:", status.data.receiving.amount);
+    break;
+  case "PENDING":
+    console.log("In progress:", status.data.subStatus);
+    break;
+  case "FAILED":
+    console.log("Failed");
+    break;
+  case "NOT_FOUND":
+    console.log("Not found yet — try again shortly");
+    break;
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/status?\
+txHash=0xSourceTransactionHash&\
+fromChain=1&\
+toChain=42161" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+url := "https://api.hypermid.io/v1/status?" +
+    "txHash=0xSourceTransactionHash" +
+    "&fromChain=1&toChain=42161"
+
+req, _ := http.NewRequest("GET", url, nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Tip>
+  For Near Intents deposits, use [GET /v1/execute/deposit/status](/api-reference/deposit-status) instead.
+</Tip>

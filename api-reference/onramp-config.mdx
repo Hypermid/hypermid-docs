@@ -1,0 +1,82 @@
+---
+title: "Get On-Ramp Config"
+api: "GET /v1/onramp/config"
+description: "Get supported fiat currencies and payment methods"
+---
+
+Returns the available fiat currencies and payment methods for the on-ramp service.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "currencies": [
+      { "code": "USD", "name": "US Dollar", "symbol": "$" },
+      { "code": "EUR", "name": "Euro", "symbol": "\u20ac" },
+      { "code": "GBP", "name": "British Pound", "symbol": "\u00a3" },
+      { "code": "CAD", "name": "Canadian Dollar", "symbol": "C$" },
+      { "code": "AUD", "name": "Australian Dollar", "symbol": "A$" },
+      { "code": "CHF", "name": "Swiss Franc", "symbol": "CHF" }
+    ],
+    "paymentMethods": [
+      {
+        "id": "credit_card",
+        "name": "Credit Card",
+        "processingTime": "Instant",
+        "feePercentage": 3.49
+      },
+      {
+        "id": "debit_card",
+        "name": "Debit Card",
+        "processingTime": "Instant",
+        "feePercentage": 2.99
+      },
+      {
+        "id": "bank_transfer",
+        "name": "Bank Transfer",
+        "processingTime": "1-3 business days",
+        "feePercentage": 1.49
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "u1d2e3f4-a5b6-7890-4567-901234567890",
+    "timestamp": 1711234579,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1979,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const config = await client.getOnrampConfig();
+
+console.log("Supported currencies:");
+for (const currency of config.data.currencies) {
+  console.log(`  ${currency.symbol} ${currency.code} - ${currency.name}`);
+}
+
+console.log("Payment methods:");
+for (const method of config.data.paymentMethods) {
+  console.log(`  ${method.name}: ${method.feePercentage}% fee, ${method.processingTime}`);
+}
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/onramp/config \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/onramp/config", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

@@ -1,0 +1,238 @@
+---
+title: "Response Format"
+sidebarTitle: "Response Format"
+description: "Standard response envelope, error codes, and pagination"
+---
+
+# Response Format
+
+Every HyperMid API response uses a consistent envelope format. This makes it straightforward to handle responses, errors, and metadata across all endpoints.
+
+## Response Envelope
+
+All endpoints return a JSON object with three top-level fields:
+
+```json
+{
+  "data": <T | null>,
+  "error": <ErrorObject | null>,
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1998,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | `T \| null` | The response payload. `null` when an error occurs. |
+| `error` | `ErrorObject \| null` | Error details. `null` on success. |
+| `meta` | `MetaObject` | Request metadata, always present. |
+
+<Info>
+  Exactly one of `data` or `error` will be non-null. You can use this as a discriminator in your code.
+</Info>
+
+## Success Response
+
+When a request succeeds, `data` contains the response payload and `error` is `null`:
+
+```json
+{
+  "data": {
+    "chains": [
+      { "id": 1, "name": "Ethereum", "type": "EVM" },
+      { "id": 42161, "name": "Arbitrum", "type": "EVM" }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1997,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+## Error Response
+
+When a request fails, `error` contains the error details and `data` is `null`:
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "INVALID_PARAMS",
+    "message": "Parameter 'fromChain' is required",
+    "details": {
+      "field": "fromChain",
+      "reason": "missing"
+    }
+  },
+  "meta": {
+    "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "timestamp": 1711234568,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1996,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+### Error Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | `string` | Machine-readable error code (e.g., `INVALID_PARAMS`) |
+| `message` | `string` | Human-readable error description |
+| `details` | `object` | Additional context about the error (varies by error type) |
+
+## Meta Object
+
+The `meta` object is always present and contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `requestId` | `string` | Unique UUID for this request. Include this when contacting support. |
+| `timestamp` | `number` | Unix timestamp of the response. |
+| `rateLimit.limit` | `number` | Maximum requests allowed per minute. |
+| `rateLimit.remaining` | `number` | Requests remaining in the current window. |
+| `rateLimit.reset` | `number` | Unix timestamp when the rate limit window resets. |
+
+## Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `INVALID_PARAMS` | 400 | Missing or invalid request parameters |
+| `VALIDATION_ERROR` | 400 | Request body failed validation |
+| `SLIPPAGE_ERROR` | 400 | Slippage tolerance exceeded |
+| `UNAUTHORIZED` | 401 | Invalid or missing API key for a protected endpoint |
+| `NO_ROUTE_FOUND` | 404 | No swap route found for the given parameters |
+| `RATE_LIMIT` | 429 | Rate limit exceeded |
+| `INTERNAL_ERROR` | 500 | Unexpected server error |
+| `TRANSACTION_BUILD_FAILED` | 500 | Failed to build the swap transaction |
+| `UPSTREAM_ERROR` | 502 | Error from an upstream provider (LI.FI, RampNow, etc.) |
+| `RPC_FAILURE` | 502 | Blockchain RPC node error |
+| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
+| `TIMEOUT` | 504 | Request timed out |
+| `UPSTREAM_TIMEOUT` | 504 | Upstream provider timed out |
+
+For detailed error handling strategies, see the [Error Handling Guide](/guides/error-handling).
+
+## Handling Responses in Code
+
+<CodeGroup>
+```typescript TypeScript
+import { HyperMid, HyperMidError } from "@hypermid/sdk";
+
+const client = new HyperMid({ apiKey: "your-api-key" });
+
+try {
+  const response = await client.getQuote({
+    fromChain: 1,
+    toChain: 42161,
+    fromToken: "0x0000000000000000000000000000000000000000",
+    toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    fromAmount: "100000000000000000",
+    fromAddress: "0xYourWalletAddress",
+  });
+
+  if (response.error) {
+    console.error(`Error [${response.error.code}]: ${response.error.message}`);
+    return;
+  }
+
+  console.log("Quote:", response.data);
+  console.log("Request ID:", response.meta.requestId);
+  console.log("Rate limit remaining:", response.meta.rateLimit.remaining);
+} catch (err) {
+  if (err instanceof HyperMidError) {
+    console.error("API Error:", err.code, err.message);
+  }
+  throw err;
+}
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "io"
+)
+
+type Response[T any] struct {
+    Data  *T           `json:"data"`
+    Error *APIError    `json:"error"`
+    Meta  Meta         `json:"meta"`
+}
+
+type APIError struct {
+    Code    string                 `json:"code"`
+    Message string                 `json:"message"`
+    Details map[string]interface{} `json:"details"`
+}
+
+type Meta struct {
+    RequestID string    `json:"requestId"`
+    Timestamp int64     `json:"timestamp"`
+    RateLimit RateLimit `json:"rateLimit"`
+}
+
+type RateLimit struct {
+    Limit     int   `json:"limit"`
+    Remaining int   `json:"remaining"`
+    Reset     int64 `json:"reset"`
+}
+
+func main() {
+    resp, err := http.Get("https://api.hypermid.io/v1/chains")
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    body, _ := io.ReadAll(resp.Body)
+
+    var result Response[json.RawMessage]
+    json.Unmarshal(body, &result)
+
+    if result.Error != nil {
+        fmt.Printf("Error [%s]: %s\n", result.Error.Code, result.Error.Message)
+        return
+    }
+
+    fmt.Printf("Data: %s\n", string(*result.Data))
+    fmt.Printf("Request ID: %s\n", result.Meta.RequestID)
+}
+```
+</CodeGroup>
+
+## HTTP Status Codes
+
+HyperMid uses standard HTTP status codes alongside the `error.code` field:
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Success |
+| `400` | Bad request (invalid parameters or validation error) |
+| `401` | Unauthorized (invalid API key) |
+| `404` | Not found (no route found) |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+| `502` | Bad gateway (upstream error) |
+| `503` | Service unavailable |
+| `504` | Gateway timeout |

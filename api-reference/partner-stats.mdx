@@ -1,0 +1,84 @@
+---
+title: "Get Partner Stats"
+api: "GET /v1/partner/stats"
+description: "Retrieve partner volume and transaction statistics"
+---
+
+Returns aggregated statistics for your partner account, including total volume, transaction counts, and revenue metrics.
+
+<ParamField query="period" type="string">
+  Time period for stats: `24h`, `7d`, `30d`, `90d`, `all`. Default: `30d`.
+</ParamField>
+
+<ParamField query="groupBy" type="string">
+  Group results by: `day`, `week`, `month`. Default: `day`.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "period": "30d",
+    "totalVolumeUSD": "1250000.00",
+    "totalTransactions": 4523,
+    "successfulTransactions": 4401,
+    "failedTransactions": 122,
+    "successRate": 97.3,
+    "totalFeesEarnedUSD": "1875.00",
+    "averageTransactionUSD": "276.32",
+    "topChains": [
+      { "chainId": 1, "name": "Ethereum", "volumeUSD": "450000.00", "count": 1200 },
+      { "chainId": 42161, "name": "Arbitrum", "volumeUSD": "320000.00", "count": 1100 },
+      { "chainId": 137, "name": "Polygon", "volumeUSD": "180000.00", "count": 850 }
+    ],
+    "dailyStats": [
+      {
+        "date": "2024-03-25",
+        "volumeUSD": "42000.00",
+        "transactions": 156,
+        "feesEarnedUSD": "63.00"
+      },
+      {
+        "date": "2024-03-24",
+        "volumeUSD": "38500.00",
+        "transactions": 142,
+        "feesEarnedUSD": "57.75"
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "x4a5b6c7-d8e9-0123-7890-234567890123",
+    "timestamp": 1711234582,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1976,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const stats = await client.getPartnerStats({ period: "30d" });
+
+console.log("Total volume:", stats.data.totalVolumeUSD, "USD");
+console.log("Transactions:", stats.data.totalTransactions);
+console.log("Success rate:", stats.data.successRate, "%");
+console.log("Fees earned:", stats.data.totalFeesEarnedUSD, "USD");
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/partner/stats?period=30d" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/partner/stats?period=30d", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

@@ -1,0 +1,65 @@
+---
+title: "Get Partner Profile"
+api: "GET /v1/partner/me"
+description: "Retrieve your partner account details"
+---
+
+Returns the authenticated partner's profile, including account settings, fee tier, and rate limits. Requires a valid API key.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "partner_abc123",
+    "name": "My DeFi App",
+    "email": "dev@mydefiapp.com",
+    "feeTier": {
+      "swapFeeBps": 15,
+      "onrampFeeBps": 50
+    },
+    "rateLimit": {
+      "requestsPerMinute": 2000
+    },
+    "webhooksEnabled": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-06-20T14:45:00Z"
+  },
+  "error": null,
+  "meta": {
+    "requestId": "w3f4a5b6-c7d8-9012-6789-123456789012",
+    "timestamp": 1711234581,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1977,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const me = await client.getPartnerProfile();
+
+console.log("Partner:", me.data.name);
+console.log("Swap fee:", me.data.feeTier.swapFeeBps, "bps");
+console.log("Rate limit:", me.data.rateLimit.requestsPerMinute, "req/min");
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/partner/me \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/partner/me", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Note>
+  This endpoint requires authentication. Anonymous requests will receive a `401 UNAUTHORIZED` error.
+</Note>

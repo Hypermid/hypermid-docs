@@ -1,0 +1,78 @@
+---
+title: "Get Tools"
+api: "GET /v1/tools"
+description: "List available swap and bridge tools"
+---
+
+Returns the list of available bridge and DEX aggregator tools that HyperMid can use for swaps.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "tools": [
+      {
+        "key": "stargate",
+        "name": "Stargate",
+        "type": "bridge",
+        "supportedChains": [1, 42161, 137, 10, 8453, 43114, 56]
+      },
+      {
+        "key": "hop",
+        "name": "Hop Protocol",
+        "type": "bridge",
+        "supportedChains": [1, 42161, 137, 10]
+      },
+      {
+        "key": "across",
+        "name": "Across Protocol",
+        "type": "bridge",
+        "supportedChains": [1, 42161, 137, 10, 8453]
+      },
+      {
+        "key": "1inch",
+        "name": "1inch",
+        "type": "dex",
+        "supportedChains": [1, 42161, 137, 10, 56, 43114]
+      },
+      {
+        "key": "near-intents",
+        "name": "Near Intents",
+        "type": "intents",
+        "supportedChains": [900000001, 900000002, 900000003, 900000004]
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "d4e5f6a7-b8c9-0123-def0-234567890123",
+    "timestamp": 1711234570,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1996,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const tools = await client.getTools();
+
+const bridges = tools.data.tools.filter(t => t.type === "bridge");
+console.log("Available bridges:", bridges.map(b => b.name).join(", "));
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/tools \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/tools", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

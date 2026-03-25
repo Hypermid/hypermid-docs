@@ -1,0 +1,98 @@
+---
+title: "Get Tokens"
+api: "GET /v1/tokens"
+description: "List tokens available on specified chains"
+---
+
+Returns the list of tokens available for swapping on the specified chains. Tokens are grouped by chain ID.
+
+<ParamField query="chains" type="string" required>
+  Comma-separated list of chain IDs (e.g., `1,42161,137`).
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "tokens": {
+      "1": [
+        {
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ethereum",
+          "decimals": 18,
+          "logoURI": "https://assets.hypermid.io/tokens/eth.png",
+          "priceUSD": "3250.00"
+        },
+        {
+          "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "logoURI": "https://assets.hypermid.io/tokens/usdc.png",
+          "priceUSD": "1.00"
+        },
+        {
+          "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6,
+          "logoURI": "https://assets.hypermid.io/tokens/usdt.png",
+          "priceUSD": "1.00"
+        }
+      ],
+      "42161": [
+        {
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ethereum",
+          "decimals": 18,
+          "logoURI": "https://assets.hypermid.io/tokens/eth.png",
+          "priceUSD": "3250.00"
+        },
+        {
+          "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "logoURI": "https://assets.hypermid.io/tokens/usdc.png",
+          "priceUSD": "1.00"
+        }
+      ]
+    }
+  },
+  "error": null,
+  "meta": {
+    "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "timestamp": 1711234568,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1998,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const tokens = await client.getTokens({ chains: [1, 42161] });
+
+// Get USDC on Ethereum
+const ethTokens = tokens.data.tokens[1];
+const usdc = ethTokens.find(t => t.symbol === "USDC");
+console.log("USDC address:", usdc.address);
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/tokens?chains=1,42161" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/tokens?chains=1,42161", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

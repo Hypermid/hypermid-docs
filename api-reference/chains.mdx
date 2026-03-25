@@ -1,0 +1,91 @@
+---
+title: "Get Chains"
+api: "GET /v1/chains"
+description: "List all supported blockchains"
+---
+
+Returns the list of all blockchains supported by HyperMid, including EVM chains, Solana, Bitcoin, and Near Intents chains.
+
+<ParamField query="type" type="string">
+  Filter by chain type. Possible values: `EVM`, `SVM`, `UTXO`, `NEAR_INTENTS`.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "chains": [
+      {
+        "id": 1,
+        "name": "Ethereum",
+        "type": "EVM",
+        "nativeToken": {
+          "symbol": "ETH",
+          "decimals": 18,
+          "address": "0x0000000000000000000000000000000000000000",
+          "priceUSD": "3250.00"
+        },
+        "blockExplorerUrl": "https://etherscan.io",
+        "rpcUrl": "https://eth.llamarpc.com"
+      },
+      {
+        "id": 42161,
+        "name": "Arbitrum",
+        "type": "EVM",
+        "nativeToken": {
+          "symbol": "ETH",
+          "decimals": 18,
+          "address": "0x0000000000000000000000000000000000000000",
+          "priceUSD": "3250.00"
+        },
+        "blockExplorerUrl": "https://arbiscan.io",
+        "rpcUrl": "https://arb1.arbitrum.io/rpc"
+      },
+      {
+        "id": 900000001,
+        "name": "NEAR",
+        "type": "NEAR_INTENTS",
+        "nativeToken": {
+          "symbol": "NEAR",
+          "decimals": 24,
+          "address": "near",
+          "priceUSD": "5.20"
+        },
+        "blockExplorerUrl": "https://nearblocks.io"
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1999,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const chains = await client.getChains();
+
+// Filter for EVM chains only
+const evmChains = chains.data.chains.filter(c => c.type === "EVM");
+console.log(`Found ${evmChains.length} EVM chains`);
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/chains \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/chains", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

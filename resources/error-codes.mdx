@@ -1,0 +1,204 @@
+---
+title: "Error Codes"
+sidebarTitle: "Error Codes"
+description: "Complete reference of all HyperMid API error codes"
+---
+
+# Error Codes
+
+Every error response includes a machine-readable `code` field in the error object. Use these codes to build targeted error handling in your application.
+
+## Error Response Format
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "INVALID_PARAMS",
+    "message": "Human-readable description",
+    "details": { ... }
+  },
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": 1711234567,
+    "rateLimit": { ... }
+  }
+}
+```
+
+## Complete Error Code Reference
+
+### Client Errors (4xx)
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>HTTP Status</th>
+      <th>Description</th>
+      <th>Common Causes</th>
+      <th>Resolution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`INVALID_PARAMS`</td>
+      <td>400</td>
+      <td>Missing or invalid request parameters</td>
+      <td>Required parameter not provided; invalid chain ID; malformed token address</td>
+      <td>Check the `details` field for the specific parameter and fix your request</td>
+    </tr>
+    <tr>
+      <td>`VALIDATION_ERROR`</td>
+      <td>400</td>
+      <td>Request body failed schema validation</td>
+      <td>Wrong data types; extra fields; nested object structure incorrect</td>
+      <td>Compare your request body against the API documentation</td>
+    </tr>
+    <tr>
+      <td>`SLIPPAGE_ERROR`</td>
+      <td>400</td>
+      <td>Price moved beyond slippage tolerance</td>
+      <td>Market volatility; low liquidity pool; slippage too tight</td>
+      <td>Increase the `slippage` parameter or get a fresh quote</td>
+    </tr>
+    <tr>
+      <td>`UNAUTHORIZED`</td>
+      <td>401</td>
+      <td>Invalid or missing API key</td>
+      <td>Wrong API key; expired key; accessing partner-only endpoint without a key</td>
+      <td>Verify your API key in the `X-API-Key` header</td>
+    </tr>
+    <tr>
+      <td>`NO_ROUTE_FOUND`</td>
+      <td>404</td>
+      <td>No swap route available for the given parameters</td>
+      <td>Unsupported token pair; amount too low; no liquidity; chains not connected</td>
+      <td>Try different tokens, higher amounts, or wider slippage</td>
+    </tr>
+    <tr>
+      <td>`RATE_LIMIT`</td>
+      <td>429</td>
+      <td>Too many requests</td>
+      <td>Exceeded 100 req/min (anonymous) or 2000 req/min (partner)</td>
+      <td>Wait until `meta.rateLimit.reset` and implement exponential backoff</td>
+    </tr>
+  </tbody>
+</table>
+
+### Server Errors (5xx)
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>HTTP Status</th>
+      <th>Description</th>
+      <th>Common Causes</th>
+      <th>Resolution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`TRANSACTION_BUILD_FAILED`</td>
+      <td>500</td>
+      <td>Failed to construct the swap transaction</td>
+      <td>Insufficient balance; token approval needed; contract interaction failure</td>
+      <td>Retry the request; if persistent, try a different route or tool</td>
+    </tr>
+    <tr>
+      <td>`INTERNAL_ERROR`</td>
+      <td>500</td>
+      <td>Unexpected server error</td>
+      <td>Bug in the API server; database error; configuration issue</td>
+      <td>Retry with exponential backoff; contact support if persistent</td>
+    </tr>
+    <tr>
+      <td>`UPSTREAM_ERROR`</td>
+      <td>502</td>
+      <td>Error from an upstream provider</td>
+      <td>LI.FI, RampNow, or Near Intents returned an error</td>
+      <td>Retry after a brief delay; try excluding the failing tool with `denyTools`</td>
+    </tr>
+    <tr>
+      <td>`RPC_FAILURE`</td>
+      <td>502</td>
+      <td>Blockchain RPC node error</td>
+      <td>RPC node down; network congestion; chain reorganization</td>
+      <td>Retry after a brief delay</td>
+    </tr>
+    <tr>
+      <td>`SERVICE_UNAVAILABLE`</td>
+      <td>503</td>
+      <td>Service temporarily unavailable</td>
+      <td>Maintenance; deployment; overwhelming traffic</td>
+      <td>Retry with exponential backoff; check [API status](https://api.hypermid.io/v1/ping)</td>
+    </tr>
+    <tr>
+      <td>`TIMEOUT`</td>
+      <td>504</td>
+      <td>Request timed out</td>
+      <td>Complex route calculation; slow RPC responses</td>
+      <td>Retry with exponential backoff</td>
+    </tr>
+    <tr>
+      <td>`UPSTREAM_TIMEOUT`</td>
+      <td>504</td>
+      <td>Upstream provider timed out</td>
+      <td>LI.FI or RampNow took too long to respond</td>
+      <td>Retry after a delay; consider using a different tool</td>
+    </tr>
+  </tbody>
+</table>
+
+## Error Handling Example
+
+```typescript
+import { HyperMid, HyperMidError } from "@hypermid/sdk";
+
+const client = new HyperMid({ apiKey: "your-api-key" });
+
+try {
+  const quote = await client.getQuote({ ... });
+} catch (error) {
+  if (error instanceof HyperMidError) {
+    switch (error.code) {
+      case "INVALID_PARAMS":
+        // Fix the request
+        console.error("Bad request:", error.details);
+        break;
+
+      case "NO_ROUTE_FOUND":
+        // Inform user, suggest alternatives
+        console.log("No route found. Try a different token pair.");
+        break;
+
+      case "SLIPPAGE_ERROR":
+        // Increase slippage and retry
+        console.log("Price changed. Retrying with higher slippage...");
+        break;
+
+      case "RATE_LIMIT":
+        // Wait and retry
+        const waitMs = (error.rateLimit.reset - Date.now() / 1000) * 1000;
+        await new Promise((r) => setTimeout(r, waitMs));
+        break;
+
+      case "UPSTREAM_ERROR":
+      case "RPC_FAILURE":
+      case "UPSTREAM_TIMEOUT":
+      case "TIMEOUT":
+      case "INTERNAL_ERROR":
+      case "SERVICE_UNAVAILABLE":
+        // Retry with backoff
+        console.log("Transient error. Retrying...");
+        break;
+
+      default:
+        console.error("Unknown error:", error.code);
+    }
+  }
+}
+```
+
+For comprehensive error handling patterns, see the [Error Handling Guide](/guides/error-handling).

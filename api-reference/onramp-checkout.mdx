@@ -1,0 +1,125 @@
+---
+title: "Create Checkout"
+api: "POST /v1/onramp/checkout"
+description: "Create a fiat on-ramp checkout session"
+---
+
+Creates a checkout session for a fiat-to-crypto purchase. Returns a `checkoutUrl` that you redirect the user to for payment completion.
+
+<ParamField body="fiatCurrency" type="string" required>
+  The fiat currency code (e.g., `USD`, `EUR`, `GBP`).
+</ParamField>
+
+<ParamField body="cryptoAsset" type="string" required>
+  The crypto asset symbol (e.g., `ETH`, `USDC`).
+</ParamField>
+
+<ParamField body="chainId" type="number" required>
+  The chain ID to receive crypto on.
+</ParamField>
+
+<ParamField body="fiatAmount" type="number" required>
+  The fiat amount to spend.
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Payment method: `credit_card`, `debit_card`, or `bank_transfer`.
+</ParamField>
+
+<ParamField body="walletAddress" type="string" required>
+  The wallet address to receive crypto.
+</ParamField>
+
+<ParamField body="redirectUrl" type="string">
+  URL to redirect the user to after payment. The order UID will be appended as a query parameter.
+</ParamField>
+
+<ParamField body="externalId" type="string">
+  Your own reference ID for this order.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "orderUid": "ord_abc123def456",
+    "checkoutUrl": "https://checkout.rampnow.io/session/sess_xyz789",
+    "fiatCurrency": "USD",
+    "fiatAmount": 100,
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "estimatedCryptoAmount": "0.029615",
+    "walletAddress": "0xYourAddress",
+    "expiresAt": 1711236377,
+    "status": "CREATED"
+  },
+  "error": null,
+  "meta": {
+    "requestId": "r8a9b0c1-d2e3-4567-1234-678901234567",
+    "timestamp": 1711234578,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1982,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const checkout = await client.createOnrampCheckout({
+  fiatCurrency: "USD",
+  cryptoAsset: "ETH",
+  chainId: 1,
+  fiatAmount: 100,
+  paymentMethod: "credit_card",
+  walletAddress: "0xYourAddress",
+  redirectUrl: "https://yourapp.com/onramp/complete",
+  externalId: "order-12345",
+});
+
+// Redirect the user to complete payment
+console.log("Redirect to:", checkout.data.checkoutUrl);
+console.log("Track with order UID:", checkout.data.orderUid);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/onramp/checkout" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fiatCurrency": "USD",
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "fiatAmount": 100,
+    "paymentMethod": "credit_card",
+    "walletAddress": "0xYourAddress",
+    "redirectUrl": "https://yourapp.com/onramp/complete"
+  }'
+```
+
+```go Go
+body := `{
+  "fiatCurrency": "USD",
+  "cryptoAsset": "ETH",
+  "chainId": 1,
+  "fiatAmount": 100,
+  "paymentMethod": "credit_card",
+  "walletAddress": "0xYourAddress",
+  "redirectUrl": "https://yourapp.com/onramp/complete"
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/onramp/checkout",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>
+
+<Warning>
+  Checkout URLs expire. Redirect the user promptly after creating the session.
+</Warning>

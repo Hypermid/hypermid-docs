@@ -1,0 +1,132 @@
+---
+title: "Go SDK"
+sidebarTitle: "Go"
+description: "Go SDK for server-side HyperMid integrations"
+---
+
+# Go SDK
+
+<Info>
+  The Go SDK is currently under development. This page documents the planned API. Check the [GitHub repository](https://github.com/Hypermid/sdk-go) for the latest status.
+</Info>
+
+## Planned Installation
+
+```bash
+go get github.com/hypermid/sdk-go
+```
+
+## Planned Usage
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    hypermid "github.com/hypermid/sdk-go"
+)
+
+func main() {
+    client := hypermid.NewClient(hypermid.Config{
+        APIKey:  "hm_live_abc123def456",
+        Timeout: 30 * time.Second,
+    })
+
+    ctx := context.Background()
+
+    // Get supported chains
+    chains, err := client.GetChains(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, chain := range chains.Chains {
+        fmt.Printf("%s (ID: %d)\n", chain.Name, chain.ID)
+    }
+
+    // Get a quote
+    quote, err := client.GetQuote(ctx, &hypermid.QuoteRequest{
+        FromChain:   1,
+        ToChain:     42161,
+        FromToken:   "0x0000000000000000000000000000000000000000",
+        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        FromAmount:  "1000000000000000000",
+        FromAddress: "0xYourAddress",
+        Slippage:    0.03,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Output: %s %s\n", quote.Estimate.ToAmount, quote.Action.ToToken.Symbol)
+    fmt.Printf("Via: %s\n", quote.Tool)
+
+    // Execute the swap
+    exec, err := client.Execute(ctx, &hypermid.ExecuteRequest{
+        FromChain:   1,
+        ToChain:     42161,
+        FromToken:   "0x0000000000000000000000000000000000000000",
+        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        FromAmount:  "1000000000000000000",
+        FromAddress: "0xYourAddress",
+        ToAddress:   "0xYourAddress",
+        Slippage:    0.03,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if exec.TransactionRequest != nil {
+        fmt.Printf("Sign and send tx to: %s\n", exec.TransactionRequest.To)
+    }
+}
+```
+
+## Planned Features
+
+- Full API coverage with strongly typed request/response structs
+- Context-based cancellation and timeouts
+- Automatic retry with exponential backoff
+- Rate limit handling with configurable strategies
+- Thread-safe client
+- Generated from the OpenAPI spec
+
+## Interim: Direct HTTP
+
+Until the SDK is released, you can call the API directly:
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func main() {
+    req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/chains", nil)
+    req.Header.Set("X-API-Key", "your-api-key")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    body, _ := io.ReadAll(resp.Body)
+
+    var result map[string]interface{}
+    json.Unmarshal(body, &result)
+
+    fmt.Println(result["data"])
+}
+```
+
+## Stay Updated
+
+Follow the [GitHub repository](https://github.com/Hypermid/sdk-go) for release announcements. You can also reach out on [X](https://x.com/hypermid) or contact support for early access.

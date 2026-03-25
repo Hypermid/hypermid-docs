@@ -1,0 +1,257 @@
+---
+title: "Error Handling"
+sidebarTitle: "Error Handling"
+description: "All error codes and recommended handling strategies"
+---
+
+# Error Handling
+
+HyperMid uses a consistent error format across all endpoints. This guide covers every error code and the recommended strategy for handling each one.
+
+## Error Response Format
+
+All errors follow the standard [response envelope](/response-format):
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "INVALID_PARAMS",
+    "message": "Parameter 'fromChain' is required",
+    "details": {
+      "field": "fromChain",
+      "reason": "missing"
+    }
+  },
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1995,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+<Info>
+  Always include the `meta.requestId` when contacting support about an error. This allows the team to trace the exact request through the system.
+</Info>
+
+## Error Codes Reference
+
+### Client Errors (4xx)
+
+| Code | HTTP | Description | Strategy |
+|------|------|-------------|----------|
+| `INVALID_PARAMS` | 400 | Missing or invalid request parameters | Fix the request parameters and retry |
+| `VALIDATION_ERROR` | 400 | Request body failed schema validation | Check request body against the API docs |
+| `SLIPPAGE_ERROR` | 400 | Price moved beyond slippage tolerance | Increase slippage or get a fresh quote |
+| `UNAUTHORIZED` | 401 | Invalid or missing API key | Check your API key is correct |
+| `NO_ROUTE_FOUND` | 404 | No swap route available | Try different token pairs, higher amounts, or wider slippage |
+| `RATE_LIMIT` | 429 | Too many requests | Wait until `meta.rateLimit.reset` and retry |
+
+### Server Errors (5xx)
+
+| Code | HTTP | Description | Strategy |
+|------|------|-------------|----------|
+| `INTERNAL_ERROR` | 500 | Unexpected server error | Retry with exponential backoff |
+| `TRANSACTION_BUILD_FAILED` | 500 | Could not build the transaction | Retry; if persistent, try a different route |
+| `UPSTREAM_ERROR` | 502 | Error from upstream provider | Retry after a delay |
+| `RPC_FAILURE` | 502 | Blockchain RPC node error | Retry after a delay |
+| `SERVICE_UNAVAILABLE` | 503 | Service temporarily down | Retry with exponential backoff |
+| `TIMEOUT` | 504 | Request timed out | Retry with exponential backoff |
+| `UPSTREAM_TIMEOUT` | 504 | Upstream provider timed out | Retry after a delay |
+
+## Handling Strategies
+
+### Retry with Exponential Backoff
+
+For transient errors (`INTERNAL_ERROR`, `UPSTREAM_ERROR`, `RPC_FAILURE`, `SERVICE_UNAVAILABLE`, `TIMEOUT`, `UPSTREAM_TIMEOUT`), implement exponential backoff:
+
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await fn();
+      return result;
+    } catch (error: any) {
+      const retryableCodes = [
+        "INTERNAL_ERROR",
+        "UPSTREAM_ERROR",
+        "RPC_FAILURE",
+        "SERVICE_UNAVAILABLE",
+        "TIMEOUT",
+        "UPSTREAM_TIMEOUT",
+      ];
+
+      if (
+        attempt === maxRetries ||
+        !retryableCodes.includes(error.code)
+      ) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      console.log(`Retry ${attempt + 1}/${maxRetries} in ${Math.round(delay)}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
+// Usage
+const quote = await withRetry(() =>
+  client.getQuote({
+    fromChain: 1,
+    toChain: 42161,
+    fromToken: "0x0000000000000000000000000000000000000000",
+    toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    fromAmount: "1000000000000000000",
+    fromAddress: "0xYourAddress",
+  })
+);
+```
+
+### Rate Limit Handling
+
+When you receive a `RATE_LIMIT` error, use the `meta.rateLimit.reset` timestamp to wait before retrying:
+
+```typescript
+async function handleRateLimit<T>(fn: () => Promise<{ meta: any; error: any; data: T }>) {
+  const response = await fn();
+
+  if (response.error?.code === "RATE_LIMIT") {
+    const resetAt = response.meta.rateLimit.reset;
+    const waitMs = (resetAt - Math.floor(Date.now() / 1000)) * 1000 + 1000;
+    console.log(`Rate limited. Waiting ${waitMs}ms...`);
+    await new Promise((r) => setTimeout(r, waitMs));
+    return fn(); // Retry once
+  }
+
+  return response;
+}
+```
+
+### No Route Found
+
+When `NO_ROUTE_FOUND` is returned, the swap cannot be executed with the given parameters. Try these strategies:
+
+```typescript
+async function getQuoteWithFallback(params: QuoteParams) {
+  // Try with original params
+  let quote = await client.getQuote(params);
+
+  if (quote.error?.code === "NO_ROUTE_FOUND") {
+    // Strategy 1: Increase slippage
+    quote = await client.getQuote({ ...params, slippage: 0.05 });
+  }
+
+  if (quote.error?.code === "NO_ROUTE_FOUND") {
+    // Strategy 2: Try a different intermediate token
+    // For example, swap to USDC first, then to the target token
+    console.log("No direct route found. Consider a multi-hop swap.");
+  }
+
+  return quote;
+}
+```
+
+### Slippage Error
+
+When price moves beyond the tolerance during execution:
+
+```typescript
+if (error.code === "SLIPPAGE_ERROR") {
+  // Get a fresh quote with higher slippage
+  const freshQuote = await client.getQuote({
+    ...originalParams,
+    slippage: Math.min(originalParams.slippage * 2, 0.10), // Double slippage, max 10%
+  });
+
+  // Show the user the new estimated output before proceeding
+  console.log("Price has changed. New estimated output:", freshQuote.data.estimate.toAmount);
+}
+```
+
+## Comprehensive Error Handler
+
+Here's a production-ready error handler that covers all cases:
+
+```typescript
+import { HyperMid } from "@hypermid/sdk";
+
+interface HyperMidResponse<T> {
+  data: T | null;
+  error: { code: string; message: string; details: any } | null;
+  meta: { requestId: string; rateLimit: { reset: number } };
+}
+
+async function handleResponse<T>(response: HyperMidResponse<T>): Promise<T> {
+  if (!response.error) {
+    return response.data!;
+  }
+
+  const { code, message, details } = response.error;
+  const { requestId } = response.meta;
+
+  switch (code) {
+    case "INVALID_PARAMS":
+    case "VALIDATION_ERROR":
+      // Developer error — fix the request
+      throw new Error(`Invalid request [${requestId}]: ${message} (${JSON.stringify(details)})`);
+
+    case "SLIPPAGE_ERROR":
+      // Price moved — notify user
+      throw new Error(`Price changed beyond tolerance. Please get a fresh quote.`);
+
+    case "NO_ROUTE_FOUND":
+      // No route — inform user
+      throw new Error(`No swap route available for this token pair and amount.`);
+
+    case "UNAUTHORIZED":
+      // Auth error — check API key
+      throw new Error(`Authentication failed. Check your API key.`);
+
+    case "RATE_LIMIT":
+      // Rate limited — wait and retry
+      throw new Error(`Rate limit exceeded. Retry after reset.`);
+
+    case "TRANSACTION_BUILD_FAILED":
+      // Transaction build failure
+      throw new Error(`Failed to build transaction [${requestId}]. Try again or use a different route.`);
+
+    case "UPSTREAM_ERROR":
+    case "RPC_FAILURE":
+    case "UPSTREAM_TIMEOUT":
+      // Upstream issue — retry
+      throw new Error(`Upstream provider error [${requestId}]: ${message}. Retry in a moment.`);
+
+    case "SERVICE_UNAVAILABLE":
+    case "TIMEOUT":
+    case "INTERNAL_ERROR":
+      // Server issue — retry with backoff
+      throw new Error(`Service error [${requestId}]: ${message}. Retry with backoff.`);
+
+    default:
+      throw new Error(`Unknown error [${requestId}]: ${code} - ${message}`);
+  }
+}
+```
+
+## Best Practices
+
+1. **Always check `response.error`** — Never assume a 200 status means success without checking the error field.
+
+2. **Log `requestId`** — Store the `meta.requestId` for every failed request. This is essential for debugging with support.
+
+3. **Implement circuit breakers** — If you see repeated 5xx errors, temporarily stop making requests to avoid wasting rate limit quota.
+
+4. **Show user-friendly messages** — Map error codes to messages appropriate for your users, not the raw API error message.
+
+5. **Monitor rate limits proactively** — Track `meta.rateLimit.remaining` and slow down before hitting the limit.

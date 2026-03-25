@@ -1,0 +1,76 @@
+---
+title: "Introduction"
+sidebarTitle: "What is HyperMid?"
+description: "Unified API for cross-chain swaps, bridges, and fiat on-ramp across 90+ blockchains"
+---
+
+# Welcome to HyperMid
+
+HyperMid is a **unified Partner API** that gives you access to cross-chain swaps, token bridges, and fiat on-ramp functionality through a single integration. Instead of building separate integrations with multiple bridge protocols, DEX aggregators, and payment providers, HyperMid handles the complexity so you can ship faster.
+
+<CardGroup cols={2}>
+  <Card title="90+ Chains" icon="link">
+    EVM chains, Solana, Bitcoin, NEAR, TON, Tron, XRP, and more — all through one API.
+  </Card>
+  <Card title="Best Rates" icon="chart-line">
+    Aggregates LI.FI, Near Intents, and other providers to find the optimal route for every swap.
+  </Card>
+  <Card title="Fiat On-Ramp" icon="credit-card">
+    Let users buy crypto with fiat currency via the integrated RampNow provider.
+  </Card>
+  <Card title="Partner Dashboard" icon="gauge">
+    Track volumes, revenue, and transaction analytics in real time.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+HyperMid acts as a **server-side proxy** between your application and upstream providers. Your users never interact with LI.FI, Near Intents, or RampNow directly — all traffic flows through the HyperMid API.
+
+```
+Your App  →  HyperMid API  →  LI.FI / Near Intents / RampNow
+                ↕
+         Partner Dashboard
+```
+
+This architecture provides several benefits:
+
+- **Single integration** — one API key, one response format, one set of error codes
+- **Rate limiting and caching** — HyperMid manages upstream rate limits so you don't have to
+- **Fee management** — configure your fee tier once in the dashboard
+- **Analytics** — all transactions are tracked and available via the Partner API
+
+## Use Cases
+
+| Use Case | Description |
+|----------|-------------|
+| **Wallets** | Add cross-chain swap functionality to your wallet with a few API calls |
+| **dApps** | Enable token bridging so users can interact with your protocol from any chain |
+| **Payment Processors** | Accept payments on any chain and settle on your preferred chain |
+| **Trading Bots** | Automate cross-chain arbitrage and portfolio rebalancing |
+| **Fiat Gateways** | Let users buy crypto directly in your app with credit card or bank transfer |
+
+## Supported Providers
+
+| Provider | Functionality | Chains |
+|----------|--------------|--------|
+| **LI.FI** | Cross-chain swaps and bridges | EVM chains, Solana |
+| **Near Intents** | Intent-based cross-chain transfers | NEAR, TON, Tron, XRP, DOGE, LTC, and more |
+| **RampNow** | Fiat to crypto on-ramp | Multiple chains and fiat currencies |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your first swap running in 5 minutes.
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/overview">
+    Explore all available endpoints.
+  </Card>
+  <Card title="Cross-Chain Swap Guide" icon="arrows-rotate" href="/guides/cross-chain-swap">
+    Learn the full swap lifecycle.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Set up your API key and understand rate limits.
+  </Card>
+</CardGroup>

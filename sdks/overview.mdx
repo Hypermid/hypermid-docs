@@ -1,0 +1,69 @@
+---
+title: "SDK Overview"
+sidebarTitle: "Overview"
+description: "Official SDKs for the HyperMid API"
+---
+
+# SDKs
+
+HyperMid provides official SDKs to simplify integration. Each SDK wraps the REST API with typed methods, automatic retries, and helper utilities.
+
+## Available SDKs
+
+<CardGroup cols={3}>
+  <Card title="TypeScript" icon="js" href="/sdks/typescript">
+    Full-featured SDK for Node.js and browser environments. **Recommended for most integrations.**
+  </Card>
+  <Card title="Go" icon="golang" href="/sdks/go">
+    Go SDK for server-side integrations. **Coming soon.**
+  </Card>
+  <Card title="Rust" icon="rust" href="/sdks/rust">
+    Rust SDK for high-performance applications. **Coming soon.**
+  </Card>
+</CardGroup>
+
+## Quick Comparison
+
+| Feature | TypeScript | Go | Rust |
+|---------|-----------|-----|------|
+| **Status** | Stable | Coming Soon | Coming Soon |
+| **Package** | `@hypermid/sdk` | `github.com/hypermid/sdk-go` | `hypermid-sdk` |
+| **Minimum Version** | Node 18+ | Go 1.21+ | Rust 1.70+ |
+| **Async** | Promise-based | Context-based | async/await |
+| **Types** | Full TypeScript types | Generated structs | Generated types |
+| **Auto-retry** | Yes | Yes | Yes |
+| **Rate limit handling** | Automatic | Automatic | Automatic |
+
+## Direct API Access
+
+If there's no SDK for your language yet, you can call the REST API directly. All endpoints use standard HTTP methods and JSON payloads:
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.hypermid.io/v1/chains",
+    headers={"X-API-Key": "your-api-key"}
+)
+
+data = response.json()
+print(data["data"]["chains"])
+```
+
+```ruby Ruby
+require 'net/http'
+require 'json'
+
+uri = URI("https://api.hypermid.io/v1/chains")
+req = Net::HTTP::Get.new(uri)
+req["X-API-Key"] = "your-api-key"
+
+res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http|
+  http.request(req)
+}
+
+data = JSON.parse(res.body)
+puts data["data"]["chains"]
+```
+
+See the [API Reference](/api-reference/overview) for complete endpoint documentation.

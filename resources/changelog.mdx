@@ -1,0 +1,106 @@
+---
+title: "Changelog"
+sidebarTitle: "Changelog"
+description: "API updates, new features, and breaking changes"
+---
+
+# Changelog
+
+All notable changes to the HyperMid API are documented here. Follow this page to stay updated on new features, improvements, and deprecations.
+
+---
+
+## March 2026
+
+### 2026-03-15 — Near Intents ADI Chain Support
+
+- Added ADI chain (chain ID `900000015`) to Near Intents
+- ADI uses manual deposit mode
+
+### 2026-03-01 — Widget v1.2 Release
+
+- Added `allowedTokens` configuration option to the widget
+- Improved wallet connection flow with automatic reconnection
+- Fixed a bug where the widget would not update quotes on amount change
+
+---
+
+## February 2026
+
+### 2026-02-20 — On-Ramp Assets Endpoint
+
+- New endpoint: `GET /v1/onramp/assets` returns all purchasable crypto assets with min/max amounts
+- Added `externalId` parameter to `POST /v1/onramp/checkout` for partner order tracking
+
+### 2026-02-10 — Rate Limit Increase
+
+- Partner rate limit increased from 1,000 to 2,000 requests per minute
+- Rate limit headers now included in all responses, including error responses
+
+---
+
+## January 2026
+
+### 2026-01-25 — Near Intents Expansion
+
+- Added Aleo (chain ID `900000014`) to Near Intents
+- Improved deposit detection time for XRP and Stellar chains
+- Added `depositMode` override parameter to `POST /v1/execute`
+
+### 2026-01-10 — Webhook Events
+
+- Added `deposit.received`, `deposit.completed`, and `deposit.failed` webhook events
+- Webhook signature now uses HMAC-SHA256 (previously HMAC-SHA1)
+
+<Warning>
+  If you have existing webhooks, update your signature verification to use SHA-256.
+</Warning>
+
+---
+
+## December 2025
+
+### 2025-12-15 — Routes Endpoint
+
+- New endpoint: `GET /v1/routes` returns multiple swap routes for comparison
+- Added `sortBy` parameter (`output`, `speed`, `gas`)
+- Added route tags (`BEST_OUTPUT`, `FASTEST`, `CHEAPEST`)
+
+### 2025-12-01 — Gas Prices
+
+- New endpoint: `GET /v1/gas-prices` returns current gas prices by chain
+- Added `slow`, `standard`, and `fast` speed tiers with estimated confirmation times
+
+---
+
+## November 2025
+
+### 2025-11-20 — Fiat On-Ramp
+
+- Launched fiat on-ramp integration with RampNow
+- New endpoints: `POST /v1/onramp/quote`, `POST /v1/onramp/checkout`, `GET /v1/onramp/status`, `GET /v1/onramp/config`
+- Supports USD, EUR, GBP, CAD, AUD, CHF
+- Payment methods: credit card, debit card, bank transfer
+
+### 2025-11-01 — Partner Dashboard
+
+- Launched Partner Dashboard at [app.hypermid.io](https://app.hypermid.io)
+- New endpoints: `GET /v1/partner/me`, `GET /v1/partner/stats`, `GET /v1/partner/transactions`
+- Webhook management: create, list, and delete webhook endpoints
+
+---
+
+## October 2025
+
+### 2025-10-15 — Near Intents Integration
+
+- Added Near Intents as a swap provider
+- Supported chains: NEAR, TON, Tron, XRP, DOGE, LTC, BCH, Stellar, Cardano, Aptos, StarkNet, Dash, Zcash
+- New endpoints: `POST /v1/execute/deposit/submit`, `GET /v1/execute/deposit/status`
+
+### 2025-10-01 — Initial Public Release
+
+- Launched HyperMid Partner API v1
+- Core endpoints: chains, tokens, connections, tools, quote, execute, status
+- LI.FI integration for EVM and Solana cross-chain swaps
+- TypeScript SDK published as `@hypermid/sdk`

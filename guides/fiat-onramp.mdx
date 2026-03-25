@@ -1,0 +1,256 @@
+---
+title: "Fiat On-Ramp"
+sidebarTitle: "Fiat On-Ramp"
+description: "Enable users to buy crypto with fiat currency via RampNow"
+---
+
+# Fiat On-Ramp Guide
+
+HyperMid integrates with RampNow to provide a fiat-to-crypto on-ramp. Users can purchase crypto using credit cards, debit cards, and bank transfers, and receive tokens directly on their preferred blockchain.
+
+## Flow Overview
+
+<Steps>
+  <Step title="Get Configuration">
+    Fetch supported fiat currencies and payment methods via `GET /v1/onramp/config`.
+  </Step>
+  <Step title="Get Available Assets">
+    Fetch purchasable crypto assets via `GET /v1/onramp/assets`.
+  </Step>
+  <Step title="Get a Quote">
+    Get pricing for the fiat-to-crypto conversion via `POST /v1/onramp/quote`.
+  </Step>
+  <Step title="Create Checkout">
+    Create a checkout session and get a redirect URL via `POST /v1/onramp/checkout`.
+  </Step>
+  <Step title="Redirect User">
+    Send the user to the checkout URL to complete payment.
+  </Step>
+  <Step title="Track Status">
+    Poll the order status via `GET /v1/onramp/status` until completion.
+  </Step>
+</Steps>
+
+## Step 1: Get Configuration
+
+Fetch the available fiat currencies and payment methods:
+
+<CodeGroup>
+```typescript TypeScript
+const config = await client.getOnrampConfig();
+
+console.log("Supported currencies:", config.data.currencies);
+// ["USD", "EUR", "GBP", ...]
+
+console.log("Payment methods:", config.data.paymentMethods);
+// ["credit_card", "debit_card", "bank_transfer", ...]
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/onramp/config \
+  -H "X-API-Key: your-api-key"
+```
+</CodeGroup>
+
+## Step 2: Get Available Assets
+
+Fetch the list of crypto assets available for purchase:
+
+<CodeGroup>
+```typescript TypeScript
+const assets = await client.getOnrampAssets();
+
+for (const asset of assets.data.assets) {
+  console.log(`${asset.symbol} on chain ${asset.chainId}: min ${asset.minAmount}, max ${asset.maxAmount}`);
+}
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/onramp/assets \
+  -H "X-API-Key: your-api-key"
+```
+</CodeGroup>
+
+## Step 3: Get a Quote
+
+Request a quote for the fiat-to-crypto conversion:
+
+<CodeGroup>
+```typescript TypeScript
+const quote = await client.getOnrampQuote({
+  fiatCurrency: "USD",
+  cryptoAsset: "ETH",
+  chainId: 1,
+  fiatAmount: 100,            // $100 USD
+  paymentMethod: "credit_card",
+  walletAddress: "0xYourWalletAddress",
+});
+
+console.log("You'll receive:", quote.data.cryptoAmount, "ETH");
+console.log("Exchange rate:", quote.data.exchangeRate);
+console.log("Fees:", quote.data.fees);
+console.log("Total charge:", quote.data.totalFiatAmount, quote.data.fiatCurrency);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/onramp/quote" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fiatCurrency": "USD",
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "fiatAmount": 100,
+    "paymentMethod": "credit_card",
+    "walletAddress": "0xYourWalletAddress"
+  }'
+```
+</CodeGroup>
+
+## Step 4: Create Checkout Session
+
+Create a checkout session to get a payment URL:
+
+<CodeGroup>
+```typescript TypeScript
+const checkout = await client.createOnrampCheckout({
+  fiatCurrency: "USD",
+  cryptoAsset: "ETH",
+  chainId: 1,
+  fiatAmount: 100,
+  paymentMethod: "credit_card",
+  walletAddress: "0xYourWalletAddress",
+  redirectUrl: "https://yourapp.com/onramp/callback",
+});
+
+console.log("Checkout URL:", checkout.data.checkoutUrl);
+console.log("Order UID:", checkout.data.orderUid);
+
+// Redirect user to the checkout URL
+window.location.href = checkout.data.checkoutUrl;
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/onramp/checkout" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fiatCurrency": "USD",
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "fiatAmount": 100,
+    "paymentMethod": "credit_card",
+    "walletAddress": "0xYourWalletAddress",
+    "redirectUrl": "https://yourapp.com/onramp/callback"
+  }'
+```
+</CodeGroup>
+
+## Step 5: Track Order Status
+
+After the user completes payment, poll the order status:
+
+<CodeGroup>
+```typescript TypeScript
+async function pollOnrampStatus(orderUid: string) {
+  while (true) {
+    const status = await client.getOnrampStatus({ orderUid });
+
+    console.log("Status:", status.data.status);
+
+    switch (status.data.status) {
+      case "PENDING":
+        console.log("Waiting for payment...");
+        break;
+      case "PAYMENT_RECEIVED":
+        console.log("Payment received, processing...");
+        break;
+      case "CRYPTO_SENT":
+        console.log("Crypto sent to wallet!");
+        console.log("Tx hash:", status.data.txHash);
+        break;
+      case "COMPLETED":
+        console.log("Order complete!");
+        return status.data;
+      case "FAILED":
+        console.error("Order failed:", status.data.failureReason);
+        throw new Error(status.data.failureReason);
+      case "REFUNDED":
+        console.log("Payment was refunded");
+        return status.data;
+    }
+
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/onramp/status?orderUid=ord_abc123" \
+  -H "X-API-Key: your-api-key"
+```
+</CodeGroup>
+
+## Complete Example
+
+```typescript
+import { HyperMid } from "@hypermid/sdk";
+
+const client = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
+
+async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
+  // 1. Check available assets
+  const assets = await client.getOnrampAssets();
+  const ethAsset = assets.data.assets.find(
+    (a) => a.symbol === "ETH" && a.chainId === 1
+  );
+
+  if (!ethAsset) throw new Error("ETH not available for purchase");
+
+  // 2. Get a quote
+  const quote = await client.getOnrampQuote({
+    fiatCurrency: "USD",
+    cryptoAsset: "ETH",
+    chainId: 1,
+    fiatAmount: usdAmount,
+    paymentMethod: "credit_card",
+    walletAddress,
+  });
+
+  console.log(`$${usdAmount} USD = ${quote.data.cryptoAmount} ETH`);
+  console.log(`Fees: $${quote.data.fees.totalFee} USD`);
+
+  // 3. Create checkout
+  const checkout = await client.createOnrampCheckout({
+    fiatCurrency: "USD",
+    cryptoAsset: "ETH",
+    chainId: 1,
+    fiatAmount: usdAmount,
+    paymentMethod: "credit_card",
+    walletAddress,
+    redirectUrl: "https://yourapp.com/onramp/complete",
+  });
+
+  // 4. Return checkout URL for the frontend to redirect
+  return {
+    checkoutUrl: checkout.data.checkoutUrl,
+    orderUid: checkout.data.orderUid,
+  };
+}
+```
+
+## Best Practices
+
+<Note>
+  The fiat on-ramp involves real money. Always show users a clear summary of fees, exchange rates, and the expected crypto amount before redirecting to checkout.
+</Note>
+
+1. **Show fees transparently** — Display the breakdown of network fees, processing fees, and exchange rate before the user proceeds.
+
+2. **Use webhooks for production** — Instead of polling, configure a [webhook](/guides/webhooks) to receive order status updates automatically.
+
+3. **Handle KYC requirements** — Some jurisdictions and amounts may require additional KYC verification. The checkout flow handles this automatically, but inform users they may need to verify their identity.
+
+4. **Set appropriate redirect URLs** — The `redirectUrl` should point to a page in your app that shows the order status and provides a good user experience.
+
+5. **Respect minimum/maximum amounts** — Check the asset's `minAmount` and `maxAmount` from the assets endpoint before requesting a quote.

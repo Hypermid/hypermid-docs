@@ -1,0 +1,51 @@
+---
+title: "Delete Webhook"
+api: "DELETE /v1/partner/webhooks/{id}"
+description: "Delete a registered webhook endpoint"
+---
+
+Deletes a webhook endpoint. After deletion, no further events will be delivered to this URL.
+
+<ParamField path="id" type="string" required>
+  The webhook ID to delete (e.g., `whk_abc123def456`).
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "whk_abc123def456",
+    "deleted": true
+  },
+  "error": null,
+  "meta": {
+    "requestId": "b8e9f0a1-b2c3-4567-1234-678901234567",
+    "timestamp": 1711234586,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1972,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const result = await client.deleteWebhook("whk_abc123def456");
+console.log("Deleted:", result.data.deleted);
+```
+
+```bash cURL
+curl -X DELETE "https://api.hypermid.io/v1/partner/webhooks/whk_abc123def456" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("DELETE",
+    "https://api.hypermid.io/v1/partner/webhooks/whk_abc123def456", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

@@ -1,0 +1,209 @@
+---
+title: "Widget Integration"
+sidebarTitle: "Widget Integration"
+description: "Embed the HyperMid cross-chain swap widget in your application"
+---
+
+# Widget Integration
+
+The HyperMid Widget is a drop-in UI component that provides a complete cross-chain swap experience. It handles chain selection, token selection, quoting, execution, and status tracking — all within an embeddable iframe or React component.
+
+## Quick Start
+
+### Script Tag (Any Website)
+
+Add the widget to any HTML page with a single script tag:
+
+```html
+<div id="hypermid-widget"></div>
+
+<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script>
+  HyperMidWidget.init({
+    containerId: "hypermid-widget",
+    partnerId: "your-partner-id",
+    theme: "dark",
+    defaultFromChain: 1,
+    defaultToChain: 42161,
+  });
+</script>
+```
+
+### React Component
+
+Install the React widget package:
+
+```bash
+npm install @hypermid/widget-react
+```
+
+Use it in your React application:
+
+```tsx
+import { HyperMidWidget } from "@hypermid/widget-react";
+
+function SwapPage() {
+  return (
+    <HyperMidWidget
+      partnerId="your-partner-id"
+      theme="dark"
+      defaultFromChain={1}
+      defaultToChain={42161}
+      onSwapComplete={(result) => {
+        console.log("Swap complete:", result);
+      }}
+      onSwapFailed={(error) => {
+        console.error("Swap failed:", error);
+      }}
+    />
+  );
+}
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `partnerId` | `string` | — | Your partner ID from the dashboard |
+| `theme` | `"light" \| "dark"` | `"light"` | Widget color theme |
+| `defaultFromChain` | `number` | `1` | Default source chain ID |
+| `defaultToChain` | `number` | — | Default destination chain ID |
+| `defaultFromToken` | `string` | — | Default source token address |
+| `defaultToToken` | `string` | — | Default destination token address |
+| `allowedChains` | `number[]` | All | Restrict available chains |
+| `allowedTokens` | `string[]` | All | Restrict available tokens |
+| `hideFromChainSelector` | `boolean` | `false` | Lock the source chain |
+| `hideToChainSelector` | `boolean` | `false` | Lock the destination chain |
+| `primaryColor` | `string` | `"#7B3FE4"` | Primary accent color (hex) |
+| `borderRadius` | `number` | `12` | Border radius in pixels |
+| `width` | `string` | `"420px"` | Widget width |
+| `height` | `string` | `"auto"` | Widget height |
+
+## Event Callbacks
+
+### React
+
+```tsx
+<HyperMidWidget
+  partnerId="your-partner-id"
+  onQuoteReceived={(quote) => {
+    console.log("Quote:", quote.estimate.toAmount);
+  }}
+  onSwapStarted={(params) => {
+    console.log("Swap started:", params.fromChain, "->", params.toChain);
+  }}
+  onSwapComplete={(result) => {
+    console.log("Success! Tx:", result.destinationTxHash);
+    // Update your UI, show success message, etc.
+  }}
+  onSwapFailed={(error) => {
+    console.error("Failed:", error.code, error.message);
+    // Show error to user
+  }}
+/>
+```
+
+### Script Tag
+
+```javascript
+HyperMidWidget.init({
+  containerId: "hypermid-widget",
+  partnerId: "your-partner-id",
+  onQuoteReceived: function (quote) {
+    console.log("Quote:", quote);
+  },
+  onSwapComplete: function (result) {
+    console.log("Complete:", result);
+  },
+  onSwapFailed: function (error) {
+    console.error("Failed:", error);
+  },
+});
+```
+
+## Styling
+
+### Custom Theme
+
+Override specific CSS properties to match your brand:
+
+```tsx
+<HyperMidWidget
+  partnerId="your-partner-id"
+  theme="dark"
+  primaryColor="#FF6B35"
+  borderRadius={16}
+  style={{
+    fontFamily: "Inter, sans-serif",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+  }}
+/>
+```
+
+### CSS Override (Script Tag)
+
+```css
+#hypermid-widget {
+  --hm-primary: #FF6B35;
+  --hm-bg: #1a1a2e;
+  --hm-text: #ffffff;
+  --hm-border-radius: 16px;
+  --hm-font-family: "Inter", sans-serif;
+}
+```
+
+## Wallet Connection
+
+The widget includes built-in wallet connection support via popular wallet providers. You can also pass an external wallet provider:
+
+```tsx
+import { HyperMidWidget } from "@hypermid/widget-react";
+import { useAccount, useSendTransaction } from "wagmi";
+
+function SwapPage() {
+  const { address, connector } = useAccount();
+  const { sendTransaction } = useSendTransaction();
+
+  return (
+    <HyperMidWidget
+      partnerId="your-partner-id"
+      walletAddress={address}
+      onTransactionRequest={async (txRequest) => {
+        const hash = await sendTransaction(txRequest);
+        return hash;
+      }}
+    />
+  );
+}
+```
+
+## Iframe Embedding
+
+For maximum isolation, embed the widget as an iframe:
+
+```html
+<iframe
+  src="https://widget.hypermid.io/v1/embed?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161"
+  width="420"
+  height="600"
+  frameborder="0"
+  allow="clipboard-write"
+  style="border-radius: 12px; border: none;"
+></iframe>
+```
+
+<Note>
+  The iframe embed communicates with your parent page via `postMessage` for wallet interactions and event callbacks.
+</Note>
+
+## Best Practices
+
+1. **Set default chains** — Pre-select the most common chain pair for your users to reduce friction.
+
+2. **Restrict chains if needed** — Use `allowedChains` to limit options to chains relevant to your application.
+
+3. **Handle callbacks** — Always implement `onSwapComplete` and `onSwapFailed` to update your application state.
+
+4. **Responsive design** — The widget is responsive by default but test it at your specific container dimensions.
+
+5. **Test in staging** — Use the widget in a staging environment before deploying to production.

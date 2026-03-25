@@ -1,0 +1,108 @@
+---
+title: "Rust SDK"
+sidebarTitle: "Rust"
+description: "Rust SDK for high-performance HyperMid integrations"
+---
+
+# Rust SDK
+
+<Info>
+  The Rust SDK is currently under development. This page documents the planned API. Check the [GitHub repository](https://github.com/Hypermid/sdk-rust) for the latest status.
+</Info>
+
+## Planned Installation
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+hypermid-sdk = "0.1"
+tokio = { version = "1", features = ["full"] }
+```
+
+## Planned Usage
+
+```rust
+use hypermid_sdk::{HyperMid, QuoteRequest};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = HyperMid::builder()
+        .api_key("hm_live_abc123def456")
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+
+    // Get supported chains
+    let chains = client.get_chains().await?;
+    for chain in &chains.chains {
+        println!("{} (ID: {})", chain.name, chain.id);
+    }
+
+    // Get a quote
+    let quote = client
+        .get_quote(QuoteRequest {
+            from_chain: 1,
+            to_chain: 42161,
+            from_token: "0x0000000000000000000000000000000000000000".into(),
+            to_token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".into(),
+            from_amount: "1000000000000000000".into(),
+            from_address: "0xYourAddress".into(),
+            slippage: Some(0.03),
+            ..Default::default()
+        })
+        .await?;
+
+    println!("Output: {} USD", quote.estimate.to_amount_usd);
+    println!("Via: {}", quote.tool);
+
+    Ok(())
+}
+```
+
+## Planned Features
+
+- Fully async with Tokio runtime
+- Strongly typed with serde serialization/deserialization
+- Builder pattern for client and request configuration
+- Automatic retry with exponential backoff
+- Rate limit handling
+- Generated from the OpenAPI spec
+- Zero-copy deserialization where possible
+
+## Interim: Direct HTTP with reqwest
+
+Until the SDK is released, you can use `reqwest` directly:
+
+```rust
+use reqwest::header;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    let response = client
+        .get("https://api.hypermid.io/v1/chains")
+        .header("X-API-Key", "your-api-key")
+        .send()
+        .await?
+        .json::<Value>()
+        .await?;
+
+    if let Some(data) = response.get("data") {
+        println!("{}", serde_json::to_string_pretty(data).unwrap());
+    }
+
+    if let Some(error) = response.get("error") {
+        if !error.is_null() {
+            eprintln!("Error: {}", error);
+        }
+    }
+
+    Ok(())
+}
+```
+
+## Stay Updated
+
+Follow the [GitHub repository](https://github.com/Hypermid/sdk-rust) for release announcements. You can also reach out on [X](https://x.com/hypermid) or contact support for early access.

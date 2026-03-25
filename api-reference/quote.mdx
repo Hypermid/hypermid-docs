@@ -1,0 +1,191 @@
+---
+title: "Get Quote"
+api: "GET /v1/quote"
+description: "Get the best swap quote for a token pair"
+---
+
+Returns the best available quote for swapping tokens between chains. HyperMid compares routes across all available providers and returns the optimal one.
+
+<ParamField query="fromChain" type="number" required>
+  Source chain ID (e.g., `1` for Ethereum).
+</ParamField>
+
+<ParamField query="toChain" type="number" required>
+  Destination chain ID (e.g., `42161` for Arbitrum).
+</ParamField>
+
+<ParamField query="fromToken" type="string" required>
+  Source token contract address. Use `0x0000000000000000000000000000000000000000` for native tokens on EVM chains.
+</ParamField>
+
+<ParamField query="toToken" type="string" required>
+  Destination token contract address.
+</ParamField>
+
+<ParamField query="fromAmount" type="string" required>
+  Amount to swap in the smallest unit (e.g., wei for ETH). Must be a string to handle large numbers.
+</ParamField>
+
+<ParamField query="fromAddress" type="string" required>
+  Sender wallet address on the source chain.
+</ParamField>
+
+<ParamField query="toAddress" type="string">
+  Recipient wallet address on the destination chain. Defaults to `fromAddress` if not provided.
+</ParamField>
+
+<ParamField query="slippage" type="number">
+  Maximum acceptable slippage as a decimal (e.g., `0.03` for 3%). Default: `0.03`.
+</ParamField>
+
+<ParamField query="tools" type="string">
+  Comma-separated list of tools to consider (e.g., `stargate,hop`). Default: all available tools.
+</ParamField>
+
+<ParamField query="denyTools" type="string">
+  Comma-separated list of tools to exclude (e.g., `across`).
+</ParamField>
+
+<ParamField query="preferredTool" type="string">
+  Preferred tool to use if available (e.g., `stargate`).
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "quote_abc123",
+    "type": "lifi",
+    "tool": "stargate",
+    "action": {
+      "fromChainId": 1,
+      "toChainId": 42161,
+      "fromToken": {
+        "address": "0x0000000000000000000000000000000000000000",
+        "symbol": "ETH",
+        "decimals": 18,
+        "priceUSD": "3250.00"
+      },
+      "toToken": {
+        "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "symbol": "USDC",
+        "decimals": 6,
+        "priceUSD": "1.00"
+      },
+      "fromAmount": "1000000000000000000",
+      "fromAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      "toAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      "slippage": 0.03
+    },
+    "estimate": {
+      "fromAmount": "1000000000000000000",
+      "fromAmountUSD": "3250.00",
+      "toAmount": "3237500000",
+      "toAmountUSD": "3237.50",
+      "toAmountMin": "3140375000",
+      "gasCosts": [
+        {
+          "type": "SEND",
+          "amount": "5000000000000000",
+          "amountUSD": "16.25",
+          "token": {
+            "symbol": "ETH",
+            "decimals": 18
+          }
+        }
+      ],
+      "feeCosts": [
+        {
+          "name": "Bridge Fee",
+          "amount": "3250000",
+          "amountUSD": "3.25",
+          "percentage": "0.001"
+        }
+      ],
+      "executionDuration": 120
+    }
+  },
+  "error": null,
+  "meta": {
+    "requestId": "f6a7b8c9-d0e1-2345-f012-456789012345",
+    "timestamp": 1711234572,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1994,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+```json 404
+{
+  "data": null,
+  "error": {
+    "code": "NO_ROUTE_FOUND",
+    "message": "No route found for the given parameters",
+    "details": {
+      "fromChain": 1,
+      "toChain": 42161,
+      "fromToken": "0x...",
+      "toToken": "0x..."
+    }
+  },
+  "meta": {
+    "requestId": "g7b8c9d0-e1f2-3456-0123-567890123456",
+    "timestamp": 1711234573,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1993,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const quote = await client.getQuote({
+  fromChain: 1,
+  toChain: 42161,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAmount: "1000000000000000000",
+  fromAddress: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  slippage: 0.03,
+});
+
+if (quote.data) {
+  console.log("Output:", quote.data.estimate.toAmountUSD, "USD");
+  console.log("Via:", quote.data.tool);
+  console.log("Time:", quote.data.estimate.executionDuration, "seconds");
+}
+```
+
+```bash cURL
+curl -X GET "https://api.hypermid.io/v1/quote?\
+fromChain=1&\
+toChain=42161&\
+fromToken=0x0000000000000000000000000000000000000000&\
+toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831&\
+fromAmount=1000000000000000000&\
+fromAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045&\
+slippage=0.03" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+url := "https://api.hypermid.io/v1/quote?" +
+    "fromChain=1&toChain=42161" +
+    "&fromToken=0x0000000000000000000000000000000000000000" +
+    "&toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831" +
+    "&fromAmount=1000000000000000000" +
+    "&fromAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" +
+    "&slippage=0.03"
+
+req, _ := http.NewRequest("GET", url, nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

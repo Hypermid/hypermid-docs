@@ -1,0 +1,129 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "HyperMid",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#7B3FE4",
+    "light": "#9B6FE8",
+    "dark": "#5B1FD4",
+    "anchors": {
+      "from": "#7B3FE4",
+      "to": "#44F2A1"
+    }
+  },
+  "topbarLinks": [
+    { "name": "API Status", "url": "https://api.hypermid.io/v1/ping" }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://app.hypermid.io"
+  },
+  "tabs": [
+    { "name": "API Reference", "url": "api-reference" },
+    { "name": "SDKs", "url": "sdks" }
+  ],
+  "anchors": [
+    { "name": "GitHub", "icon": "github", "url": "https://github.com/Hypermid" },
+    { "name": "Examples", "icon": "code", "url": "https://github.com/Hypermid/hypermid-examples" }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart", "authentication", "response-format"]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/cross-chain-swap",
+        "guides/near-intents",
+        "guides/fiat-onramp",
+        "guides/error-handling",
+        "guides/webhooks",
+        "guides/widget-integration"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": ["api-reference/overview"]
+    },
+    {
+      "group": "Swap",
+      "pages": [
+        "api-reference/chains",
+        "api-reference/tokens",
+        "api-reference/connections",
+        "api-reference/tools",
+        "api-reference/gas-prices",
+        "api-reference/quote",
+        "api-reference/routes",
+        "api-reference/status"
+      ]
+    },
+    {
+      "group": "Execute",
+      "pages": [
+        "api-reference/execute",
+        "api-reference/deposit-submit",
+        "api-reference/deposit-status"
+      ]
+    },
+    {
+      "group": "On-Ramp",
+      "pages": [
+        "api-reference/onramp-quote",
+        "api-reference/onramp-checkout",
+        "api-reference/onramp-status",
+        "api-reference/onramp-config",
+        "api-reference/onramp-assets"
+      ]
+    },
+    {
+      "group": "Partner",
+      "pages": [
+        "api-reference/partner-me",
+        "api-reference/partner-stats",
+        "api-reference/partner-transactions",
+        "api-reference/webhooks-create",
+        "api-reference/webhooks-list",
+        "api-reference/webhooks-delete",
+        "api-reference/swap-event"
+      ]
+    },
+    {
+      "group": "System",
+      "pages": ["api-reference/ping"]
+    },
+    {
+      "group": "SDKs",
+      "pages": ["sdks/overview", "sdks/typescript", "sdks/go", "sdks/rust"]
+    },
+    {
+      "group": "Resources",
+      "pages": [
+        "resources/chains",
+        "resources/error-codes",
+        "resources/changelog",
+        "resources/support"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "x": "https://x.com/hypermid",
+    "github": "https://github.com/Hypermid"
+  },
+  "api": {
+    "baseUrl": "https://api.hypermid.io",
+    "auth": {
+      "method": "key",
+      "name": "X-API-Key"
+    },
+    "playground": {
+      "mode": "simple"
+    }
+  },
+  "openapi": "https://api.hypermid.io/v1/openapi.json"
+}

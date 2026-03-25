@@ -1,0 +1,111 @@
+---
+title: "Get On-Ramp Status"
+api: "GET /v1/onramp/status"
+description: "Check the status of a fiat on-ramp order"
+---
+
+Returns the current status of a fiat-to-crypto on-ramp order.
+
+<ParamField query="orderUid" type="string" required>
+  The order UID returned from the checkout endpoint.
+</ParamField>
+
+<ResponseExample>
+```json 200 Completed
+{
+  "data": {
+    "orderUid": "ord_abc123def456",
+    "status": "COMPLETED",
+    "fiatCurrency": "USD",
+    "fiatAmount": 100,
+    "cryptoAsset": "ETH",
+    "cryptoAmount": "0.029615",
+    "chainId": 1,
+    "walletAddress": "0xYourAddress",
+    "txHash": "0xOnrampTxHash",
+    "paymentMethod": "credit_card",
+    "createdAt": 1711234578,
+    "completedAt": 1711234878
+  },
+  "error": null,
+  "meta": {
+    "requestId": "s9b0c1d2-e3f4-5678-2345-789012345678",
+    "timestamp": 1711234880,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1981,
+      "reset": 1711234927
+    }
+  }
+}
+```
+
+```json 200 Pending
+{
+  "data": {
+    "orderUid": "ord_abc123def456",
+    "status": "PAYMENT_RECEIVED",
+    "fiatCurrency": "USD",
+    "fiatAmount": 100,
+    "cryptoAsset": "ETH",
+    "cryptoAmount": null,
+    "chainId": 1,
+    "walletAddress": "0xYourAddress",
+    "txHash": null,
+    "paymentMethod": "credit_card",
+    "createdAt": 1711234578,
+    "completedAt": null
+  },
+  "error": null,
+  "meta": {
+    "requestId": "t0c1d2e3-f4a5-6789-3456-890123456789",
+    "timestamp": 1711234680,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1980,
+      "reset": 1711234727
+    }
+  }
+}
+```
+</ResponseExample>
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `CREATED` | Checkout session created, waiting for user action |
+| `PENDING` | Payment is being processed |
+| `PAYMENT_RECEIVED` | Fiat payment confirmed, crypto transfer in progress |
+| `CRYPTO_SENT` | Crypto transaction submitted to the blockchain |
+| `COMPLETED` | Order fully completed |
+| `FAILED` | Order failed |
+| `REFUNDED` | Payment was refunded |
+| `EXPIRED` | Checkout session expired |
+
+<CodeGroup>
+```typescript TypeScript
+const status = await client.getOnrampStatus({
+  orderUid: "ord_abc123def456",
+});
+
+console.log("Status:", status.data.status);
+
+if (status.data.status === "COMPLETED") {
+  console.log("Received:", status.data.cryptoAmount, status.data.cryptoAsset);
+  console.log("Tx:", status.data.txHash);
+}
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/onramp/status?orderUid=ord_abc123def456" \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/onramp/status?orderUid=ord_abc123def456", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

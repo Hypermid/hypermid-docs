@@ -1,0 +1,114 @@
+---
+title: "Get On-Ramp Quote"
+api: "POST /v1/onramp/quote"
+description: "Get a fiat-to-crypto conversion quote"
+---
+
+Returns a price quote for purchasing crypto with fiat currency, including exchange rate, fees, and estimated crypto amount.
+
+<ParamField body="fiatCurrency" type="string" required>
+  The fiat currency code (e.g., `USD`, `EUR`, `GBP`).
+</ParamField>
+
+<ParamField body="cryptoAsset" type="string" required>
+  The crypto asset symbol (e.g., `ETH`, `USDC`, `BTC`).
+</ParamField>
+
+<ParamField body="chainId" type="number" required>
+  The chain ID to receive crypto on (e.g., `1` for Ethereum).
+</ParamField>
+
+<ParamField body="fiatAmount" type="number" required>
+  The fiat amount to spend.
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Payment method: `credit_card`, `debit_card`, or `bank_transfer`.
+</ParamField>
+
+<ParamField body="walletAddress" type="string" required>
+  The wallet address to receive crypto.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "fiatCurrency": "USD",
+    "fiatAmount": 100,
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "cryptoAmount": "0.029615",
+    "exchangeRate": 3376.65,
+    "fees": {
+      "networkFee": 2.50,
+      "processingFee": 3.49,
+      "partnerFee": 0.30,
+      "totalFee": 6.29
+    },
+    "totalFiatAmount": 106.29,
+    "paymentMethod": "credit_card",
+    "expiresAt": 1711234877
+  },
+  "error": null,
+  "meta": {
+    "requestId": "q7f8a9b0-c1d2-3456-0123-567890123456",
+    "timestamp": 1711234577,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1983,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const quote = await client.getOnrampQuote({
+  fiatCurrency: "USD",
+  cryptoAsset: "ETH",
+  chainId: 1,
+  fiatAmount: 100,
+  paymentMethod: "credit_card",
+  walletAddress: "0xYourAddress",
+});
+
+console.log(`$100 USD = ${quote.data.cryptoAmount} ETH`);
+console.log(`Total charge: $${quote.data.totalFiatAmount}`);
+console.log(`Fees: $${quote.data.fees.totalFee}`);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/onramp/quote" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fiatCurrency": "USD",
+    "cryptoAsset": "ETH",
+    "chainId": 1,
+    "fiatAmount": 100,
+    "paymentMethod": "credit_card",
+    "walletAddress": "0xYourAddress"
+  }'
+```
+
+```go Go
+body := `{
+  "fiatCurrency": "USD",
+  "cryptoAsset": "ETH",
+  "chainId": 1,
+  "fiatAmount": 100,
+  "paymentMethod": "credit_card",
+  "walletAddress": "0xYourAddress"
+}`
+
+req, _ := http.NewRequest("POST",
+    "https://api.hypermid.io/v1/onramp/quote",
+    strings.NewReader(body))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

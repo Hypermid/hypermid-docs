@@ -1,0 +1,93 @@
+---
+title: "Get On-Ramp Assets"
+api: "GET /v1/onramp/assets"
+description: "List crypto assets available for fiat purchase"
+---
+
+Returns the list of crypto assets that can be purchased through the fiat on-ramp, along with minimum and maximum purchase amounts.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "assets": [
+      {
+        "symbol": "ETH",
+        "name": "Ethereum",
+        "chainId": 1,
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "logoURI": "https://assets.hypermid.io/tokens/eth.png",
+        "minAmountUSD": 20,
+        "maxAmountUSD": 10000
+      },
+      {
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "chainId": 1,
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "decimals": 6,
+        "logoURI": "https://assets.hypermid.io/tokens/usdc.png",
+        "minAmountUSD": 10,
+        "maxAmountUSD": 50000
+      },
+      {
+        "symbol": "ETH",
+        "name": "Ethereum",
+        "chainId": 42161,
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "logoURI": "https://assets.hypermid.io/tokens/eth.png",
+        "minAmountUSD": 20,
+        "maxAmountUSD": 10000
+      },
+      {
+        "symbol": "SOL",
+        "name": "Solana",
+        "chainId": 1151111081099710,
+        "address": "So11111111111111111111111111111111111111112",
+        "decimals": 9,
+        "logoURI": "https://assets.hypermid.io/tokens/sol.png",
+        "minAmountUSD": 10,
+        "maxAmountUSD": 10000
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "requestId": "v2e3f4a5-b6c7-8901-5678-012345678901",
+    "timestamp": 1711234580,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1978,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const assets = await client.getOnrampAssets();
+
+// Find ETH on Ethereum
+const ethOnMainnet = assets.data.assets.find(
+  (a) => a.symbol === "ETH" && a.chainId === 1
+);
+
+console.log(`ETH purchase range: $${ethOnMainnet.minAmountUSD} - $${ethOnMainnet.maxAmountUSD}`);
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/onramp/assets \
+  -H "X-API-Key: your-api-key"
+```
+
+```go Go
+req, _ := http.NewRequest("GET",
+    "https://api.hypermid.io/v1/onramp/assets", nil)
+req.Header.Set("X-API-Key", "your-api-key")
+resp, _ := http.DefaultClient.Do(req)
+```
+</CodeGroup>

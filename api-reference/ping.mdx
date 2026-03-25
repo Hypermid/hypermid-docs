@@ -1,0 +1,49 @@
+---
+title: "Ping"
+api: "GET /v1/ping"
+description: "Health check endpoint"
+---
+
+Simple health check endpoint to verify the API is operational. Does not require authentication.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "status": "ok",
+    "version": "1.0.0",
+    "timestamp": 1711234588
+  },
+  "error": null,
+  "meta": {
+    "requestId": "d0a1b2c3-d4e5-6789-3456-890123456789",
+    "timestamp": 1711234588,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1970,
+      "reset": 1711234627
+    }
+  }
+}
+```
+</ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const ping = await client.ping();
+console.log("API status:", ping.data.status);
+console.log("Version:", ping.data.version);
+```
+
+```bash cURL
+curl https://api.hypermid.io/v1/ping
+```
+
+```go Go
+resp, _ := http.Get("https://api.hypermid.io/v1/ping")
+```
+</CodeGroup>
+
+<Tip>
+  Use this endpoint for uptime monitoring. It does not count against your rate limit when called without an API key.
+</Tip>

@@ -1,0 +1,136 @@
+---
+title: "Authentication"
+sidebarTitle: "Authentication"
+description: "API keys, rate limits, and the HyperMid access model"
+---
+
+# Authentication
+
+HyperMid uses an **open access model** — you can start making API calls immediately without an API key. When you're ready for higher rate limits and custom fee tiers, register for a Partner API key.
+
+## Access Tiers
+
+| Feature | Anonymous | Partner |
+|---------|-----------|---------|
+| **Rate Limit** | 100 requests/min | 2,000 requests/min |
+| **Fee** | 30 bps (0.30%) | Custom (negotiable) |
+| **Dashboard** | No | Yes |
+| **Analytics** | No | Yes |
+| **Webhooks** | No | Yes |
+| **Priority Support** | No | Yes |
+
+## Anonymous Access
+
+No authentication is required. Simply make requests to the API without any headers:
+
+```bash
+curl https://api.hypermid.io/v1/chains
+```
+
+Anonymous access is subject to a 100 requests/minute rate limit and a fixed 30 basis point fee on all swaps.
+
+## Partner Access
+
+To use a Partner API key, include the `X-API-Key` header in every request:
+
+<CodeGroup>
+```bash cURL
+curl https://api.hypermid.io/v1/chains \
+  -H "X-API-Key: hm_live_abc123def456"
+```
+
+```typescript TypeScript
+import { HyperMid } from "@hypermid/sdk";
+
+const client = new HyperMid({
+  apiKey: "hm_live_abc123def456",
+});
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/chains", nil)
+req.Header.Set("X-API-Key", "hm_live_abc123def456")
+```
+</CodeGroup>
+
+### Getting an API Key
+
+<Steps>
+  <Step title="Sign Up">
+    Create an account at [app.hypermid.io](https://app.hypermid.io).
+  </Step>
+  <Step title="Create a Partner Project">
+    Navigate to Settings and create a new partner project.
+  </Step>
+  <Step title="Generate API Key">
+    Generate your API key from the project settings page. You'll receive a key in the format `hm_live_...`.
+  </Step>
+  <Step title="Use the Key">
+    Include the key in the `X-API-Key` header of every request.
+  </Step>
+</Steps>
+
+<Warning>
+  Keep your API key secret. Do not expose it in client-side code or public repositories. All API calls should be made from your backend server.
+</Warning>
+
+## Rate Limits
+
+Rate limit information is included in the `meta.rateLimit` object of every response:
+
+```json
+{
+  "data": { ... },
+  "error": null,
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1999,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `limit` | Maximum requests allowed per window |
+| `remaining` | Requests remaining in the current window |
+| `reset` | Unix timestamp when the window resets |
+
+### Rate Limit Exceeded
+
+When you exceed the rate limit, you'll receive a `429` response with the `RATE_LIMIT` error code:
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "RATE_LIMIT",
+    "message": "Rate limit exceeded. Try again in 30 seconds.",
+    "details": {}
+  },
+  "meta": {
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "timestamp": 1711234567,
+    "rateLimit": {
+      "limit": 100,
+      "remaining": 0,
+      "reset": 1711234627
+    }
+  }
+}
+```
+
+<Tip>
+  Implement exponential backoff when you receive a `429` response. Use the `meta.rateLimit.reset` timestamp to determine when you can resume requests.
+</Tip>
+
+## Security Best Practices
+
+1. **Server-side only** — Never include your API key in frontend JavaScript, mobile apps, or any client-side code.
+2. **Environment variables** — Store your API key in environment variables, not in source code.
+3. **Key rotation** — Rotate your keys periodically via the Partner Dashboard.
+4. **Monitor usage** — Check the dashboard regularly for unexpected usage patterns.
