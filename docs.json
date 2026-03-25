@@ -7,11 +7,7 @@
     "light": "#44E1AA",
     "dark": "#44E1AA"
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg",
-    "href": "https://hypermid.io"
-  },
+  "logo": "/logo/dark.svg",
   "favicon": "/favicon.svg",
   "appearance": {
     "default": "system"
