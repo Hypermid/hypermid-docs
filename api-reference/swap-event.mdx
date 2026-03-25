@@ -1,10 +1,10 @@
 ---
 title: "Submit Swap Event"
-api: "POST /v1/swap-event"
+openapi: "POST /v1/swap-event"
 description: "Submit a swap lifecycle event for tracking"
 ---
 
-Submits a swap lifecycle event to HyperMid for analytics and tracking purposes. Use this to report when users interact with your swap UI or when swap steps are completed.
+Submits a swap lifecycle event to Hypermid for analytics and tracking purposes. Use this to report when users interact with your swap UI or when swap steps are completed.
 
 <ParamField body="event" type="string" required>
   The event type. Possible values: `quote_requested`, `quote_received`, `swap_started`, `swap_signed`, `swap_completed`, `swap_failed`, `swap_cancelled`.
@@ -113,5 +113,5 @@ resp, _ := http.DefaultClient.Do(req)
 </CodeGroup>
 
 <Tip>
-  Submitting swap events improves your analytics in the Partner Dashboard and helps HyperMid optimize route selection for your users.
+  Submitting swap events improves your analytics in the Partner Dashboard and helps Hypermid optimize route selection for your users.
 </Tip>

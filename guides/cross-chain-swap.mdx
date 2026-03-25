@@ -6,11 +6,11 @@ description: "Complete guide to the swap lifecycle: quote, execute, and track"
 
 # Cross-Chain Swap Guide
 
-This guide covers the full lifecycle of a cross-chain swap through HyperMid: discovering chains and tokens, getting a quote, executing the swap, and tracking its status.
+This guide covers the full lifecycle of a cross-chain swap through Hypermid: discovering chains and tokens, getting a quote, executing the swap, and tracking its status.
 
 ## Overview
 
-A cross-chain swap moves tokens from one blockchain to another. HyperMid aggregates multiple providers (LI.FI for EVM/Solana bridges, Near Intents for intent-based transfers) and returns the best route automatically.
+A cross-chain swap moves tokens from one blockchain to another. Hypermid aggregates multiple providers (LI.FI for EVM/Solana bridges, Near Intents for intent-based transfers) and returns the best route automatically.
 
 ```
 ┌──────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
@@ -240,9 +240,9 @@ console.log("Deposit status:", depositStatus.data.status);
 Here's a full working example that handles both route types:
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
+const client = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 
 async function swap() {
   // 1. Get a quote

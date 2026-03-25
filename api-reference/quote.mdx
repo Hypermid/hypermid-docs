@@ -1,10 +1,10 @@
 ---
 title: "Get Quote"
-api: "GET /v1/quote"
+openapi: "GET /v1/quote"
 description: "Get the best swap quote for a token pair"
 ---
 
-Returns the best available quote for swapping tokens between chains. HyperMid compares routes across all available providers and returns the optimal one.
+Returns the best available quote for swapping tokens between chains. Hypermid compares routes across all available providers and returns the optimal one.
 
 <ParamField query="fromChain" type="number" required>
   Source chain ID (e.g., `1` for Ethereum).

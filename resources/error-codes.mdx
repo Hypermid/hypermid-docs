@@ -1,7 +1,7 @@
 ---
 title: "Error Codes"
 sidebarTitle: "Error Codes"
-description: "Complete reference of all HyperMid API error codes"
+description: "Complete reference of all Hypermid API error codes"
 ---
 
 # Error Codes
@@ -154,14 +154,14 @@ Every error response includes a machine-readable `code` field in the error objec
 ## Error Handling Example
 
 ```typescript
-import { HyperMid, HyperMidError } from "@hypermid/sdk";
+import { Hypermid, HypermidError } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: "your-api-key" });
+const client = new Hypermid({ apiKey: "your-api-key" });
 
 try {
   const quote = await client.getQuote({ ... });
 } catch (error) {
-  if (error instanceof HyperMidError) {
+  if (error instanceof HypermidError) {
     switch (error.code) {
       case "INVALID_PARAMS":
         // Fix the request

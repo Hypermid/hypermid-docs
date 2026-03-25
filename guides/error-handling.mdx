@@ -6,7 +6,7 @@ description: "All error codes and recommended handling strategies"
 
 # Error Handling
 
-HyperMid uses a consistent error format across all endpoints. This guide covers every error code and the recommended strategy for handling each one.
+Hypermid uses a consistent error format across all endpoints. This guide covers every error code and the recommended strategy for handling each one.
 
 ## Error Response Format
 
@@ -184,15 +184,15 @@ if (error.code === "SLIPPAGE_ERROR") {
 Here's a production-ready error handler that covers all cases:
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-interface HyperMidResponse<T> {
+interface HypermidResponse<T> {
   data: T | null;
   error: { code: string; message: string; details: any } | null;
   meta: { requestId: string; rateLimit: { reset: number } };
 }
 
-async function handleResponse<T>(response: HyperMidResponse<T>): Promise<T> {
+async function handleResponse<T>(response: HypermidResponse<T>): Promise<T> {
   if (!response.error) {
     return response.data!;
   }

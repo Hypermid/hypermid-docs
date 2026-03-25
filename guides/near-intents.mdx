@@ -6,7 +6,7 @@ description: "Intent-based cross-chain transfers for NEAR, TON, Tron, XRP, and m
 
 # Near Intents
 
-Near Intents is HyperMid's intent-based transfer system that enables swaps involving non-EVM chains like NEAR, TON, Tron, XRP, Dogecoin, Litecoin, and others. Unlike traditional bridge transactions that require on-chain smart contract calls, Near Intents uses a deposit-based model where users send tokens to a temporary deposit address.
+Near Intents is Hypermid's intent-based transfer system that enables swaps involving non-EVM chains like NEAR, TON, Tron, XRP, Dogecoin, Litecoin, and others. Unlike traditional bridge transactions that require on-chain smart contract calls, Near Intents uses a deposit-based model where users send tokens to a temporary deposit address.
 
 ## Supported Chains
 
@@ -116,7 +116,7 @@ console.log("Deposit address:", exec.data.depositAddress);
 
 ## Auto-Detection
 
-By default, HyperMid automatically determines the deposit mode based on the source chain:
+By default, Hypermid automatically determines the deposit mode based on the source chain:
 
 - **EVM, Solana, Bitcoin, TON, Tron** — defaults to `wallet`
 - **NEAR, XRP, DOGE, LTC, BCH, Stellar, Cardano, Aptos, StarkNet, Dash, Zcash, Aleo, ADI** — always `manual`
@@ -130,7 +130,7 @@ console.log("Deposit mode:", exec.data.depositMode);
 
 ## Submitting a Manual Deposit
 
-After the user sends tokens manually, you should notify HyperMid that the deposit has been made:
+After the user sends tokens manually, you should notify Hypermid that the deposit has been made:
 
 ```typescript
 const submitResult = await client.submitDeposit({
@@ -192,9 +192,9 @@ curl "https://api.hypermid.io/v1/execute/deposit/status?depositId=dep_abc123" \
 ## Complete Example: XRP to USDC on Arbitrum
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
+const client = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 
 async function xrpToUsdc() {
   // 1. Get a quote

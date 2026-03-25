@@ -6,7 +6,7 @@ description: "Standard response envelope, error codes, and pagination"
 
 # Response Format
 
-Every HyperMid API response uses a consistent envelope format. This makes it straightforward to handle responses, errors, and metadata across all endpoints.
+Every Hypermid API response uses a consistent envelope format. This makes it straightforward to handle responses, errors, and metadata across all endpoints.
 
 ## Response Envelope
 
@@ -134,9 +134,9 @@ For detailed error handling strategies, see the [Error Handling Guide](/guides/e
 
 <CodeGroup>
 ```typescript TypeScript
-import { HyperMid, HyperMidError } from "@hypermid/sdk";
+import { Hypermid, HypermidError } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: "your-api-key" });
+const client = new Hypermid({ apiKey: "your-api-key" });
 
 try {
   const response = await client.getQuote({
@@ -157,7 +157,7 @@ try {
   console.log("Request ID:", response.meta.requestId);
   console.log("Rate limit remaining:", response.meta.rateLimit.remaining);
 } catch (err) {
-  if (err instanceof HyperMidError) {
+  if (err instanceof HypermidError) {
     console.error("API Error:", err.code, err.message);
   }
   throw err;
@@ -223,7 +223,7 @@ func main() {
 
 ## HTTP Status Codes
 
-HyperMid uses standard HTTP status codes alongside the `error.code` field:
+Hypermid uses standard HTTP status codes alongside the `error.code` field:
 
 | Status | Meaning |
 |--------|---------|

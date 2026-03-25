@@ -1,12 +1,12 @@
 ---
 title: "TypeScript SDK"
 sidebarTitle: "TypeScript"
-description: "Full-featured TypeScript SDK for the HyperMid API"
+description: "Full-featured TypeScript SDK for the Hypermid API"
 ---
 
 # TypeScript SDK
 
-The official TypeScript SDK provides a fully typed, promise-based client for the HyperMid API. It works in both Node.js (18+) and modern browser environments.
+The official TypeScript SDK provides a fully typed, promise-based client for the Hypermid API. It works in both Node.js (18+) and modern browser environments.
 
 ## Installation
 
@@ -27,9 +27,9 @@ yarn add @hypermid/sdk
 ## Configuration
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-const client = new HyperMid({
+const client = new Hypermid({
   apiKey: "hm_live_abc123def456",     // Optional: omit for anonymous access
   baseUrl: "https://api.hypermid.io", // Optional: default
   timeout: 30000,                      // Optional: request timeout in ms (default: 30s)
@@ -224,9 +224,9 @@ if (isNearIntentsExecution(exec.data)) {
 The SDK provides a high-level `executeSwap` helper that manages the full lifecycle:
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: "your-api-key" });
+const client = new Hypermid({ apiKey: "your-api-key" });
 
 const result = await client.executeSwap({
   fromChain: 1,
@@ -257,12 +257,12 @@ The `executeSwap` method handles:
 ## Error Handling
 
 ```typescript
-import { HyperMid, HyperMidError, isRateLimitError } from "@hypermid/sdk";
+import { Hypermid, HypermidError, isRateLimitError } from "@hypermid/sdk";
 
 try {
   const quote = await client.getQuote({ ... });
 } catch (error) {
-  if (error instanceof HyperMidError) {
+  if (error instanceof HypermidError) {
     console.error("API Error:", error.code, error.message);
     console.error("Request ID:", error.requestId);
 
@@ -287,6 +287,6 @@ import type {
   Chain,
   Token,
   Route,
-  HyperMidConfig,
+  HypermidConfig,
 } from "@hypermid/sdk";
 ```

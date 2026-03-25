@@ -6,7 +6,7 @@ description: "Enable users to buy crypto with fiat currency via RampNow"
 
 # Fiat On-Ramp Guide
 
-HyperMid integrates with RampNow to provide a fiat-to-crypto on-ramp. Users can purchase crypto using credit cards, debit cards, and bank transfers, and receive tokens directly on their preferred blockchain.
+Hypermid integrates with RampNow to provide a fiat-to-crypto on-ramp. Users can purchase crypto using credit cards, debit cards, and bank transfers, and receive tokens directly on their preferred blockchain.
 
 ## Flow Overview
 
@@ -194,9 +194,9 @@ curl "https://api.hypermid.io/v1/onramp/status?orderUid=ord_abc123" \
 ## Complete Example
 
 ```typescript
-import { HyperMid } from "@hypermid/sdk";
+import { Hypermid } from "@hypermid/sdk";
 
-const client = new HyperMid({ apiKey: process.env.HYPERMID_API_KEY });
+const client = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 
 async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
   // 1. Check available assets

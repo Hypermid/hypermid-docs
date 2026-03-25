@@ -96,7 +96,7 @@ Each webhook delivery includes a JSON payload with the event details:
 
 ## Signature Verification
 
-Every webhook request includes a `X-HyperMid-Signature` header containing an HMAC-SHA256 signature of the request body, signed with your webhook secret.
+Every webhook request includes a `X-Hypermid-Signature` header containing an HMAC-SHA256 signature of the request body, signed with your webhook secret.
 
 <CodeGroup>
 ```typescript TypeScript (Express)
@@ -171,7 +171,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    signature := r.Header.Get("X-HyperMid-Signature")
+    signature := r.Header.Get("X-Hypermid-Signature")
 
     mac := hmac.New(sha256.New, []byte(webhookSecret))
     mac.Write(body)
@@ -225,7 +225,7 @@ curl -X DELETE "https://api.hypermid.io/v1/partner/webhooks/whk_abc123" \
 
 3. **Use HTTPS** — Webhook URLs must use HTTPS for security.
 
-4. **Implement retry logic** — If your endpoint returns a non-2xx status, HyperMid will retry the delivery with exponential backoff.
+4. **Implement retry logic** — If your endpoint returns a non-2xx status, Hypermid will retry the delivery with exponential backoff.
 
 5. **Log everything** — Store the raw webhook payload for debugging purposes.
 

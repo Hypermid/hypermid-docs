@@ -1,7 +1,7 @@
 ---
 title: "Rust SDK"
 sidebarTitle: "Rust"
-description: "Rust SDK for high-performance HyperMid integrations"
+description: "Rust SDK for high-performance Hypermid integrations"
 ---
 
 # Rust SDK
@@ -23,11 +23,11 @@ tokio = { version = "1", features = ["full"] }
 ## Planned Usage
 
 ```rust
-use hypermid_sdk::{HyperMid, QuoteRequest};
+use hypermid_sdk::{Hypermid, QuoteRequest};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HyperMid::builder()
+    let client = Hypermid::builder()
         .api_key("hm_live_abc123def456")
         .timeout(std::time::Duration::from_secs(30))
         .build()?;
