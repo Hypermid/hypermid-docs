@@ -4,7 +4,97 @@ sidebarTitle: "Playground"
 description: "Customize, preview, and configure the Hypermid widget with live controls"
 ---
 
-import { WidgetConfigurator } from "/snippets/WidgetConfigurator.jsx";
+import { useState, useEffect } from "react";
+
+export const WidgetConfiguratorSimple = () => {
+  const [chains, setChains] = useState([]);
+  const [fromChainId, setFromChainId] = useState("8453");
+  const [toChainId, setToChainId] = useState("42161");
+  const [fromTokens, setFromTokens] = useState([]);
+  const [toTokens, setToTokens] = useState([]);
+  const [fromToken, setFromToken] = useState("");
+  const [toToken, setToToken] = useState("");
+  const [fromSearch, setFromSearch] = useState("");
+  const [toSearch, setToSearch] = useState("");
+  const [tab, setTab] = useState("iframe");
+  const [copied, setCopied] = useState(null);
+
+  useEffect(() => {
+    fetch("https://li.quest/v1/chains?chainTypes=EVM,SVM,UTXO,MVM")
+      .then(r => r.json())
+      .then(data => {
+        const list = (data.chains || []).map(c => ({ id: c.id, name: c.name, coin: c.coin || "" }));
+        setChains(list);
+      }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!fromChainId) return;
+    setFromToken("");
+    fetch("https://li.quest/v1/tokens?chains=" + fromChainId)
+      .then(r => r.json())
+      .then(data => setFromTokens((data.tokens?.[fromChainId] || []).map(t => ({ address: t.address, symbol: t.symbol, name: t.name }))))
+      .catch(() => setFromTokens([]));
+  }, [fromChainId]);
+
+  useEffect(() => {
+    if (!toChainId) return;
+    setToToken("");
+    fetch("https://li.quest/v1/tokens?chains=" + toChainId)
+      .then(r => r.json())
+      .then(data => setToTokens((data.tokens?.[toChainId] || []).map(t => ({ address: t.address, symbol: t.symbol, name: t.name }))))
+      .catch(() => setToTokens([]));
+  }, [toChainId]);
+
+  const filteredFrom = fromSearch ? fromTokens.filter(t => t.symbol.toLowerCase().includes(fromSearch.toLowerCase())).slice(0, 30) : fromTokens.slice(0, 30);
+  const filteredTo = toSearch ? toTokens.filter(t => t.symbol.toLowerCase().includes(toSearch.toLowerCase())).slice(0, 30) : toTokens.slice(0, 30);
+
+  const fromChain = chains.find(c => String(c.id) === fromChainId);
+  const toChain = chains.find(c => String(c.id) === toChainId);
+
+  const code = tab === "iframe"
+    ? '<iframe\n  src="https://www.hypermid.io/widget?embed=1&theme=dark&fromChain=' + fromChainId + '&toChain=' + toChainId + (fromToken ? '&fromToken=' + fromToken : '') + (toToken ? '&toToken=' + toToken : '') + '"\n  width="470" height="700" frameborder="0"\n  allow="clipboard-write; payment; web-share"\n  style="border: none; border-radius: 16px;"\n></iframe>'
+    : '<div id="hypermid-widget"></div>\n\n<script src="https://widget.hypermid.io/v1/embed.js"></script>\n<script>\n  HypermidWidget.init({\n    containerId: "hypermid-widget",\n    theme: "dark",\n    defaultFromChain: ' + fromChainId + ',\n    defaultToChain: ' + toChainId + (fromToken ? ',\n    defaultFromToken: "' + fromToken + '"' : '') + (toToken ? ',\n    defaultToToken: "' + toToken + '"' : '') + '\n  });\n</script>';
+
+  const copyCode = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(null), 2000); };
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="font-semibold mb-2">From Chain</p>
+          <select value={fromChainId} onChange={e => setFromChainId(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600">
+            {chains.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+          </select>
+          <p className="font-semibold mt-3 mb-1">From Token</p>
+          <input type="text" placeholder="Search tokens..." value={fromSearch} onChange={e => setFromSearch(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600 mb-1" />
+          <select value={fromToken} onChange={e => setFromToken(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600" size={5}>
+            <option value="">Native (default)</option>
+            {filteredFrom.map(t => <option key={t.address} value={t.address}>{t.symbol} — {t.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <p className="font-semibold mb-2">To Chain</p>
+          <select value={toChainId} onChange={e => setToChainId(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600">
+            {chains.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+          </select>
+          <p className="font-semibold mt-3 mb-1">To Token</p>
+          <input type="text" placeholder="Search tokens..." value={toSearch} onChange={e => setToSearch(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600 mb-1" />
+          <select value={toToken} onChange={e => setToToken(e.target.value)} className="w-full p-2 rounded border dark:bg-gray-800 dark:border-gray-600" size={5}>
+            <option value="">Native (default)</option>
+            {filteredTo.map(t => <option key={t.address} value={t.address}>{t.symbol} — {t.name}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="flex gap-2 items-center mt-4">
+        <button onClick={() => setTab("iframe")} className={"px-3 py-1 rounded text-sm " + (tab === "iframe" ? "bg-green-500 text-black font-semibold" : "bg-gray-200 dark:bg-gray-700")}>Iframe</button>
+        <button onClick={() => setTab("script")} className={"px-3 py-1 rounded text-sm " + (tab === "script" ? "bg-green-500 text-black font-semibold" : "bg-gray-200 dark:bg-gray-700")}>Script Tag</button>
+        <button onClick={copyCode} className="ml-auto px-3 py-1 rounded text-sm bg-gray-200 dark:bg-gray-700">{copied ? "Copied!" : "Copy"}</button>
+      </div>
+      <pre className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm overflow-auto whitespace-pre-wrap">{code}</pre>
+    </div>
+  );
+};
 
 Use the interactive playground below to customize the widget's appearance — colors, fonts, border radius, modes, chains, and layout. Once you're happy with the result, copy the embed code.
 
@@ -48,7 +138,7 @@ Use the interactive playground below to customize the widget's appearance — co
 
 Browse all supported chains and tokens, select your desired from/to preset, then copy the generated embed code.
 
-<WidgetConfigurator />
+<WidgetConfiguratorSimple />
 
 ## Embed Code Formats
 
