@@ -1,12 +1,25 @@
 ---
 title: "Widget Integration"
 sidebarTitle: "Widget Integration"
-description: "Embed the Hypermid swap app as a widget in your website"
+description: "Embed the Hypermid swap, bridge & on-ramp widget in your website"
 ---
 
-The Hypermid Widget embeds the full Hypermid swap experience into any website. It uses the same app your users already know — loaded as an iframe with a lightweight embed script.
+The Hypermid Widget embeds the full Hypermid experience into any website — **swap**, **bridge**, **gas refuel**, and **buy crypto with card**. It uses the same production app at `hypermid.io`, loaded as an iframe.
 
-No separate UI to maintain. Always up to date. One script tag.
+<Info>
+  The widget includes **full wallet connection** (550+ wallets via Reown/WalletConnect) supporting EVM, Solana, Bitcoin, TON, TRON, and SUI — no additional setup needed.
+</Info>
+
+## Features
+
+- **Cross-chain swap & bridge** — 90+ chains, best route comparison
+- **On-ramp** — Buy crypto with card via RampNow (USD, EUR, GBP, and more)
+- **Gas refuel** — Top up gas on any chain
+- **Wallet connection** — MetaMask, WalletConnect, Coinbase, Trust Wallet, Binance, and 550+ more
+- **Full theme customization** — Colors, borders, radius, fonts, shadows
+- **Event callbacks** — Quote, execute, status, error events via postMessage
+- **Auto-resize** — Iframe height adjusts to content
+- **Mode toggle** — Users can switch between Swap, Gas, and Fund modes
 
 ## Quick Start
 
@@ -29,7 +42,7 @@ No separate UI to maintain. Always up to date. One script tag.
 
 ### Data Attribute (Zero JS)
 
-For even simpler integration, use data attributes — no JavaScript needed:
+For even simpler integration — no JavaScript needed:
 
 ```html
 <div
@@ -52,35 +65,124 @@ If you prefer full control, embed the iframe directly:
 <iframe
   src="https://hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
   width="420"
-  height="600"
+  height="700"
   frameborder="0"
   allow="clipboard-write; payment; web-share"
-  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
   style="border: none; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.15);"
 ></iframe>
 ```
 
+<Warning>
+  Do NOT add the `sandbox` attribute to the iframe — it will break wallet connections.
+</Warning>
+
 ## Configuration Options
+
+### Display
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `containerId` | `string` | **required** | DOM element ID to mount into |
 | `partnerId` | `string` | — | Your partner ID for fee tracking |
 | `theme` | `"dark" \| "light"` | `"dark"` | Widget color theme |
+| `mode` | `"swap" \| "gas" \| "fund"` | `"swap"` | Initial active mode |
+| `width` | `string` | `"420px"` | Widget width |
+| `height` | `string` | `"700px"` | Widget height |
+| `hideOnramp` | `boolean` | `false` | Hide the mode toggle (swap/gas/fund) |
+| `hidePoweredBy` | `boolean` | `false` | Hide "Powered by Hypermid" |
+
+### Presets
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `defaultFromChain` | `number` | `1` | Default source chain ID |
 | `defaultToChain` | `number` | — | Default destination chain ID |
 | `defaultFromToken` | `string` | — | Default source token address |
 | `defaultToToken` | `string` | — | Default destination token address |
 | `defaultFromAmount` | `string` | — | Default input amount |
-| `accentColor` | `string` | — | Accent color hex (e.g. `"#44E1AA"`) |
-| `width` | `string` | `"420px"` | Widget width |
-| `height` | `string` | `"600px"` | Widget height |
-| `borderRadius` | `string` | `"16px"` | Border radius |
-| `hideOnramp` | `boolean` | `false` | Hide "Buy with card" button |
-| `hidePoweredBy` | `boolean` | `false` | Hide "Powered by Hypermid" |
-| `lockFromChain` | `boolean` | `false` | Prevent changing source chain |
-| `lockToChain` | `boolean` | `false` | Prevent changing destination chain |
 | `walletAddress` | `string` | — | Pre-fill wallet address |
+| `lockFromChain` | `boolean` | `false` | Lock source chain selector |
+| `lockToChain` | `boolean` | `false` | Lock destination chain selector |
+
+### Theme Customization
+
+Override any visual aspect of the widget to match your brand:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `accentColor` | `string` | `"#44E1AA"` | CTA button & highlight color |
+| `accentHoverColor` | `string` | — | Accent hover state color |
+| `bgPrimary` | `string` | — | Page background color |
+| `bgCard` | `string` | — | Card background color |
+| `bgCardInner` | `string` | — | Inner card / token area background |
+| `bgInput` | `string` | — | Input field background |
+| `textPrimary` | `string` | — | Primary text color |
+| `textSecondary` | `string` | — | Secondary text color |
+| `borderColor` | `string` | — | Border color (format: `"hex:opacity"` e.g. `"6C63FF:15"`) |
+| `borderRadius` | `number` | `16` | Card corner radius in px |
+| `buttonRadius` | `number` | `12` | Button corner radius in px |
+| `fontFamily` | `string` | `"Sora"` | Font family name |
+| `shadow` | `string` | — | Card shadow CSS value (or `"none"`) |
+
+**Example — fully branded widget:**
+
+```javascript
+HypermidWidget.init({
+  containerId: "swap",
+  partnerId: "trust-wallet",
+  theme: "dark",
+  defaultFromChain: 1,
+  defaultToChain: 42161,
+  // Brand customization
+  accentColor: "#FF6B35",
+  bgPrimary: "#1A1A2E",
+  bgCard: "#252540",
+  borderRadius: 20,
+  buttonRadius: 8,
+  fontFamily: "Inter",
+});
+```
+
+## Wallet Connection
+
+The widget includes **built-in wallet connection** via Reown AppKit — the same wallet infrastructure used by the main Hypermid app. No additional configuration needed.
+
+**Supported wallet ecosystems:**
+
+| Ecosystem | Wallets |
+|-----------|---------|
+| **EVM** | MetaMask, WalletConnect QR, Coinbase, Trust Wallet, Binance, SafePal, Rainbow, and 500+ more |
+| **Solana** | Phantom, Solflare, Backpack |
+| **Bitcoin** | Xverse, Leather, UniSat |
+| **TON** | Tonkeeper, MyTonWallet |
+| **TRON** | TronLink |
+| **SUI** | Sui Wallet |
+
+When users click **"Connect Wallet"**, a modal appears with all supported wallets for the selected chain ecosystem. After connecting, the widget displays token balances and enables transaction signing.
+
+## On-Ramp (Buy Crypto)
+
+The widget includes a built-in **"Buy Crypto"** tab powered by RampNow. Users can purchase crypto with their credit/debit card directly within the widget.
+
+**To open the widget in on-ramp mode by default:**
+
+```javascript
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  partnerId: "your-partner-id",
+  mode: "fund",  // Opens Buy Crypto tab
+});
+```
+
+The on-ramp supports:
+- **Fiat currencies**: USD, EUR, GBP, and more
+- **Crypto tokens**: ETH, USDC, USDT, BTC, and 50+ tokens
+- **Payment methods**: Credit card, debit card, Apple Pay, Google Pay
+- **KYC**: Handled by RampNow within the flow
+
+<Tip>
+  To hide the mode toggle and show only the swap UI, set `hideOnramp: true`. This removes the swap/gas/fund toggle at the top.
+</Tip>
 
 ## Event Callbacks
 
@@ -121,7 +223,7 @@ Events are communicated via `window.postMessage` from the iframe. The embed scri
 
 ## Programmatic Control
 
-After initialization, you can update the widget or control it programmatically:
+After initialization, control the widget dynamically:
 
 ```javascript
 // Update configuration (rebuilds iframe)
@@ -136,6 +238,15 @@ HypermidWidget.setSwap({
   toChain: 137,
   fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   fromAmount: "100",
+});
+
+// Change theme at runtime
+HypermidWidget.postMessage("setTheme", { theme: "light" });
+
+// Override CSS variables at runtime
+HypermidWidget.postMessage("setStyle", {
+  "--bg-card": "#1a1a2e",
+  "--accent-cyan": "#ff6b35",
 });
 
 // Remove the widget
@@ -158,8 +269,10 @@ declare global {
 interface HypermidWidgetProps {
   partnerId?: string;
   theme?: "dark" | "light";
+  mode?: "swap" | "gas" | "fund";
   defaultFromChain?: number;
   defaultToChain?: number;
+  accentColor?: string;
   onSwapComplete?: (result: any) => void;
   onError?: (error: any) => void;
 }
@@ -168,7 +281,6 @@ export function HypermidWidget(props: HypermidWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load embed script
     const script = document.createElement("script");
     script.src = "https://widget.hypermid.io/v1/embed.js";
     script.onload = () => {
@@ -176,8 +288,10 @@ export function HypermidWidget(props: HypermidWidgetProps) {
         containerId: "hypermid-react-widget",
         partnerId: props.partnerId,
         theme: props.theme || "dark",
+        mode: props.mode || "swap",
         defaultFromChain: props.defaultFromChain,
         defaultToChain: props.defaultToChain,
+        accentColor: props.accentColor,
         onExecute: props.onSwapComplete,
         onError: props.onError,
       });
@@ -192,15 +306,20 @@ export function HypermidWidget(props: HypermidWidgetProps) {
 
   return <div id="hypermid-react-widget" ref={containerRef} />;
 }
+```
 
-// Usage:
-// <HypermidWidget
-//   partnerId="your-partner-id"
-//   theme="dark"
-//   defaultFromChain={1}
-//   defaultToChain={42161}
-//   onSwapComplete={(result) => console.log("Done!", result)}
-// />
+**Usage:**
+
+```tsx
+<HypermidWidget
+  partnerId="your-partner-id"
+  theme="dark"
+  mode="swap"
+  defaultFromChain={1}
+  defaultToChain={42161}
+  accentColor="#FF6B35"
+  onSwapComplete={(result) => console.log("Done!", result)}
+/>
 ```
 
 ## Supported Chains
@@ -208,13 +327,17 @@ export function HypermidWidget(props: HypermidWidgetProps) {
 The widget supports all chains available in the Hypermid app:
 
 - **EVM**: Ethereum, Arbitrum, Base, Polygon, Optimism, BSC, Avalanche, and 50+ more
-- **Non-EVM**: Solana, Bitcoin, TON, TRON, NEAR, XRP, Dogecoin, and more
-- **On-ramp**: Buy crypto with card directly in the widget
+- **Non-EVM**: Solana, Bitcoin, TON, TRON, NEAR, XRP, Dogecoin, Litecoin, and more
+- **On-ramp**: Buy crypto with card on any supported chain
+
+See [Chain Support](/resources/chains) for the full list.
 
 ## Best Practices
 
 1. **Set default chains** — Pre-select the most common pair for your users to reduce friction
-2. **Use partnerId** — Ensures fee tracking and higher rate limits for your integration
+2. **Use `partnerId`** — Ensures fee tracking and higher rate limits for your integration
 3. **Handle callbacks** — Implement `onExecute` and `onError` to update your app state
-4. **Test dimensions** — The widget is responsive but test at your specific container size
-5. **Lock chains if needed** — Use `lockFromChain`/`lockToChain` for focused use cases (e.g., always bridge to your chain)
+4. **Don't use `sandbox`** — The iframe `sandbox` attribute breaks wallet connections
+5. **Set `height: 700px`** — The widget needs at least 700px height for the on-ramp form
+6. **Lock chains if needed** — Use `lockFromChain`/`lockToChain` for focused use cases
+7. **Test in incognito** — Your existing Hypermid session may auto-connect the wallet
