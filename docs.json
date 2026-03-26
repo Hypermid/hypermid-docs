@@ -120,14 +120,25 @@
         ]
       },
       {
+        "tab": "Widget",
+        "icon": "browser",
+        "groups": [
+          {
+            "group": "Widget",
+            "pages": [
+              "widget/overview",
+              "widget/playground",
+              "widget/configuration",
+              "widget/events",
+              "widget/react"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "SDKs",
         "icon": "code",
         "pages": ["sdks/overview", "sdks/typescript", "sdks/go", "sdks/rust"]
-      },
-      {
-        "tab": "GitHub",
-        "icon": "github",
-        "href": "https://github.com/Hypermid"
       }
     ]
   },

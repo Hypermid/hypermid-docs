@@ -1,0 +1,180 @@
+---
+title: "Events & Control"
+sidebarTitle: "Events & Control"
+description: "Listen for widget events and control the widget programmatically"
+---
+
+## Event Callbacks
+
+Listen for events from the widget by passing callback functions to `HypermidWidget.init()`:
+
+```javascript
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  partnerId: "your-partner-id",
+
+  onReady: function () {
+    console.log("Widget loaded and ready");
+  },
+
+  onQuote: function (quote) {
+    console.log("Quote received:", quote);
+    // { fromToken, toToken, fromAmount, toAmount, provider, fee }
+  },
+
+  onExecute: function (result) {
+    console.log("Swap executed:", result);
+    // { txHash, provider, fromChain, toChain, status }
+  },
+
+  onStatusChange: function (status) {
+    console.log("Status update:", status);
+    // { status: "PENDING" | "PROCESSING" | "DONE" | "FAILED", txHash }
+  },
+
+  onError: function (error) {
+    console.error("Widget error:", error);
+    // { code, message }
+  },
+});
+```
+
+### Event Reference
+
+| Event | Callback | Payload | Description |
+|-------|----------|---------|-------------|
+| `ready` | `onReady` | — | Widget iframe has loaded and is interactive |
+| `quote` | `onQuote` | `{ fromToken, toToken, fromAmount, toAmount, provider, fee }` | A swap quote has been received |
+| `execute` | `onExecute` | `{ txHash, provider, fromChain, toChain, status }` | A swap transaction has been submitted |
+| `status` | `onStatusChange` | `{ status, txHash }` | Transaction status has changed |
+| `error` | `onError` | `{ code, message }` | An error occurred |
+| `resize` | — | `{ height }` | Widget content height changed (auto-handled) |
+
+### Status Values
+
+The `onStatusChange` callback receives these status values:
+
+| Status | Description |
+|--------|-------------|
+| `PENDING` | Transaction submitted, waiting for confirmation |
+| `PROCESSING` | Transaction confirmed on source chain, bridging in progress |
+| `DONE` | Transaction completed successfully |
+| `FAILED` | Transaction failed |
+
+Events are communicated via `window.postMessage` from the iframe. The embed script handles the plumbing automatically.
+
+## Programmatic Control
+
+After initialization, control the widget dynamically:
+
+### Update Configuration
+
+Rebuild the widget with new settings:
+
+```javascript
+HypermidWidget.update({
+  theme: "light",
+  defaultFromChain: 42161,
+});
+```
+
+<Warning>
+  `update()` rebuilds the iframe URL — this reloads the widget. For runtime changes without reload, use `postMessage`.
+</Warning>
+
+### Set Swap Parameters
+
+Change the swap pair and amount without reloading:
+
+```javascript
+HypermidWidget.setSwap({
+  fromChain: 1,
+  toChain: 137,
+  fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  fromAmount: "100",
+});
+```
+
+### Change Theme at Runtime
+
+```javascript
+HypermidWidget.postMessage("setTheme", { theme: "light" });
+```
+
+### Override CSS Variables at Runtime
+
+```javascript
+HypermidWidget.postMessage("setStyle", {
+  "--bg-card": "#1a1a2e",
+  "--accent-cyan": "#ff6b35",
+  "--text-primary": "#ffffff",
+});
+```
+
+### Destroy the Widget
+
+Remove the widget from the DOM and clean up:
+
+```javascript
+HypermidWidget.destroy();
+```
+
+## Direct postMessage API
+
+If you're using the direct iframe embed (without `embed.js`), you can send messages directly:
+
+```javascript
+const iframe = document.getElementById("hypermid-widget-iframe");
+
+// Set swap parameters
+iframe.contentWindow.postMessage({
+  type: "hypermid:setSwap",
+  payload: {
+    fromChain: 1,
+    toChain: 42161,
+    fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  }
+}, "https://www.hypermid.io");
+
+// Change theme
+iframe.contentWindow.postMessage({
+  type: "hypermid:setTheme",
+  payload: { theme: "light" }
+}, "https://www.hypermid.io");
+```
+
+### Listening for Events (Direct Iframe)
+
+```javascript
+window.addEventListener("message", function (event) {
+  // Only accept messages from Hypermid
+  if (event.origin !== "https://www.hypermid.io") return;
+
+  const { type, payload } = event.data;
+  if (!type || !type.startsWith("hypermid:")) return;
+
+  const eventName = type.replace("hypermid:", "");
+
+  switch (eventName) {
+    case "ready":
+      console.log("Widget ready");
+      break;
+    case "quote":
+      console.log("Quote:", payload);
+      break;
+    case "execute":
+      console.log("Swap executed:", payload);
+      break;
+    case "status":
+      console.log("Status update:", payload);
+      break;
+    case "error":
+      console.error("Error:", payload);
+      break;
+    case "resize":
+      // Auto-resize iframe
+      iframe.style.height = payload.height + "px";
+      break;
+  }
+});
+```

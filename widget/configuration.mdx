@@ -1,0 +1,168 @@
+---
+title: "Configuration"
+sidebarTitle: "Configuration"
+description: "Full reference for all widget configuration options"
+---
+
+## Display Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `containerId` | `string` | **required** | DOM element ID to mount into |
+| `partnerId` | `string` | — | Your partner ID for fee tracking |
+| `theme` | `"dark" \| "light"` | `"dark"` | Widget color theme |
+| `mode` | `"swap" \| "gas" \| "fund"` | `"swap"` | Initial active mode |
+| `modes` | `string` | `"swap,gas,fund"` | Comma-separated list of enabled modes |
+| `width` | `string` | `"420px"` | Widget width |
+| `height` | `string` | `"700px"` | Widget height |
+| `hideOnramp` | `boolean` | `false` | Hide the mode toggle (swap/gas/fund) |
+| `hidePoweredBy` | `boolean` | `false` | Hide "Powered by Hypermid" |
+
+### Mode Control
+
+You can control which modes are available in the widget using the `modes` parameter:
+
+```javascript
+// Show only Swap and Buy Crypto (hide Gas)
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  modes: "swap,fund",
+  mode: "swap",
+});
+```
+
+```javascript
+// Show only Swap (no mode toggle shown)
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  modes: "swap",
+});
+```
+
+When only one mode is enabled, the mode toggle is automatically hidden.
+
+## Chain & Token Presets
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `defaultFromChain` | `number` | `1` | Default source chain ID |
+| `defaultToChain` | `number` | — | Default destination chain ID |
+| `defaultFromToken` | `string` | — | Default source token address |
+| `defaultToToken` | `string` | — | Default destination token address |
+| `defaultFromAmount` | `string` | — | Default input amount |
+| `walletAddress` | `string` | — | Pre-fill wallet address |
+| `lockFromChain` | `boolean` | `false` | Lock source chain selector |
+| `lockToChain` | `boolean` | `false` | Lock destination chain selector |
+
+### Common Chain IDs
+
+| Chain | Chain ID |
+|-------|----------|
+| Ethereum | `1` |
+| Arbitrum | `42161` |
+| Base | `8453` |
+| Polygon | `137` |
+| Optimism | `10` |
+| BNB Chain | `56` |
+| Avalanche | `43114` |
+| zkSync Era | `324` |
+| Linea | `59144` |
+| Scroll | `534352` |
+| Solana | `1151111081099710` |
+
+**Example — locked ETH to USDC on Arbitrum:**
+
+```javascript
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  defaultFromChain: 1,
+  defaultToChain: 42161,
+  defaultFromToken: "0x0000000000000000000000000000000000000000", // ETH
+  defaultToToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",  // USDC on Arbitrum
+  lockFromChain: true,
+  lockToChain: true,
+});
+```
+
+## Theme Customization
+
+Override any visual aspect of the widget to match your brand:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `accentColor` | `string` | `"#44E1AA"` | CTA button & highlight color |
+| `accentHoverColor` | `string` | — | Accent hover state color |
+| `bgPrimary` | `string` | `"#060912"` | Page background color |
+| `bgCard` | `string` | `"#0C1022"` | Card background color |
+| `bgCardInner` | `string` | `"#0E1428"` | Inner card / token area background |
+| `bgInput` | `string` | `"#111832"` | Input field background |
+| `textPrimary` | `string` | `"#E2E8F0"` | Primary text color |
+| `textSecondary` | `string` | `"#8A9AB4"` | Secondary text color |
+| `borderColor` | `string` | — | Border color (format: `"hex:opacity"` e.g. `"6C63FF:15"`) |
+| `borderRadius` | `number` | `16` | Card corner radius in px |
+| `buttonRadius` | `number` | `12` | Button corner radius in px |
+| `fontFamily` | `string` | `"Sora"` | Google Font family name |
+
+### Border Color Format
+
+The `borderColor` option uses a special `hex:opacity` format where opacity is a percentage (0–100):
+
+```javascript
+// Blue border at 10% opacity
+borderColor: "416EF2:10"
+
+// Purple border at 15% opacity
+borderColor: "6C63FF:15"
+
+// Simple solid hex (100% opacity)
+borderColor: "333333"
+```
+
+### Font Family
+
+Any [Google Font](https://fonts.google.com/) is supported. The widget dynamically loads the font when specified. Popular choices:
+
+`Sora` (default), `Inter`, `Poppins`, `Space Grotesk`, `DM Sans`, `Roboto`, `Manrope`, `Outfit`, `Plus Jakarta Sans`, `Nunito Sans`, `Work Sans`, `Montserrat`, `Rubik`, `Figtree`, `Lexend`
+
+### Full Branding Example
+
+```javascript
+HypermidWidget.init({
+  containerId: "swap",
+  partnerId: "trust-wallet",
+  theme: "dark",
+  defaultFromChain: 1,
+  defaultToChain: 42161,
+  // Brand customization
+  accentColor: "#FF6B35",
+  bgPrimary: "#1A1A2E",
+  bgCard: "#252540",
+  bgCardInner: "#2D2D55",
+  bgInput: "#35356A",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A0C0",
+  borderColor: "FF6B35:12",
+  borderRadius: 20,
+  buttonRadius: 8,
+  fontFamily: "Inter",
+});
+```
+
+### Direct Iframe URL Parameters
+
+When using the direct iframe embed, pass theme options as URL query parameters (hex values without `#`):
+
+```
+https://www.hypermid.io/widget?embed=1
+  &theme=dark
+  &accent=FF6B35
+  &bgPrimary=1A1A2E
+  &bgCard=252540
+  &borderRadius=20
+  &buttonRadius=8
+  &fontFamily=Inter
+```
+
+<Tip>
+  Use the **[Widget Playground](/widget/playground)** to visually configure all these options and generate the embed code automatically.
+</Tip>

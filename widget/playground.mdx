@@ -1,0 +1,93 @@
+---
+title: "Widget Playground"
+sidebarTitle: "Playground"
+description: "Customize and preview the Hypermid widget with live controls"
+---
+
+Use the interactive playground below to customize the widget's appearance — colors, fonts, border radius, modes, chains, and layout. Once you're happy with the result, copy the embed code.
+
+<iframe
+  src="https://www.hypermid.io/widget/playground"
+  width="100%"
+  height="900"
+  frameborder="0"
+  allow="clipboard-write"
+  style="border: none; border-radius: 12px; margin-top: 16px;"
+></iframe>
+
+<Info>
+  The playground above is a live instance of the Hypermid widget configurator. All changes are reflected in real-time in the preview, and the generated embed code updates automatically.
+</Info>
+
+## How It Works
+
+1. **Configure** — Use the left panel to adjust modes, colors, typography, radius, layout, and chain defaults
+2. **Preview** — See changes in real-time in the widget preview on the right
+3. **Copy code** — Switch between **Direct Iframe** and **Script Tag** embed formats, then click **Copy Code**
+4. **Paste** — Drop the code into your website's HTML
+
+## What You Can Customize
+
+<CardGroup cols={2}>
+  <Card title="Modes" icon="toggle-on">
+    Enable/disable Swap, Gas Refuel, and Buy Crypto modes individually. Set the default active mode.
+  </Card>
+  <Card title="Colors" icon="palette">
+    Accent/CTA color, background layers (primary, card, card inner, input), text colors, and border color.
+  </Card>
+  <Card title="Typography" icon="font">
+    Choose from 25 Google Fonts including Inter, Poppins, Space Grotesk, DM Sans, Manrope, and more.
+  </Card>
+  <Card title="Shape" icon="square">
+    Adjust card corner radius (0–32px) and button corner radius (0–24px) independently.
+  </Card>
+  <Card title="Layout" icon="ruler">
+    Set widget width (320–600px) and height (580–1000px). The widget requires minimum 580px height for the on-ramp form.
+  </Card>
+  <Card title="Chain Presets" icon="link">
+    Pre-select default source and destination chains (Ethereum, Arbitrum, Base, Polygon, Solana, and more). Optionally lock chain selectors.
+  </Card>
+</CardGroup>
+
+## Embed Code Formats
+
+The playground generates two embed code formats:
+
+### Direct Iframe
+
+A single `<iframe>` tag — simplest integration, works anywhere:
+
+```html
+<iframe
+  src="https://www.hypermid.io/widget?embed=1&theme=dark&fromChain=1&toChain=42161"
+  width="420"
+  height="700"
+  frameborder="0"
+  allow="clipboard-write; payment; web-share"
+  style="border: none; border-radius: 16px;"
+></iframe>
+```
+
+### Script Tag
+
+Uses the embed.js script for programmatic control, event callbacks, and dynamic updates:
+
+```html
+<div id="hypermid-widget"></div>
+
+<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script>
+  HypermidWidget.init({
+    containerId: "hypermid-widget",
+    theme: "dark",
+    defaultFromChain: 1,
+    defaultToChain: 42161,
+    width: "420px",
+    height: "700px",
+  });
+</script>
+```
+
+<Tip>
+  Use the **Script Tag** format if you need [event callbacks](/widget/events) or [programmatic control](/widget/events#programmatic-control).
+</Tip>

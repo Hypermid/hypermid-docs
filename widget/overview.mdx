@@ -1,0 +1,142 @@
+---
+title: "Widget Integration"
+sidebarTitle: "Overview"
+description: "Embed the Hypermid swap, bridge & on-ramp widget in your website"
+---
+
+The Hypermid Widget embeds the full Hypermid experience into any website — **swap**, **bridge**, **gas refuel**, and **buy crypto with card**. It uses the same production app at `hypermid.io`, loaded as an iframe.
+
+<Info>
+  The widget includes **full wallet connection** (550+ wallets via Reown/WalletConnect) supporting EVM, Solana, Bitcoin, TON, TRON, and SUI — no additional setup needed.
+</Info>
+
+## Features
+
+- **Cross-chain swap & bridge** — 90+ chains, best route comparison
+- **On-ramp** — Buy crypto with card via RampNow (USD, EUR, GBP, and more)
+- **Gas refuel** — Top up gas on any chain
+- **Wallet connection** — MetaMask, WalletConnect, Coinbase, Trust Wallet, Binance, and 550+ more
+- **Full theme customization** — Colors, borders, radius, fonts
+- **Event callbacks** — Quote, execute, status, error events via postMessage
+- **Auto-resize** — Iframe height adjusts to content
+- **Mode toggle** — Users can switch between Swap, Gas, and Fund modes
+
+## Quick Start
+
+### Script Tag (Any Website)
+
+```html
+<div id="hypermid-widget"></div>
+
+<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script>
+  HypermidWidget.init({
+    containerId: "hypermid-widget",
+    partnerId: "your-partner-id",
+    theme: "dark",
+    defaultFromChain: 1,
+    defaultToChain: 42161,
+  });
+</script>
+```
+
+### Data Attribute (Zero JS)
+
+For even simpler integration — no JavaScript needed:
+
+```html
+<div
+  id="hypermid-widget"
+  data-hypermid-widget
+  data-partner-id="your-partner-id"
+  data-theme="dark"
+  data-from-chain="1"
+  data-to-chain="42161"
+></div>
+
+<script src="https://widget.hypermid.io/v1/embed.js"></script>
+```
+
+### Direct Iframe
+
+If you prefer full control, embed the iframe directly:
+
+```html
+<iframe
+  src="https://www.hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
+  width="420"
+  height="700"
+  frameborder="0"
+  allow="clipboard-write; payment; web-share"
+  style="border: none; border-radius: 16px;"
+></iframe>
+```
+
+<Warning>
+  Do NOT add the `sandbox` attribute to the iframe — it will break wallet connections.
+</Warning>
+
+## Playground
+
+Use the interactive **[Widget Playground](/widget/playground)** to customize colors, fonts, border radius, modes, and more — then copy the embed code directly.
+
+## Wallet Connection
+
+The widget includes **built-in wallet connection** via Reown AppKit — the same wallet infrastructure used by the main Hypermid app. No additional configuration needed.
+
+**Supported wallet ecosystems:**
+
+| Ecosystem | Wallets |
+|-----------|---------|
+| **EVM** | MetaMask, WalletConnect QR, Coinbase, Trust Wallet, Binance, SafePal, Rainbow, and 500+ more |
+| **Solana** | Phantom, Solflare, Backpack |
+| **Bitcoin** | Xverse, Leather, UniSat |
+| **TON** | Tonkeeper, MyTonWallet |
+| **TRON** | TronLink |
+| **SUI** | Sui Wallet |
+
+When users click **"Connect Wallet"**, a modal appears with all supported wallets for the selected chain ecosystem. After connecting, the widget displays token balances and enables transaction signing.
+
+## On-Ramp (Buy Crypto)
+
+The widget includes a built-in **"Buy Crypto"** tab powered by RampNow. Users can purchase crypto with their credit/debit card directly within the widget.
+
+**To open the widget in on-ramp mode by default:**
+
+```javascript
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  partnerId: "your-partner-id",
+  mode: "fund",  // Opens Buy Crypto tab
+});
+```
+
+The on-ramp supports:
+- **Fiat currencies**: USD, EUR, GBP, and more
+- **Crypto tokens**: ETH, USDC, USDT, BTC, and 50+ tokens
+- **Payment methods**: Credit card, debit card, Apple Pay, Google Pay
+- **KYC**: Handled by RampNow within the flow
+
+<Tip>
+  To hide the mode toggle and show only the swap UI, set `hideOnramp: true`. This removes the swap/gas/fund toggle.
+</Tip>
+
+## Supported Chains
+
+The widget supports all chains available in the Hypermid app:
+
+- **EVM**: Ethereum, Arbitrum, Base, Polygon, Optimism, BSC, Avalanche, and 50+ more
+- **Non-EVM**: Solana, Bitcoin, TON, TRON, NEAR, XRP, Dogecoin, Litecoin, and more
+- **On-ramp**: Buy crypto with card on any supported chain
+
+See [Chain Support](/resources/chains) for the full list.
+
+## Best Practices
+
+1. **Set default chains** — Pre-select the most common pair for your users to reduce friction
+2. **Use `partnerId`** — Ensures fee tracking and higher rate limits for your integration
+3. **Handle callbacks** — Implement `onExecute` and `onError` to update your app state
+4. **Don't use `sandbox`** — The iframe `sandbox` attribute breaks wallet connections
+5. **Set `height: 700px`** — The widget needs at least 700px height for the on-ramp form
+6. **Lock chains if needed** — Use `lockFromChain`/`lockToChain` for focused use cases
+7. **Test in incognito** — Your existing Hypermid session may auto-connect the wallet

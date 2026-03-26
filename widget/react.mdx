@@ -1,0 +1,171 @@
+---
+title: "React Integration"
+sidebarTitle: "React"
+description: "Use the Hypermid widget in React, Next.js, and Remix applications"
+---
+
+## React Component
+
+Wrap the embed script in a React component for easy integration:
+
+```tsx
+import { useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    HypermidWidget: any;
+  }
+}
+
+interface HypermidWidgetProps {
+  partnerId?: string;
+  theme?: "dark" | "light";
+  mode?: "swap" | "gas" | "fund";
+  modes?: string;
+  defaultFromChain?: number;
+  defaultToChain?: number;
+  accentColor?: string;
+  bgPrimary?: string;
+  bgCard?: string;
+  fontFamily?: string;
+  borderRadius?: number;
+  buttonRadius?: number;
+  width?: string;
+  height?: string;
+  onReady?: () => void;
+  onSwapComplete?: (result: any) => void;
+  onError?: (error: any) => void;
+}
+
+export function HypermidWidget(props: HypermidWidgetProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://widget.hypermid.io/v1/embed.js";
+    script.onload = () => {
+      window.HypermidWidget.init({
+        containerId: "hypermid-react-widget",
+        partnerId: props.partnerId,
+        theme: props.theme || "dark",
+        mode: props.mode || "swap",
+        modes: props.modes,
+        defaultFromChain: props.defaultFromChain,
+        defaultToChain: props.defaultToChain,
+        accentColor: props.accentColor,
+        bgPrimary: props.bgPrimary,
+        bgCard: props.bgCard,
+        fontFamily: props.fontFamily,
+        borderRadius: props.borderRadius,
+        buttonRadius: props.buttonRadius,
+        width: props.width || "420px",
+        height: props.height || "700px",
+        onReady: props.onReady,
+        onExecute: props.onSwapComplete,
+        onError: props.onError,
+      });
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      window.HypermidWidget?.destroy();
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return <div id="hypermid-react-widget" ref={containerRef} />;
+}
+```
+
+## Usage
+
+```tsx
+<HypermidWidget
+  partnerId="your-partner-id"
+  theme="dark"
+  mode="swap"
+  defaultFromChain={1}
+  defaultToChain={42161}
+  accentColor="#FF6B35"
+  fontFamily="Inter"
+  onSwapComplete={(result) => console.log("Done!", result)}
+/>
+```
+
+## Next.js
+
+For Next.js, use the component with `"use client"` directive since it uses browser APIs:
+
+```tsx
+"use client";
+
+import { HypermidWidget } from "@/components/HypermidWidget";
+
+export default function SwapPage() {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <HypermidWidget
+        partnerId="your-partner-id"
+        theme="dark"
+        defaultFromChain={1}
+        defaultToChain={42161}
+        onSwapComplete={(result) => {
+          // Update your app state
+          console.log("Swap completed:", result.txHash);
+        }}
+      />
+    </div>
+  );
+}
+```
+
+<Info>
+  The embed script is loaded client-side only. No SSR issues — the widget mounts after hydration.
+</Info>
+
+## Remix / React Router
+
+Works the same way in Remix or React Router:
+
+```tsx
+import { HypermidWidget } from "~/components/HypermidWidget";
+
+export default function SwapRoute() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+      <HypermidWidget
+        partnerId="your-partner-id"
+        theme="dark"
+        defaultFromChain={1}
+        defaultToChain={42161}
+      />
+    </div>
+  );
+}
+```
+
+## Dynamic Updates
+
+To update the widget after mount, keep a ref to the global `HypermidWidget`:
+
+```tsx
+import { useCallback } from "react";
+
+function SwapPage() {
+  const switchToLight = useCallback(() => {
+    window.HypermidWidget?.update({ theme: "light" });
+  }, []);
+
+  const setChain = useCallback((chainId: number) => {
+    window.HypermidWidget?.setSwap({ fromChain: chainId });
+  }, []);
+
+  return (
+    <div>
+      <button onClick={switchToLight}>Light Mode</button>
+      <button onClick={() => setChain(42161)}>Arbitrum</button>
+      <HypermidWidget partnerId="your-partner-id" />
+    </div>
+  );
+}
+```
