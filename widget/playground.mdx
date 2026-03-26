@@ -1,8 +1,10 @@
 ---
 title: "Widget Playground"
 sidebarTitle: "Playground"
-description: "Customize and preview the Hypermid widget with live controls"
+description: "Customize, preview, and configure the Hypermid widget with live controls"
 ---
+
+import { WidgetConfigurator } from "/snippets/WidgetConfigurator.jsx";
 
 Use the interactive playground below to customize the widget's appearance — colors, fonts, border radius, modes, chains, and layout. Once you're happy with the result, copy the embed code.
 
@@ -18,13 +20,6 @@ Use the interactive playground below to customize the widget's appearance — co
 <Info>
   The playground above is a live instance of the Hypermid widget configurator. All changes are reflected in real-time in the preview, and the generated embed code updates automatically.
 </Info>
-
-## How It Works
-
-1. **Configure** — Use the left panel to adjust modes, colors, typography, radius, layout, and chain defaults
-2. **Preview** — See changes in real-time in the widget preview on the right
-3. **Copy code** — Switch between **Direct Iframe** and **Script Tag** embed formats, then click **Copy Code**
-4. **Paste** — Drop the code into your website's HTML
 
 ## What You Can Customize
 
@@ -45,9 +40,15 @@ Use the interactive playground below to customize the widget's appearance — co
     Set widget width (320–600px) and height (580–1000px). The widget requires minimum 580px height for the on-ramp form.
   </Card>
   <Card title="Chain & Token Presets" icon="link">
-    Pre-select default source and destination chains and tokens (ETH, USDC, USDT, and more). Optionally lock chain selectors.
+    Search all 90+ chains and 20,000+ tokens. Pre-select default source and destination. Optionally lock chain selectors.
   </Card>
 </CardGroup>
+
+## Chain & Token Preset Builder
+
+Browse all supported chains and tokens, select your desired from/to preset, then copy the generated embed code.
+
+<WidgetConfigurator />
 
 ## Embed Code Formats
 
@@ -91,3 +92,10 @@ Uses the embed.js script for programmatic control, event callbacks, and dynamic 
 <Tip>
   Use the **Script Tag** format if you need [event callbacks](/widget/events) or [programmatic control](/widget/events#programmatic-control).
 </Tip>
+
+## Token Address Notes
+
+- **Native tokens** (ETH, BNB, MATIC, etc.) use `0x0000000000000000000000000000000000000000`
+- **ERC-20 tokens** use the token's contract address on that chain
+- **Solana tokens** use the SPL token mint address
+- Token addresses are **chain-specific** — USDC on Ethereum has a different address than USDC on Arbitrum

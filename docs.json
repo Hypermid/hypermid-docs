@@ -131,7 +131,6 @@
               "widget/overview",
               "guides/widget-integration",
               "widget/playground",
-              "widget/preset-builder",
               "widget/configuration",
               "widget/events",
               "widget/react"
