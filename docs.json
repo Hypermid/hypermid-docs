@@ -7,8 +7,12 @@
     "light": "#44E1AA",
     "dark": "#44E1AA"
   },
-  "logo": "/logo/dark.svg",
-  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/branding/wordmark-light.svg",
+    "dark": "/branding/wordmark-dark.svg",
+    "href": "https://hypermid.io"
+  },
+  "favicon": "/branding/favicon.svg",
   "appearance": {
     "default": "system"
   },
