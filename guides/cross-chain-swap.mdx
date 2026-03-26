@@ -43,37 +43,337 @@ The app polls the status endpoint using the source transaction hash. Status tran
  
 Hypermid abstracts away bridge complexity behind a single smart routing engine. The user interacts with Hypermid — never with individual bridge providers.
  
-```mermaid
-flowchart TD
-    U["👤 User / dApp / Swap Widget"] --> R
- 
-    subgraph R["⚡ Hypermid Smart Routing Engine"]
-        direction LR
-        B1["EVM / SOL Bridge\nLiquidity pools"]
-        B2["Intent Bridge\nSolver network"]
-        B3["Warp Routes\nCross-chain transfers"]
-    end
- 
-    R --> C1["Ethereum"]
-    R --> C2["Solana"]
-    R --> C3["Bitcoin"]
-    R --> C4["XRP"]
-    R --> C5["Litecoin"]
-    R --> C6["TON"]
-    R --> C7["Arbitrum, Base, Polygon\n& 80+ more"]
- 
-    style U fill:#0f0f23,stroke:#6c63ff,color:#fff
-    style R fill:#111128,stroke:#00d2ff,color:#fff
-    style B1 fill:#1a1a3e,stroke:#7c4dff,color:#fff
-    style B2 fill:#1a1a3e,stroke:#ff6b6b,color:#fff
-    style B3 fill:#1a1a3e,stroke:#ffa726,color:#fff
-    style C1 fill:#1a1a2e,stroke:#627eea,color:#fff
-    style C2 fill:#1a1a2e,stroke:#14f195,color:#fff
-    style C3 fill:#1a1a2e,stroke:#f7931a,color:#fff
-    style C4 fill:#1a1a2e,stroke:#00aae4,color:#fff
-    style C5 fill:#1a1a2e,stroke:#bfbbbb,color:#fff
-    style C6 fill:#1a1a2e,stroke:#0098ea,color:#fff
-    style C7 fill:#1a1a2e,stroke:#555,color:#aaa
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypermid Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0a1a;
+    color: #e0e0f0;
+    padding: 48px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .diagram-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6c63ff;
+    text-align: center;
+  }
+
+  /* ── Lifecycle ── */
+  .lifecycle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    max-width: 780px;
+    width: 100%;
+  }
+
+  .phase {
+    flex: 1;
+    padding: 20px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    text-align: center;
+    position: relative;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .phase:hover {
+    border-color: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .phase-num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+  .phase-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .phase-desc {
+    font-size: 12px;
+    color: #8888aa;
+  }
+
+  .phase:nth-child(1) { border-color: rgba(108,99,255,0.3); }
+  .phase:nth-child(1) .phase-name { color: #a29bfe; }
+  .phase:nth-child(3) { border-color: rgba(0,210,255,0.3); }
+  .phase:nth-child(3) .phase-name { color: #74d7ff; }
+  .phase:nth-child(5) { border-color: rgba(124,77,255,0.3); }
+  .phase:nth-child(5) .phase-name { color: #b794f6; }
+  .phase:nth-child(7) { border-color: rgba(255,107,107,0.3); }
+  .phase:nth-child(7) .phase-name { color: #ff8a8a; }
+
+  .arrow-sep {
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+    font-size: 18px;
+  }
+
+  /* ── Architecture ── */
+  .architecture {
+    max-width: 780px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .user-box {
+    padding: 14px 32px;
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 10px;
+    background: rgba(108,99,255,0.06);
+    font-size: 14px;
+    font-weight: 500;
+    color: #c4bfff;
+    text-align: center;
+  }
+
+  .connector {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, rgba(108,99,255,0.4), rgba(0,210,255,0.4));
+    position: relative;
+  }
+  .connector::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: -3px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid rgba(0,210,255,0.5);
+  }
+
+  .engine-box {
+    width: 100%;
+    border: 1px solid rgba(0,210,255,0.25);
+    border-radius: 16px;
+    background: rgba(0,210,255,0.03);
+    padding: 24px;
+  }
+
+  .engine-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #74d7ff;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .bridges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .bridge {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .bridge:hover { border-color: rgba(255,255,255,0.15); }
+
+  .bridge-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .bridge-desc {
+    font-size: 11px;
+    color: #7777aa;
+  }
+
+  .bridge:nth-child(1) { border-color: rgba(124,77,255,0.25); }
+  .bridge:nth-child(1) .bridge-name { color: #b794f6; }
+  .bridge:nth-child(2) { border-color: rgba(255,107,107,0.25); }
+  .bridge:nth-child(2) .bridge-name { color: #ff8a8a; }
+  .bridge:nth-child(3) { border-color: rgba(255,167,38,0.25); }
+  .bridge:nth-child(3) .bridge-name { color: #ffb74d; }
+
+  .connector2 {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, rgba(0,210,255,0.3), rgba(255,255,255,0.1));
+    position: relative;
+  }
+  .connector2::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: -3px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid rgba(255,255,255,0.2);
+  }
+
+  .chains-box {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.02);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .chains-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8888aa;
+    margin-bottom: 16px;
+  }
+
+  .chains-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .chain-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    font-size: 13px;
+    font-weight: 500;
+    transition: border-color 0.2s;
+  }
+  .chain-pill:hover { border-color: rgba(255,255,255,0.18); }
+
+  .chain-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .chains-more {
+    font-size: 12px;
+    color: #555577;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Swap Lifecycle -->
+<div>
+  <div class="diagram-title" style="margin-bottom: 20px;">Swap lifecycle</div>
+  <div class="lifecycle">
+    <div class="phase">
+      <div class="phase-num">01</div>
+      <div class="phase-name">Discovery</div>
+      <div class="phase-desc">Chains & tokens</div>
+    </div>
+    <div class="arrow-sep">→</div>
+    <div class="phase">
+      <div class="phase-num">02</div>
+      <div class="phase-name">Quote</div>
+      <div class="phase-desc">Best route & price</div>
+    </div>
+    <div class="arrow-sep">→</div>
+    <div class="phase">
+      <div class="phase-num">03</div>
+      <div class="phase-name">Execute</div>
+      <div class="phase-desc">Sign & broadcast</div>
+    </div>
+    <div class="arrow-sep">→</div>
+    <div class="phase">
+      <div class="phase-num">04</div>
+      <div class="phase-name">Track</div>
+      <div class="phase-desc">Poll status</div>
+    </div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<div>
+  <div class="diagram-title" style="margin-bottom: 20px;">Architecture</div>
+  <div class="architecture">
+    <div class="user-box">User / dApp / Swap Widget</div>
+    <div class="connector"></div>
+
+    <div class="engine-box">
+      <div class="engine-label">⚡ Hypermid Smart Routing Engine</div>
+      <div class="bridges">
+        <div class="bridge">
+          <div class="bridge-name">EVM / SOL Bridge</div>
+          <div class="bridge-desc">Liquidity pools</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-name">Intent Bridge</div>
+          <div class="bridge-desc">Solver network</div>
+        </div>
+        <div class="bridge">
+          <div class="bridge-name">Warp Routes</div>
+          <div class="bridge-desc">Cross-chain transfers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector2"></div>
+
+    <div class="chains-box">
+      <div class="chains-label">90+ Supported Blockchains</div>
+      <div class="chains-grid">
+        <div class="chain-pill"><span class="chain-dot" style="background:#627eea"></span>Ethereum</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#14f195"></span>Solana</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#f7931a"></span>Bitcoin</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#00aae4"></span>XRP</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#bfbbbb"></span>Litecoin</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#0098ea"></span>TON</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#28a0f0"></span>Arbitrum</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#0052ff"></span>Base</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#8247e5"></span>Polygon</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#ff0420"></span>Optimism</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#f0b90b"></span>BSC</div>
+        <div class="chain-pill"><span class="chain-dot" style="background:#e84142"></span>Avalanche</div>
+      </div>
+      <div class="chains-more">+ PulseChain, Fantom, Gnosis, zkSync, Linea, Scroll, Mantle, and 75+ more</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
 ```
  
 ### Bridge strategies
