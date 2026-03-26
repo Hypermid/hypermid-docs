@@ -50,25 +50,37 @@ When only one mode is enabled, the mode toggle is automatically hidden.
 | `defaultFromToken` | `string` | — | Default source token address |
 | `defaultToToken` | `string` | — | Default destination token address |
 | `defaultFromAmount` | `string` | — | Default input amount |
+| `destAddress` | `string` | — | Pre-fill destination/recipient address (overrides connected wallet) |
 | `walletAddress` | `string` | — | Pre-fill wallet address |
 | `lockFromChain` | `boolean` | `false` | Lock source chain selector |
 | `lockToChain` | `boolean` | `false` | Lock destination chain selector |
 
-### Common Chain IDs
+<Info>
+  The `destAddress` parameter is useful when the destination address differs from the connected wallet — for example, when building a payment flow where users send tokens to a merchant address, or when the recipient is a smart contract.
+</Info>
 
-| Chain | Chain ID |
-|-------|----------|
-| Ethereum | `1` |
-| Arbitrum | `42161` |
-| Base | `8453` |
-| Polygon | `137` |
-| Optimism | `10` |
-| BNB Chain | `56` |
-| Avalanche | `43114` |
-| zkSync Era | `324` |
-| Linea | `59144` |
-| Scroll | `534352` |
-| Solana | `1151111081099710` |
+### Supported Chains
+
+Hypermid supports **90+ chains** including EVM, Solana, Bitcoin, Sui, and Near-Intents chains. Here are the most commonly used chain IDs:
+
+| Chain | Chain ID | | Chain | Chain ID |
+|-------|----------|---|-------|----------|
+| Ethereum | `1` | | Sonic | `146` |
+| Arbitrum | `42161` | | Mantle | `5000` |
+| Base | `8453` | | Blast | `81457` |
+| Polygon | `137` | | Mode | `34443` |
+| Optimism | `10` | | Berachain | `80094` |
+| BNB Chain | `56` | | Abstract | `2741` |
+| Avalanche | `43114` | | Unichain | `130` |
+| zkSync Era | `324` | | World Chain | `480` |
+| Linea | `59144` | | Sei | `1329` |
+| Scroll | `534352` | | Soneium | `1868` |
+| Solana | `1151111081099710` | | Bitcoin | `20000000000001` |
+| Cronos | `25` | | Ronin | `2020` |
+| Gnosis | `100` | | Taiko | `167000` |
+| Celo | `42220` | | Moonbeam | `1284` |
+
+For the complete list of supported chains and their IDs, use the [Chains API endpoint](/api-reference/chains).
 
 **Example — locked ETH to USDC on Arbitrum:**
 
@@ -90,9 +102,9 @@ Override any visual aspect of the widget to match your brand:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `accentColor` | `string` | `"#44E1AA"` | CTA button & highlight color |
+| `accentColor` | `string` | `"#44E1AA"` | Accent & highlight color |
+| `buttonColor` | `string` | — | CTA button color (overrides gradient) |
 | `accentHoverColor` | `string` | — | Accent hover state color |
-| `bgPrimary` | `string` | `"#060912"` | Page background color |
 | `bgCard` | `string` | `"#0C1022"` | Card background color |
 | `bgCardInner` | `string` | `"#0E1428"` | Inner card / token area background |
 | `bgInput` | `string` | `"#111832"` | Input field background |
@@ -135,7 +147,7 @@ HypermidWidget.init({
   defaultToChain: 42161,
   // Brand customization
   accentColor: "#FF6B35",
-  bgPrimary: "#1A1A2E",
+  buttonColor: "#FF6B35",
   bgCard: "#252540",
   bgCardInner: "#2D2D55",
   bgInput: "#35356A",
@@ -156,11 +168,12 @@ When using the direct iframe embed, pass theme options as URL query parameters (
 https://www.hypermid.io/widget?embed=1
   &theme=dark
   &accent=FF6B35
-  &bgPrimary=1A1A2E
+  &buttonColor=FF6B35
   &bgCard=252540
   &borderRadius=20
   &buttonRadius=8
   &fontFamily=Inter
+  &destAddress=0x1234...abcd
 ```
 
 <Tip>

@@ -13,6 +13,9 @@
     "href": "https://hypermid.io"
   },
   "favicon": "/branding/favicon.svg",
+  "fonts": {
+    "family": "Sora"
+  },
   "appearance": {
     "default": "system"
   },
@@ -47,8 +50,7 @@
               "guides/near-intents",
               "guides/fiat-onramp",
               "guides/error-handling",
-              "guides/webhooks",
-              "guides/widget-integration"
+              "guides/webhooks"
             ]
           },
           {
@@ -120,14 +122,16 @@
         ]
       },
       {
-        "tab": "Widget",
+        "tab": "Widget Integration",
         "icon": "browser",
         "groups": [
           {
-            "group": "Widget",
+            "group": "Widget Integration",
             "pages": [
               "widget/overview",
+              "guides/widget-integration",
               "widget/playground",
+              "widget/preset-builder",
               "widget/configuration",
               "widget/events",
               "widget/react"
@@ -144,8 +148,7 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/hypermid",
-      "github": "https://github.com/Hypermid"
+      "x": "https://x.com/hypermid"
     }
   },
   "api": {
