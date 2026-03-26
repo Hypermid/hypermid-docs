@@ -45,30 +45,35 @@ Hypermid abstracts away bridge complexity behind a single smart routing engine. 
  
 ```mermaid
 flowchart TD
-    U[User / dApp / Swap Widget]
-    U --> R
+    U["👤 User / dApp / Swap Widget"] --> R
  
-    subgraph R[Hypermid Smart Routing Engine]
+    subgraph R["⚡ Hypermid Smart Routing Engine"]
         direction LR
-        B1[EVM / SOL Bridge\nLiquidity pools]
-        B2[Intent Bridge\nSolver network]
-        B3[Warp Routes\nCross-chain transfers]
+        B1["EVM / SOL Bridge\nLiquidity pools"]
+        B2["Intent Bridge\nSolver network"]
+        B3["Warp Routes\nCross-chain transfers"]
     end
  
-    R --> C
+    R --> C1["Ethereum"]
+    R --> C2["Solana"]
+    R --> C3["Bitcoin"]
+    R --> C4["XRP"]
+    R --> C5["Litecoin"]
+    R --> C6["TON"]
+    R --> C7["Arbitrum, Base, Polygon\n& 80+ more"]
  
-    subgraph C[90+ Supported Blockchains]
-        direction LR
-        C1[Ethereum]
-        C2[Solana]
-        C3[Bitcoin]
-        C4[XRP]
-        C5[Litecoin]
-        C6[TON]
-        C7[Arbitrum]
-        C8[Base]
-        C9[...]
-    end
+    style U fill:#0f0f23,stroke:#6c63ff,color:#fff
+    style R fill:#111128,stroke:#00d2ff,color:#fff
+    style B1 fill:#1a1a3e,stroke:#7c4dff,color:#fff
+    style B2 fill:#1a1a3e,stroke:#ff6b6b,color:#fff
+    style B3 fill:#1a1a3e,stroke:#ffa726,color:#fff
+    style C1 fill:#1a1a2e,stroke:#627eea,color:#fff
+    style C2 fill:#1a1a2e,stroke:#14f195,color:#fff
+    style C3 fill:#1a1a2e,stroke:#f7931a,color:#fff
+    style C4 fill:#1a1a2e,stroke:#00aae4,color:#fff
+    style C5 fill:#1a1a2e,stroke:#bfbbbb,color:#fff
+    style C6 fill:#1a1a2e,stroke:#0098ea,color:#fff
+    style C7 fill:#1a1a2e,stroke:#555,color:#aaa
 ```
  
 ### Bridge strategies
