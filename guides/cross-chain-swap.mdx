@@ -7,15 +7,81 @@ description: "Complete guide to the swap lifecycle: quote, execute, and track"
 This guide covers the full lifecycle of a cross-chain swap through Hypermid: discovering chains and tokens, getting a quote, executing the swap, and tracking its status.
 
 ## Overview
-
-A cross-chain swap moves tokens from one blockchain to another. Hypermid aggregates multiple providers (LI.FI for EVM/Solana bridges, Near Intents for intent-based transfers) and returns the best route automatically.
-
+ 
+A cross-chain swap moves tokens from one blockchain to another in a single user action. Hypermid's smart routing engine evaluates multiple bridge strategies in parallel across **90+ supported blockchains** — including EVM chains, Solana, Bitcoin, XRP, Litecoin, TON, and more — and returns the optimal path automatically.
+ 
+## Swap lifecycle
+ 
+Every swap follows four phases: discover available chains and tokens, get a quote, execute the transaction, and track its status until settlement.
+ 
+```mermaid
+flowchart LR
+    A[Discovery\nChains & tokens] --> B[Quote\nBest route & price]
+    B --> C[Execute\nSign & broadcast]
+    C --> D[Track\nPoll status]
 ```
-┌──────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ Get Chains│ →  │ Get Quote    │ →  │ Execute      │ →  │ Track Status │
-│ & Tokens  │    │              │    │              │    │              │
-└──────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+ 
+### 1. Discovery
+ 
+The app fetches all supported chains and tokens from the routing engine. The engine maintains a unified registry across all bridge types, so the user sees one clean token list regardless of which underlying strategy will fulfill the swap.
+ 
+### 2. Quote
+ 
+Hypermid queries its bridge providers simultaneously for the selected token pair. The routing engine compares all returned routes — factoring in output amount, gas cost, and estimated execution time — and surfaces a single best quote. The user never chooses a provider.
+ 
+### 3. Execute
+ 
+The user approves the transaction in their wallet. For EVM chains, this may involve a token approval step followed by the swap transaction itself. The app records a pending swap event via the Hypermid API, which gets updated on completion — no duplicate records.
+ 
+### 4. Track
+ 
+The app polls the status endpoint using the source transaction hash. Status transitions through `PENDING` → `COMPLETED` (or `FAILED`), and the UI reflects progress in real time. Cross-chain settlement ranges from seconds to minutes depending on the bridge strategy used.
+ 
+---
+ 
+## Architecture
+ 
+Hypermid abstracts away bridge complexity behind a single smart routing engine. The user interacts with Hypermid — never with individual bridge providers.
+ 
+```mermaid
+flowchart TD
+    U[User / dApp / Swap Widget]
+    U --> R
+ 
+    subgraph R[Hypermid Smart Routing Engine]
+        direction LR
+        B1[EVM / SOL Bridge\nLiquidity pools]
+        B2[Intent Bridge\nSolver network]
+        B3[Warp Routes\nCross-chain transfers]
+    end
+ 
+    R --> C
+ 
+    subgraph C[90+ Supported Blockchains]
+        direction LR
+        C1[Ethereum]
+        C2[Solana]
+        C3[Bitcoin]
+        C4[XRP]
+        C5[Litecoin]
+        C6[TON]
+        C7[Arbitrum]
+        C8[Base]
+        C9[...]
+    end
 ```
+ 
+### Bridge strategies
+ 
+| Strategy | Mechanism | Coverage |
+| --- | --- | --- |
+| **EVM / SOL bridge** | Routes through liquidity pools across EVM-compatible chains and Solana | Ethereum, Polygon, Arbitrum, Optimism, BSC, Avalanche, Base, Solana, and 70+ more |
+| **Intent bridge** | Matches counterparties via a solver network for optimal fills | Cross-chain swaps where solver competition yields better pricing |
+| **Warp routes** | Direct token transfers via standardised messaging | Extended coverage for chains like PulseChain and other networks outside core bridge support |
+ 
+The routing engine selects the best strategy per swap automatically. In many cases, a single swap may be split across strategies to optimise for price and speed.
+ 
+---
 
 ## Step 1: Discover Supported Chains
 
