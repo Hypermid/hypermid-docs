@@ -45,8 +45,8 @@ When only one mode is enabled, the mode toggle is automatically hidden.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `defaultFromChain` | `number` | `1` | Default source chain ID |
-| `defaultToChain` | `number` | — | Default destination chain ID |
+| `defaultFromChain` | `number \| string` | `1` | Default source chain — numeric ID or slug |
+| `defaultToChain` | `number \| string` | — | Default destination chain — numeric ID or slug |
 | `defaultFromToken` | `string` | — | Default source token address |
 | `defaultToToken` | `string` | — | Default destination token address |
 | `defaultFromAmount` | `string` | — | Default input amount |
@@ -59,40 +59,63 @@ When only one mode is enabled, the mode toggle is automatically hidden.
   The `destAddress` parameter is useful when the destination address differs from the connected wallet — for example, when building a payment flow where users send tokens to a merchant address, or when the recipient is a smart contract.
 </Info>
 
-### Supported Chains
+### Chain Identifiers
 
-Hypermid supports **90+ chains** including EVM, Solana, Bitcoin, Sui, and Near-Intents chains. Here are the most commonly used chain IDs:
+Hypermid uses a **unified chain ID system**. You can reference chains by either their **numeric ID** or a **human-readable slug**:
 
-| Chain | Chain ID | | Chain | Chain ID |
-|-------|----------|---|-------|----------|
-| Ethereum | `1` | | Sonic | `146` |
-| Arbitrum | `42161` | | Mantle | `5000` |
-| Base | `8453` | | Blast | `81457` |
-| Polygon | `137` | | Mode | `34443` |
-| Optimism | `10` | | Berachain | `80094` |
-| BNB Chain | `56` | | Abstract | `2741` |
-| Avalanche | `43114` | | Unichain | `130` |
-| zkSync Era | `324` | | World Chain | `480` |
-| Linea | `59144` | | Sei | `1329` |
-| Scroll | `534352` | | Soneium | `1868` |
-| Solana | `1151111081099710` | | Bitcoin | `20000000000001` |
-| Cronos | `25` | | Ronin | `2020` |
-| Gnosis | `100` | | Taiko | `167000` |
-| Celo | `42220` | | Moonbeam | `1284` |
+| Chain | Slug | Chain ID | Providers |
+|-------|------|----------|-----------|
+| Ethereum | `ethereum` | `1` | LiFi, Near Intents |
+| Arbitrum | `arbitrum` | `42161` | LiFi, Near Intents |
+| Base | `base` | `8453` | LiFi, Near Intents |
+| Polygon | `polygon` | `137` | LiFi, Near Intents |
+| Optimism | `optimism` | `10` | LiFi, Near Intents |
+| BNB Chain | `bsc` | `56` | LiFi, Near Intents |
+| Avalanche | `avalanche` | `43114` | LiFi, Near Intents |
+| Berachain | `berachain` | `80094` | LiFi, Near Intents |
+| Solana | `solana` | `1151111081099710` | LiFi, Near Intents |
+| Bitcoin | `bitcoin` | `20000000000001` | LiFi, Near Intents |
+| Sui | `sui` | `9270000000000000` | LiFi, Near Intents |
+| NEAR | `near` | `900000001` | Near Intents |
+| TON | `ton` | `900000002` | Near Intents |
+| Tron | `tron` | `900000003` | Near Intents |
+| XRP | `xrp` | `900000004` | Near Intents |
+| Dogecoin | `doge` | `900000005` | Near Intents |
+| Aptos | `aptos` | `900000010` | Near Intents |
+| zkSync Era | `zksync` | `324` | LiFi |
+| Linea | `linea` | `59144` | LiFi |
+| Scroll | `scroll` | `534352` | LiFi, Near Intents |
+| Sonic | `sonic` | `146` | LiFi |
+| Mantle | `mantle` | `5000` | LiFi |
+| Blast | `blast` | `81457` | LiFi |
 
-For the complete list of supported chains and their IDs, use the [Chains API endpoint](/api-reference/chains).
+<Tip>
+  **Use slugs for non-EVM chains** — `"solana"` is much easier to work with than `1151111081099710`. EVM chains can use either format: `defaultFromChain: 1` or `defaultFromChain: "ethereum"`.
+</Tip>
 
-**Example — locked ETH to USDC on Arbitrum:**
+For the complete list of all 90+ supported chains, use the [Chains API endpoint](/api-reference/chains) or the [Preset Builder](/widget/preset-builder).
+
+**Example — ETH to USDC on Arbitrum (using slugs):**
 
 ```javascript
 HypermidWidget.init({
   containerId: "hypermid-widget",
-  defaultFromChain: 1,
-  defaultToChain: 42161,
+  defaultFromChain: "ethereum",
+  defaultToChain: "arbitrum",
   defaultFromToken: "0x0000000000000000000000000000000000000000", // ETH
-  defaultToToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",  // USDC on Arbitrum
+  defaultToToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",  // USDC
   lockFromChain: true,
   lockToChain: true,
+});
+```
+
+**Example — Solana to Bitcoin (non-EVM slugs):**
+
+```javascript
+HypermidWidget.init({
+  containerId: "hypermid-widget",
+  defaultFromChain: "solana",
+  defaultToChain: "bitcoin",
 });
 ```
 
