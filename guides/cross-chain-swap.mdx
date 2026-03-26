@@ -44,18 +44,12 @@ The app polls the status endpoint using the source transaction hash. Status tran
 Hypermid abstracts away bridge complexity behind a single smart routing engine. The user interacts with Hypermid — never with individual bridge providers.
  
 <Frame>
-  <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypermid Architecture</title>
-<style>
+  <style>{`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
+  .hypermid-arch-embed {
     font-family: 'Inter', sans-serif;
     background: #0a0a1a;
     color: #e0e0f0;
@@ -290,90 +284,88 @@ Hypermid abstracts away bridge complexity behind a single smart routing engine. 
     color: #555577;
     margin-top: 4px;
   }
-</style>
-</head>
-<body>
+`}</style>
+  <div className="hypermid-arch-embed">
 
-<!-- Swap Lifecycle -->
+{/* Swap Lifecycle */}
 <div>
-  <div class="diagram-title" style="margin-bottom: 20px;">Swap lifecycle</div>
-  <div class="lifecycle">
-    <div class="phase">
-      <div class="phase-num">01</div>
-      <div class="phase-name">Discovery</div>
-      <div class="phase-desc">Chains & tokens</div>
+  <div className="diagram-title" style={{ marginBottom: 20 }}>Swap lifecycle</div>
+  <div className="lifecycle">
+    <div className="phase">
+      <div className="phase-num">01</div>
+      <div className="phase-name">Discovery</div>
+      <div className="phase-desc">Chains & tokens</div>
     </div>
-    <div class="arrow-sep">→</div>
-    <div class="phase">
-      <div class="phase-num">02</div>
-      <div class="phase-name">Quote</div>
-      <div class="phase-desc">Best route & price</div>
+    <div className="arrow-sep">→</div>
+    <div className="phase">
+      <div className="phase-num">02</div>
+      <div className="phase-name">Quote</div>
+      <div className="phase-desc">Best route & price</div>
     </div>
-    <div class="arrow-sep">→</div>
-    <div class="phase">
-      <div class="phase-num">03</div>
-      <div class="phase-name">Execute</div>
-      <div class="phase-desc">Sign & broadcast</div>
+    <div className="arrow-sep">→</div>
+    <div className="phase">
+      <div className="phase-num">03</div>
+      <div className="phase-name">Execute</div>
+      <div className="phase-desc">Sign & broadcast</div>
     </div>
-    <div class="arrow-sep">→</div>
-    <div class="phase">
-      <div class="phase-num">04</div>
-      <div class="phase-name">Track</div>
-      <div class="phase-desc">Poll status</div>
+    <div className="arrow-sep">→</div>
+    <div className="phase">
+      <div className="phase-num">04</div>
+      <div className="phase-name">Track</div>
+      <div className="phase-desc">Poll status</div>
     </div>
   </div>
 </div>
 
-<!-- Architecture -->
+{/* Architecture */}
 <div>
-  <div class="diagram-title" style="margin-bottom: 20px;">Architecture</div>
-  <div class="architecture">
-    <div class="user-box">User / dApp / Swap Widget</div>
-    <div class="connector"></div>
+  <div className="diagram-title" style={{ marginBottom: 20 }}>Architecture</div>
+  <div className="architecture">
+    <div className="user-box">User / dApp / Swap Widget</div>
+    <div className="connector"></div>
 
-    <div class="engine-box">
-      <div class="engine-label">⚡ Hypermid Smart Routing Engine</div>
-      <div class="bridges">
-        <div class="bridge">
-          <div class="bridge-name">EVM / SOL Bridge</div>
-          <div class="bridge-desc">Liquidity pools</div>
+    <div className="engine-box">
+      <div className="engine-label">⚡ Hypermid Smart Routing Engine</div>
+      <div className="bridges">
+        <div className="bridge">
+          <div className="bridge-name">EVM / SOL Bridge</div>
+          <div className="bridge-desc">Liquidity pools</div>
         </div>
-        <div class="bridge">
-          <div class="bridge-name">Intent Bridge</div>
-          <div class="bridge-desc">Solver network</div>
+        <div className="bridge">
+          <div className="bridge-name">Intent Bridge</div>
+          <div className="bridge-desc">Solver network</div>
         </div>
-        <div class="bridge">
-          <div class="bridge-name">Warp Routes</div>
-          <div class="bridge-desc">Cross-chain transfers</div>
+        <div className="bridge">
+          <div className="bridge-name">Warp Routes</div>
+          <div className="bridge-desc">Cross-chain transfers</div>
         </div>
       </div>
     </div>
 
-    <div class="connector2"></div>
+    <div className="connector2"></div>
 
-    <div class="chains-box">
-      <div class="chains-label">90+ Supported Blockchains</div>
-      <div class="chains-grid">
-        <div class="chain-pill"><span class="chain-dot" style="background:#627eea"></span>Ethereum</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#14f195"></span>Solana</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#f7931a"></span>Bitcoin</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#00aae4"></span>XRP</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#bfbbbb"></span>Litecoin</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#0098ea"></span>TON</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#28a0f0"></span>Arbitrum</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#0052ff"></span>Base</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#8247e5"></span>Polygon</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#ff0420"></span>Optimism</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#f0b90b"></span>BSC</div>
-        <div class="chain-pill"><span class="chain-dot" style="background:#e84142"></span>Avalanche</div>
+    <div className="chains-box">
+      <div className="chains-label">90+ Supported Blockchains</div>
+      <div className="chains-grid">
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#627eea" }}></span>Ethereum</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#14f195" }}></span>Solana</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#f7931a" }}></span>Bitcoin</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#00aae4" }}></span>XRP</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#bfbbbb" }}></span>Litecoin</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#0098ea" }}></span>TON</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#28a0f0" }}></span>Arbitrum</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#0052ff" }}></span>Base</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#8247e5" }}></span>Polygon</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#ff0420" }}></span>Optimism</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#f0b90b" }}></span>BSC</div>
+        <div className="chain-pill"><span className="chain-dot" style={{ background: "#e84142" }}></span>Avalanche</div>
       </div>
-      <div class="chains-more">+ PulseChain, Fantom, Gnosis, zkSync, Linea, Scroll, Mantle, and 75+ more</div>
+      <div className="chains-more">+ PulseChain, Fantom, Gnosis, zkSync, Linea, Scroll, Mantle, and 75+ more</div>
     </div>
   </div>
 </div>
 
-</body>
-</html>
+  </div>
 </Frame>
 
  
