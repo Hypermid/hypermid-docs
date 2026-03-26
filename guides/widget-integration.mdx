@@ -1,16 +1,16 @@
 ---
 title: "Widget Integration"
 sidebarTitle: "Widget Integration"
-description: "Embed the Hypermid cross-chain swap widget in your application"
+description: "Embed the Hypermid swap app as a widget in your website"
 ---
 
-The Hypermid Widget is a drop-in UI component that provides a complete cross-chain swap experience. It handles chain selection, token selection, quoting, execution, and status tracking — all within an embeddable iframe or React component.
+The Hypermid Widget embeds the full Hypermid swap experience into any website. It uses the same app your users already know — loaded as an iframe with a lightweight embed script.
+
+No separate UI to maintain. Always up to date. One script tag.
 
 ## Quick Start
 
 ### Script Tag (Any Website)
-
-Add the widget to any HTML page with a single script tag:
 
 ```html
 <div id="hypermid-widget"></div>
@@ -27,181 +27,194 @@ Add the widget to any HTML page with a single script tag:
 </script>
 ```
 
-### React Component
+### Data Attribute (Zero JS)
 
-Install the React widget package:
+For even simpler integration, use data attributes — no JavaScript needed:
 
-```bash
-npm install @hypermid/widget-react
+```html
+<div
+  id="hypermid-widget"
+  data-hypermid-widget
+  data-partner-id="your-partner-id"
+  data-theme="dark"
+  data-from-chain="1"
+  data-to-chain="42161"
+></div>
+
+<script src="https://widget.hypermid.io/v1/embed.js"></script>
 ```
 
-Use it in your React application:
+### Direct Iframe
 
-```tsx
-import { HypermidWidget } from "@hypermid/widget-react";
+If you prefer full control, embed the iframe directly:
 
-function SwapPage() {
-  return (
-    <HypermidWidget
-      partnerId="your-partner-id"
-      theme="dark"
-      defaultFromChain={1}
-      defaultToChain={42161}
-      onSwapComplete={(result) => {
-        console.log("Swap complete:", result);
-      }}
-      onSwapFailed={(error) => {
-        console.error("Swap failed:", error);
-      }}
-    />
-  );
-}
+```html
+<iframe
+  src="https://hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
+  width="420"
+  height="600"
+  frameborder="0"
+  allow="clipboard-write; payment; web-share"
+  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
+  style="border: none; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.15);"
+></iframe>
 ```
 
 ## Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `partnerId` | `string` | — | Your partner ID from the dashboard |
-| `theme` | `"light" \| "dark"` | `"light"` | Widget color theme |
+| `containerId` | `string` | **required** | DOM element ID to mount into |
+| `partnerId` | `string` | — | Your partner ID for fee tracking |
+| `theme` | `"dark" \| "light"` | `"dark"` | Widget color theme |
 | `defaultFromChain` | `number` | `1` | Default source chain ID |
 | `defaultToChain` | `number` | — | Default destination chain ID |
 | `defaultFromToken` | `string` | — | Default source token address |
 | `defaultToToken` | `string` | — | Default destination token address |
-| `allowedChains` | `number[]` | All | Restrict available chains |
-| `allowedTokens` | `string[]` | All | Restrict available tokens |
-| `hideFromChainSelector` | `boolean` | `false` | Lock the source chain |
-| `hideToChainSelector` | `boolean` | `false` | Lock the destination chain |
-| `primaryColor` | `string` | `"#7B3FE4"` | Primary accent color (hex) |
-| `borderRadius` | `number` | `12` | Border radius in pixels |
+| `defaultFromAmount` | `string` | — | Default input amount |
+| `accentColor` | `string` | — | Accent color hex (e.g. `"#44E1AA"`) |
 | `width` | `string` | `"420px"` | Widget width |
-| `height` | `string` | `"auto"` | Widget height |
+| `height` | `string` | `"600px"` | Widget height |
+| `borderRadius` | `string` | `"16px"` | Border radius |
+| `hideOnramp` | `boolean` | `false` | Hide "Buy with card" button |
+| `hidePoweredBy` | `boolean` | `false` | Hide "Powered by Hypermid" |
+| `lockFromChain` | `boolean` | `false` | Prevent changing source chain |
+| `lockToChain` | `boolean` | `false` | Prevent changing destination chain |
+| `walletAddress` | `string` | — | Pre-fill wallet address |
 
 ## Event Callbacks
 
-### React
-
-```tsx
-<HypermidWidget
-  partnerId="your-partner-id"
-  onQuoteReceived={(quote) => {
-    console.log("Quote:", quote.estimate.toAmount);
-  }}
-  onSwapStarted={(params) => {
-    console.log("Swap started:", params.fromChain, "->", params.toChain);
-  }}
-  onSwapComplete={(result) => {
-    console.log("Success! Tx:", result.destinationTxHash);
-    // Update your UI, show success message, etc.
-  }}
-  onSwapFailed={(error) => {
-    console.error("Failed:", error.code, error.message);
-    // Show error to user
-  }}
-/>
-```
-
-### Script Tag
+Listen for events from the widget:
 
 ```javascript
 HypermidWidget.init({
   containerId: "hypermid-widget",
   partnerId: "your-partner-id",
-  onQuoteReceived: function (quote) {
-    console.log("Quote:", quote);
+
+  onReady: function () {
+    console.log("Widget loaded and ready");
   },
-  onSwapComplete: function (result) {
-    console.log("Complete:", result);
+
+  onQuote: function (quote) {
+    console.log("Quote received:", quote);
+    // { fromToken, toToken, fromAmount, toAmount, provider, fee }
   },
-  onSwapFailed: function (error) {
-    console.error("Failed:", error);
+
+  onExecute: function (result) {
+    console.log("Swap executed:", result);
+    // { txHash, provider, fromChain, toChain, status }
+  },
+
+  onStatusChange: function (status) {
+    console.log("Status update:", status);
+    // { status: "PENDING" | "PROCESSING" | "DONE" | "FAILED", txHash }
+  },
+
+  onError: function (error) {
+    console.error("Widget error:", error);
+    // { code, message }
   },
 });
 ```
 
-## Styling
+Events are communicated via `window.postMessage` from the iframe. The embed script handles the plumbing automatically.
 
-### Custom Theme
+## Programmatic Control
 
-Override specific CSS properties to match your brand:
+After initialization, you can update the widget or control it programmatically:
+
+```javascript
+// Update configuration (rebuilds iframe)
+HypermidWidget.update({
+  theme: "light",
+  defaultFromChain: 42161,
+});
+
+// Set swap parameters
+HypermidWidget.setSwap({
+  fromChain: 1,
+  toChain: 137,
+  fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  fromAmount: "100",
+});
+
+// Remove the widget
+HypermidWidget.destroy();
+```
+
+## React Integration
+
+Wrap the embed script in a React component:
 
 ```tsx
-<HypermidWidget
-  partnerId="your-partner-id"
-  theme="dark"
-  primaryColor="#FF6B35"
-  borderRadius={16}
-  style={{
-    fontFamily: "Inter, sans-serif",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
-  }}
-/>
-```
+import { useEffect, useRef } from "react";
 
-### CSS Override (Script Tag)
-
-```css
-#hypermid-widget {
-  --hm-primary: #FF6B35;
-  --hm-bg: #1a1a2e;
-  --hm-text: #ffffff;
-  --hm-border-radius: 16px;
-  --hm-font-family: "Inter", sans-serif;
+declare global {
+  interface Window {
+    HypermidWidget: any;
+  }
 }
-```
 
-## Wallet Connection
-
-The widget includes built-in wallet connection support via popular wallet providers. You can also pass an external wallet provider:
-
-```tsx
-import { HypermidWidget } from "@hypermid/widget-react";
-import { useAccount, useSendTransaction } from "wagmi";
-
-function SwapPage() {
-  const { address, connector } = useAccount();
-  const { sendTransaction } = useSendTransaction();
-
-  return (
-    <HypermidWidget
-      partnerId="your-partner-id"
-      walletAddress={address}
-      onTransactionRequest={async (txRequest) => {
-        const hash = await sendTransaction(txRequest);
-        return hash;
-      }}
-    />
-  );
+interface HypermidWidgetProps {
+  partnerId?: string;
+  theme?: "dark" | "light";
+  defaultFromChain?: number;
+  defaultToChain?: number;
+  onSwapComplete?: (result: any) => void;
+  onError?: (error: any) => void;
 }
+
+export function HypermidWidget(props: HypermidWidgetProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load embed script
+    const script = document.createElement("script");
+    script.src = "https://widget.hypermid.io/v1/embed.js";
+    script.onload = () => {
+      window.HypermidWidget.init({
+        containerId: "hypermid-react-widget",
+        partnerId: props.partnerId,
+        theme: props.theme || "dark",
+        defaultFromChain: props.defaultFromChain,
+        defaultToChain: props.defaultToChain,
+        onExecute: props.onSwapComplete,
+        onError: props.onError,
+      });
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      window.HypermidWidget?.destroy();
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return <div id="hypermid-react-widget" ref={containerRef} />;
+}
+
+// Usage:
+// <HypermidWidget
+//   partnerId="your-partner-id"
+//   theme="dark"
+//   defaultFromChain={1}
+//   defaultToChain={42161}
+//   onSwapComplete={(result) => console.log("Done!", result)}
+// />
 ```
 
-## Iframe Embedding
+## Supported Chains
 
-For maximum isolation, embed the widget as an iframe:
+The widget supports all chains available in the Hypermid app:
 
-```html
-<iframe
-  src="https://widget.hypermid.io/v1/embed?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161"
-  width="420"
-  height="600"
-  frameborder="0"
-  allow="clipboard-write"
-  style="border-radius: 12px; border: none;"
-></iframe>
-```
-
-<Note>
-  The iframe embed communicates with your parent page via `postMessage` for wallet interactions and event callbacks.
-</Note>
+- **EVM**: Ethereum, Arbitrum, Base, Polygon, Optimism, BSC, Avalanche, and 50+ more
+- **Non-EVM**: Solana, Bitcoin, TON, TRON, NEAR, XRP, Dogecoin, and more
+- **On-ramp**: Buy crypto with card directly in the widget
 
 ## Best Practices
 
-1. **Set default chains** — Pre-select the most common chain pair for your users to reduce friction.
-
-2. **Restrict chains if needed** — Use `allowedChains` to limit options to chains relevant to your application.
-
-3. **Handle callbacks** — Always implement `onSwapComplete` and `onSwapFailed` to update your application state.
-
-4. **Responsive design** — The widget is responsive by default but test it at your specific container dimensions.
-
-5. **Test in staging** — Use the widget in a staging environment before deploying to production.
+1. **Set default chains** — Pre-select the most common pair for your users to reduce friction
+2. **Use partnerId** — Ensures fee tracking and higher rate limits for your integration
+3. **Handle callbacks** — Implement `onExecute` and `onError` to update your app state
+4. **Test dimensions** — The widget is responsive but test at your specific container size
+5. **Lock chains if needed** — Use `lockFromChain`/`lockToChain` for focused use cases (e.g., always bridge to your chain)
