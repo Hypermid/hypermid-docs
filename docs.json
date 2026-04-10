@@ -47,6 +47,7 @@
             "group": "Guides",
             "pages": [
               "guides/cross-chain-swap",
+              "guides/superswap",
               "guides/near-intents",
               "guides/fiat-onramp",
               "guides/error-handling",
@@ -89,6 +90,7 @@
             "group": "Execute",
             "pages": [
               "api-reference/execute",
+              "api-reference/inbound-receiver-register",
               "api-reference/deposit-submit",
               "api-reference/deposit-status"
             ]

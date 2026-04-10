@@ -50,6 +50,32 @@ Returns the best available quote for swapping tokens between chains. Hypermid co
   Preferred tool to use if available (e.g., `stargate`).
 </ParamField>
 
+## SuperSwap (PulseChain) Routes
+
+When either `fromChain` or `toChain` is **369** (PulseChain), the API automatically routes through **SuperSwap** using Hyperlane Warp Routes and Piteas DEX. No additional configuration needed.
+
+### Direct Inbound (e.g., USDC on Base → PLS on PulseChain)
+
+The user sends USDC directly to the HypermidSender contract. **One signature** required. The response shape matches a standard quote with `transactionRequest`.
+
+### Multi-step Inbound (e.g., ETH on Base → PLS on PulseChain)
+
+When the source token is not USDC, the API returns a multi-step quote with `singleSignature: true`:
+- **Step 1:** LiFi swaps the source token to USDC and sends it to the InboundReceiver contract
+- **Step 2 (automatic):** The backend bridges USDC to PulseChain and executes the Piteas swap
+
+The user signs only Step 1. After it confirms, the frontend must call [`POST /v1/inbound-receiver/register`](/api-reference/inbound-receiver-register) with an **EIP-712 wallet signature** to authorize the deposit routing.
+
+### Direct Outbound (e.g., PLS on PulseChain → USDC on Base)
+
+The user calls `outboundSwapPLS()` on the OutboundSender contract. USDC is delivered directly to the user on Base.
+
+### Multi-step Outbound (e.g., PLS on PulseChain → ETH on Base)
+
+Two steps: PLS → USDC on Base (via SuperSwap), then USDC → ETH (via LiFi on Base).
+
+See the [SuperSwap Integration Guide](/guides/superswap) for full details.
+
 <ResponseExample>
 ```json 200
 {
@@ -138,6 +164,108 @@ Returns the best available quote for swapping tokens between chains. Hypermid co
       "limit": 2000,
       "remaining": 1993,
       "reset": 1711234627
+    }
+  }
+}
+```
+
+```json SuperSwap Direct Inbound
+{
+  "data": {
+    "quote": {
+      "id": "superswap_abc123",
+      "provider": "superswap",
+      "tool": "hyperlane",
+      "fromChainId": 8453,
+      "toChainId": 369,
+      "fromToken": {
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "toToken": {
+        "address": "0xA1077a294dDE1B09bB078844df40758a5D0f9a27",
+        "symbol": "WPLS",
+        "decimals": 18
+      },
+      "fromAmount": "5000000",
+      "fee": "15000",
+      "feePercentage": "0.0030",
+      "bridgeAmount": "4985000",
+      "estimatedOutput": "332333333333333333333333",
+      "minOutput": "322466333333333333333333",
+      "bridgeGasEstimate": "10000000000000000",
+      "estimatedDuration": 300,
+      "senderContract": "0xAd96Fb4bEe3ca08Fb481B554f1819CCb1388CF79",
+      "transactionRequest": {
+        "to": "0xAd96Fb4bEe3ca08Fb481B554f1819CCb1388CF79",
+        "data": "0x...",
+        "value": "0x2386f26fc10000",
+        "chainId": 8453,
+        "gasLimit": "350000"
+      }
+    },
+    "provider": "superswap",
+    "feeBps": 30
+  }
+}
+```
+
+```json SuperSwap Multi-step Inbound
+{
+  "data": {
+    "quote": {
+      "id": "superswap_multi_def456",
+      "type": "multi-step",
+      "provider": "superswap",
+      "totalSteps": 1,
+      "singleSignature": true,
+      "estimate": {
+        "fromAmount": "1000000000000000",
+        "toAmount": "332333333333333333333333",
+        "toAmountMin": "306000000000000000000000",
+        "executionDuration": 360
+      },
+      "steps": [
+        {
+          "step": 1,
+          "type": "lifi",
+          "description": "Swap ETH → USDC (routed via InboundReceiver)",
+          "transactionRequest": {
+            "to": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
+            "data": "0x...",
+            "value": "0x38d7ea4c68000",
+            "chainId": 8453
+          }
+        },
+        {
+          "step": 2,
+          "type": "superswap-automatic",
+          "automated": true,
+          "description": "Automatic: Bridge USDC → WPLS on PulseChain"
+        }
+      ],
+      "instructions": {
+        "step1": "Sign and broadcast the swap transaction on Base",
+        "step2": "After Step 1 confirms, call POST /v1/inbound-receiver/register",
+        "step3": "Done! Backend bridges USDC → WPLS automatically (~5 min)"
+      },
+      "afterStep1": {
+        "action": "POST /v1/inbound-receiver/register",
+        "signatureRequired": true,
+        "eip712": {
+          "domain": { "name": "HypermidInboundReceiver", "version": "1", "chainId": 8453 },
+          "types": {
+            "RegisterDeposit": [
+              { "name": "txHash", "type": "bytes32" },
+              { "name": "toAddress", "type": "address" },
+              { "name": "outputToken", "type": "address" },
+              { "name": "destinationDomain", "type": "uint32" }
+            ]
+          },
+          "primaryType": "RegisterDeposit"
+        }
+      }
     }
   }
 }

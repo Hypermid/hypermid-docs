@@ -116,6 +116,17 @@ Returns the current status of a cross-chain swap transaction. Use this to track 
 | `PARTIAL` | Partially completed (refund may follow) |
 | `REFUNDED` | Transaction was refunded |
 
+### SuperSwap Sub-Status Values
+
+For PulseChain swaps (provider `superswap`), additional sub-statuses are available:
+
+| Sub-Status | Description |
+|------------|-------------|
+| `SWAP_IN_PROGRESS` | Piteas swap executing on PulseChain |
+| `FALLBACK_SENT` | Swap failed — USDCh returned to user |
+
+Add `provider=superswap` to the query to get SuperSwap-specific status when tracking PulseChain swaps.
+
 <CodeGroup>
 ```typescript TypeScript
 const status = await client.getStatus({

@@ -4,7 +4,16 @@ openapi: "POST /v1/execute"
 description: "Execute a cross-chain swap"
 ---
 
-Initiates a cross-chain swap execution. Returns either a `transactionRequest` to be signed and sent by the user's wallet (LI.FI routes), or a `depositAddress` for the user to send tokens to (Near Intents routes).
+Initiates a cross-chain swap execution. Returns either a `transactionRequest` to be signed and sent by the user's wallet (LI.FI routes), a `depositAddress` for the user to send tokens to (Near Intents routes), or a SuperSwap transaction for PulseChain swaps.
+
+## SuperSwap Execute
+
+When executing a swap involving PulseChain (chain ID `369`), the response contains:
+
+- **Inbound:** The `superSwap()` transaction for the HypermidSender contract
+- **Outbound:** The `outboundSwapPLS()` transaction for the OutboundSender contract
+
+The user signs and broadcasts the returned `transactionRequest`. The backend automatically handles bridging and the destination-chain swap.
 
 <ParamField body="fromChain" type="number" required>
   Source chain ID.
