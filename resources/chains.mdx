@@ -1,22 +1,18 @@
 ---
 title: "Supported Chains"
 sidebarTitle: "Chains"
-description: "Complete list of all supported blockchains with chain IDs and slugs"
+description: "Complete list of all supported blockchains with chain IDs, deposit modes, and integration examples"
 ---
 
-Hypermid supports 90+ blockchains across EVM and non-EVM networks.
+Hypermid supports 90+ blockchains across EVM and non-EVM networks. Every chain has a **slug** (human-readable string) and a **numeric ID**. Both are accepted in all API params, widget config, and SDK methods.
 
-## Unified Chain Identifiers
+You can also fetch the full list programmatically via [`GET /v1/chains`](/api-reference/chains).
 
-Every chain has a **slug** (human-readable string) and a **numeric ID**. Both are accepted everywhere — API params, widget config, and SDK methods.
-
-<Tip>
-  **Use slugs for non-EVM chains** — `"solana"` is much easier than `1151111081099710`. EVM chains work with either format.
-</Tip>
-
-You can also fetch the full list programmatically via [GET /v1/chains](/api-reference/chains) — each chain object includes `slug`, `providers`, and `id`.
+---
 
 ## EVM Chains
+
+EVM chains support **wallet mode** — the execute endpoint returns a `transactionRequest` that you sign and broadcast directly from your app. No manual steps needed.
 
 | Chain | Slug | Chain ID | Native Token |
 |-------|------|----------|-------------|
@@ -29,7 +25,6 @@ You can also fetch the full list programmatically via [GET /v1/chains](/api-refe
 | BNB Chain | `bsc` | `56` | BNB |
 | Gnosis | `gnosis` | `100` | xDAI |
 | Unichain | `unichain` | `130` | ETH |
-| PulseChain | `pulsechain` | `369` | PLS |
 | Polygon | `polygon` | `137` | POL |
 | Sonic | `sonic` | `146` | S |
 | X Layer | `x-layer` | `196` | OKB |
@@ -37,6 +32,7 @@ You can also fetch the full list programmatically via [GET /v1/chains](/api-refe
 | Fraxtal | `fraxtal` | `252` | frxETH |
 | Boba | `boba` | `288` | ETH |
 | zkSync Era | `zksync` | `324` | ETH |
+| PulseChain | `pulsechain` | `369` | PLS |
 | World Chain | `world-chain` | `480` | ETH |
 | Flow | `flow` | `747` | FLOW |
 | HyperEVM | `hyperevm` | `999` | HYPE |
@@ -66,67 +62,201 @@ You can also fetch the full list programmatically via [GET /v1/chains](/api-refe
 | Taiko | `taiko` | `167000` | ETH |
 | Scroll | `scroll` | `534352` | ETH |
 
+### EVM Example (Wallet Mode)
+
+All EVM swaps return a `transactionRequest` — sign it and broadcast:
+
+<CodeGroup>
+```typescript TypeScript
+const exec = await client.execute({
+  fromChain: 1,       // Ethereum
+  toChain: 42161,     // Arbitrum
+  fromToken: "0x0000000000000000000000000000000000000000",
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAmount: "1000000000000000000",
+  fromAddress: "0xYourWallet",
+  toAddress: "0xYourWallet",
+});
+
+// Sign and broadcast — that's it
+const tx = await wallet.sendTransaction(exec.data.transactionRequest);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/execute" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fromChain": 1,
+    "toChain": 42161,
+    "fromToken": "0x0000000000000000000000000000000000000000",
+    "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "fromAmount": "1000000000000000000",
+    "fromAddress": "0xYourWallet",
+    "toAddress": "0xYourWallet"
+  }'
+```
+</CodeGroup>
+
+<Tip>
+  **PulseChain swaps** use the same wallet mode but may require an extra confirmation step for inbound multi-step routes. See the [SuperSwap guide](/guides/superswap) for details.
+</Tip>
+
+---
+
 ## Non-EVM Chains
 
-| Chain | Slug | Chain ID | Native Token |
-|-------|------|----------|-------------|
-| Solana | `solana` | `1151111081099710` | SOL |
-| Bitcoin | `bitcoin` | `20000000000001` | BTC |
-| Sui | `sui` | `9270000000000000` | SUI |
+Non-EVM chains support two deposit modes depending on the chain:
 
-## Intent-Based Chains
+- **Wallet** — Returns a `transactionRequest` you can sign programmatically (same as EVM). Works for Solana, Bitcoin, TON, and Tron.
+- **Manual** — Returns a `depositAddress` (and optional `memo`). The user sends tokens from their native wallet app.
 
-These chains use intent-based transfers with a deposit model. See the [Cross-Chain Swap Guide](/guides/cross-chain-swap) for details.
-
-| Chain | Slug | Chain ID | Deposit Mode |
-|-------|------|----------|-------------|
-| NEAR | `near` | `900000001` | Manual |
-| TON | `ton` | `900000002` | Wallet |
-| Tron | `tron` | `900000003` | Wallet |
-| XRP Ledger | `xrp` | `900000004` | Manual |
-| Dogecoin | `doge` | `900000005` | Manual |
-| Litecoin | `litecoin` | `900000006` | Manual |
-| Bitcoin Cash | `bitcoin-cash` | `900000007` | Manual |
-| Stellar | `stellar` | `900000008` | Manual |
-| Cardano | `cardano` | `900000009` | Manual |
-| Aptos | `aptos` | `900000010` | Manual |
-| StarkNet | `starknet` | `900000011` | Manual |
-| Dash | `dash` | `900000012` | Manual |
-| Zcash | `zcash` | `900000013` | Manual |
-| Aleo | `aleo` | `900000014` | Manual |
-| ADI | `adi` | `900000015` | Manual |
-
-### Deposit Mode Explained
-
-- **Wallet** — The execute endpoint returns a `transactionRequest` that can be signed and sent programmatically. Supported for EVM chains, Solana, Bitcoin, TON, and Tron as source chains.
-- **Manual** — The execute endpoint returns a `depositAddress` (and optional `memo`) that the user must send tokens to using their native wallet.
+| Chain | Slug | Chain ID | Native Token | Deposit Mode |
+|-------|------|----------|-------------|-------------|
+| Solana | `solana` | `1151111081099710` | SOL | Wallet |
+| Bitcoin | `bitcoin` | `20000000000001` | BTC | Wallet |
+| Sui | `sui` | `9270000000000000` | SUI | Wallet |
+| TON | `ton` | `900000002` | TON | Wallet |
+| Tron | `tron` | `900000003` | TRX | Wallet |
+| NEAR | `near` | `900000001` | NEAR | Manual |
+| XRP Ledger | `xrp` | `900000004` | XRP | Manual |
+| Dogecoin | `doge` | `900000005` | DOGE | Manual |
+| Litecoin | `litecoin` | `900000006` | LTC | Manual |
+| Bitcoin Cash | `bitcoin-cash` | `900000007` | BCH | Manual |
+| Stellar | `stellar` | `900000008` | XLM | Manual |
+| Cardano | `cardano` | `900000009` | ADA | Manual |
+| Aptos | `aptos` | `900000010` | APT | Manual |
+| StarkNet | `starknet` | `900000011` | STRK | Manual |
+| Dash | `dash` | `900000012` | DASH | Manual |
+| Zcash | `zcash` | `900000013` | ZEC | Manual |
+| Aleo | `aleo` | `900000014` | ALEO | Manual |
+| ADI | `adi` | `900000015` | ADI | Manual |
 
 <Note>
-  Partners can override the deposit mode to "manual" for any chain using the `depositMode` parameter in the execute request.
+  **Wallet chains can also use manual mode.** Pass `depositMode: "manual"` in your execute request to force a deposit address for any chain. Useful if your app doesn't have a native wallet integration for that chain.
 </Note>
+
+### Wallet Mode Example (Solana)
+
+Wallet-mode non-EVM chains work the same as EVM — you get a `transactionRequest`:
+
+<CodeGroup>
+```typescript TypeScript
+const exec = await client.execute({
+  fromChain: "solana",
+  toChain: 1,
+  fromToken: "11111111111111111111111111111111", // native SOL
+  toToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "1000000000", // 1 SOL in lamports
+  fromAddress: "YourSolanaAddress",
+  toAddress: "0xYourEVMWallet",
+});
+
+// Sign with your Solana wallet
+const tx = await solanaWallet.signAndSendTransaction(
+  exec.data.transactionRequest
+);
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/execute" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fromChain": "solana",
+    "toChain": 1,
+    "fromToken": "11111111111111111111111111111111",
+    "toToken": "0x0000000000000000000000000000000000000000",
+    "fromAmount": "1000000000",
+    "fromAddress": "YourSolanaAddress",
+    "toAddress": "0xYourEVMWallet"
+  }'
+```
+</CodeGroup>
+
+### Manual Deposit Example (XRP)
+
+Manual-mode chains return a `depositAddress` and optional `memo`. Show these to the user so they can send from their native wallet:
+
+<CodeGroup>
+```typescript TypeScript
+const exec = await client.execute({
+  fromChain: "xrp",
+  toChain: 1,
+  fromToken: "XRP",
+  toToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "50000000", // 50 XRP in drops
+  fromAddress: "rYourXRPAddress",
+  toAddress: "0xYourEVMWallet",
+});
+
+// Display to user — they send manually from their XRP wallet
+console.log("Send to:", exec.data.depositAddress);
+console.log("Memo:", exec.data.memo);         // Required for XRP
+console.log("Deposit ID:", exec.data.depositId);
+
+// Track with deposit status endpoint
+const status = await client.getDepositStatus({
+  depositId: exec.data.depositId,
+});
+```
+
+```bash cURL
+curl -X POST "https://api.hypermid.io/v1/execute" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "fromChain": "xrp",
+    "toChain": 1,
+    "fromToken": "XRP",
+    "toToken": "0x0000000000000000000000000000000000000000",
+    "fromAmount": "50000000",
+    "fromAddress": "rYourXRPAddress",
+    "toAddress": "0xYourEVMWallet"
+  }'
+```
+</CodeGroup>
+
+<Warning>
+  **Memo is required** for XRP and Stellar deposits. If the user omits the memo, the funds may be lost. Always display the memo prominently in your UI.
+</Warning>
+
+### Forcing Manual Mode
+
+Any wallet-mode chain can be switched to manual deposit by passing `depositMode: "manual"`:
+
+```typescript
+const exec = await client.execute({
+  fromChain: "solana",
+  toChain: 1,
+  fromToken: "11111111111111111111111111111111",
+  toToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "1000000000",
+  fromAddress: "YourSolanaAddress",
+  toAddress: "0xYourEVMWallet",
+  depositMode: "manual", // Force deposit address instead of transactionRequest
+});
+
+// Now returns depositAddress instead of transactionRequest
+console.log("Send to:", exec.data.depositAddress);
+```
+
+---
 
 ## Using Chain Identifiers
 
 Both slugs and numeric IDs work in all API endpoints:
 
-```bash
-# Using numeric ID
+<CodeGroup>
+```bash cURL
+# Using numeric ID (common for EVM chains)
 curl "https://api.hypermid.io/v1/quote?fromChain=1&toChain=42161&..."
 
-# Using slug (recommended for non-EVM)
+# Using slug (recommended for non-EVM chains)
 curl "https://api.hypermid.io/v1/quote?fromChain=ethereum&toChain=solana&..."
 ```
 
-```javascript
-// Widget config — both formats work
-HypermidWidget.init({
-  defaultFromChain: "solana",     // slug
-  defaultToChain: 42161,          // numeric ID
-});
-```
-
-```typescript
-// SDK — both formats work
+```typescript SDK
 import { ChainSlug, ChainId } from "@hypermid/sdk";
 
 const quote = await hm.getQuote({
@@ -135,3 +265,15 @@ const quote = await hm.getQuote({
   ...
 });
 ```
+
+```javascript Widget
+HypermidWidget.init({
+  defaultFromChain: "solana",     // slug
+  defaultToChain: 42161,          // numeric ID
+});
+```
+</CodeGroup>
+
+<Tip>
+  **Use slugs for non-EVM chains** — `"solana"` is much easier to read than `1151111081099710`.
+</Tip>
