@@ -88,7 +88,7 @@
               "api-reference/quote",
               "api-reference/routes",
               "api-reference/execute",
-              "api-reference/confirm-deposit",
+              "api-reference/register-inbound-receiver",
               "api-reference/status",
               "api-reference/deposit-submit",
               "api-reference/deposit-status"
