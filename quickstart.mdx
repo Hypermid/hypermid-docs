@@ -125,13 +125,13 @@ const execution = await client.execute({
   toAddress: "0xYourWalletAddress",
 });
 
-// For LI.FI routes: sign and send the transactionRequest via your wallet
+// Sign and send the transactionRequest via your wallet
 if (execution.data.transactionRequest) {
   const tx = await wallet.sendTransaction(execution.data.transactionRequest);
   console.log("Transaction hash:", tx.hash);
 }
 
-// For Near Intents routes: deposit to the provided address
+// For deposit routes: send to the provided address
 if (execution.data.depositAddress) {
   console.log("Send tokens to:", execution.data.depositAddress);
   console.log("Memo:", execution.data.memo);
@@ -178,7 +178,7 @@ toChain=42161" \
 </CodeGroup>
 
 <Tip>
-  For Near Intents deposits, use `GET /v1/execute/deposit/status` with the `depositId` returned from the execute step instead of `GET /v1/status`.
+  For deposit-based routes, use `GET /v1/execute/deposit/status` with the `depositId` returned from the execute step instead of `GET /v1/status`.
 </Tip>
 
 ## What's Next?
@@ -187,7 +187,7 @@ toChain=42161" \
   <Card title="Cross-Chain Swap Guide" icon="arrows-rotate" href="/guides/cross-chain-swap">
     Understand the full swap lifecycle with error handling.
   </Card>
-  <Card title="Near Intents" icon="bolt" href="/guides/near-intents">
+  <Card title="Deposit Routes" icon="bolt" href="/guides/cross-chain-swap">
     Learn how intent-based swaps work for non-EVM chains.
   </Card>
   <Card title="Fiat On-Ramp" icon="credit-card" href="/guides/fiat-onramp">

@@ -4,16 +4,9 @@ openapi: "POST /v1/execute"
 description: "Execute a cross-chain swap"
 ---
 
-Initiates a cross-chain swap execution. Returns either a `transactionRequest` to be signed and sent by the user's wallet (LI.FI routes), a `depositAddress` for the user to send tokens to (Near Intents routes), or a SuperSwap transaction for PulseChain swaps.
+Initiates a cross-chain swap execution. Returns a `transactionRequest` to be signed and sent by the user's wallet, or a `depositAddress` for manual deposit flows.
 
-## SuperSwap Execute
-
-When executing a swap involving PulseChain (chain ID `369`), the response contains:
-
-- **Inbound:** The `superSwap()` transaction for the HypermidSender contract
-- **Outbound:** The `outboundSwapPLS()` transaction for the OutboundSender contract
-
-The user signs and broadcasts the returned `transactionRequest`. The backend automatically handles bridging and the destination-chain swap.
+For SuperSwap routes, the response contains the bridge transaction for the user to sign. The backend automatically handles cross-chain delivery and destination swaps.
 
 <ParamField body="fromChain" type="number" required>
   Source chain ID.
@@ -48,19 +41,60 @@ The user signs and broadcasts the returned `transactionRequest`. The backend aut
 </ParamField>
 
 <ParamField body="tool" type="string">
-  Specific tool to use (e.g., `stargate`). If omitted, the best tool is selected automatically.
+  Specific tool to use. If omitted, the best tool is selected automatically.
 </ParamField>
 
 <ParamField body="depositMode" type="string">
-  Override deposit mode for Near Intents routes. Set to `"manual"` to force manual deposit flow even when wallet mode is available.
+  Override deposit mode. Set to `"manual"` to force manual deposit flow for intent-based routes.
 </ParamField>
 
+## Multi-step Swap Execution
+
+For multi-step swaps (where the quote has `singleSignature: true` and `steps[1].automated: true`), the execution flow requires an additional confirmation step:
+
+1. **Sign and broadcast** the transaction from `steps[0].transactionRequest`
+2. **Wait for confirmation** on the source chain
+3. **Sign an EIP-712 authorization message** (gasless wallet signature — no transaction cost)
+4. **Call `POST /v1/inbound-receiver/register`** with the tx hash + signature
+
+The backend then automatically handles bridging and destination-chain execution.
+
+### EIP-712 Authorization
+
+The quote response includes the full EIP-712 signing specification in `afterStep1.eip712`. The wallet must sign a typed data message authorizing the routing parameters:
+
+```typescript
+// After Step 1 confirms:
+const { afterStep1 } = quote;
+
+const signature = await walletClient.signTypedData({
+  domain: afterStep1.eip712.domain,
+  types: afterStep1.eip712.types,
+  primaryType: afterStep1.eip712.primaryType,
+  message: {
+    ...afterStep1.eip712.message,
+    txHash: step1TxHash,  // Actual tx hash from Step 1
+  },
+});
+
+// Confirm the deposit
+await fetch("https://api.hypermid.io/v1/inbound-receiver/register", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    ...afterStep1.body,
+    txHash: step1TxHash,
+    signature,
+  }),
+});
+```
+
+The confirm endpoint verifies the transaction on-chain and validates the wallet signature before starting the automatic bridge.
+
 <ResponseExample>
-```json 200 LI.FI Route
+```json 200 Standard Route
 {
   "data": {
-    "type": "lifi",
-    "tool": "stargate",
     "transactionRequest": {
       "to": "0xBridgeContractAddress",
       "data": "0x2646478b...",
@@ -76,25 +110,13 @@ The user signs and broadcasts the returned `transactionRequest`. The backend aut
       "toAmountUSD": "3237.50",
       "executionDuration": 120
     }
-  },
-  "error": null,
-  "meta": {
-    "requestId": "k1f2a3b4-c5d6-7890-4567-901234567890",
-    "timestamp": 1711234575,
-    "rateLimit": {
-      "limit": 2000,
-      "remaining": 1989,
-      "reset": 1711234627
-    }
   }
 }
 ```
 
-```json 200 Near Intents Route
+```json 200 Intent-based Route
 {
   "data": {
-    "type": "near-intents",
-    "tool": "near-intents",
     "depositId": "dep_abc123def456",
     "depositAddress": "0xDepositContractAddress",
     "depositMode": "wallet",
@@ -104,36 +126,22 @@ The user signs and broadcasts the returned `transactionRequest`. The backend aut
       "data": "0xa9059cbb...",
       "value": "1000000000000000000",
       "gasLimit": "100000",
-      "gasPrice": "20000000000",
       "chainId": 1
     },
     "estimate": {
       "fromAmount": "1000000000000000000",
-      "fromAmountUSD": "3250.00",
       "toAmount": "3240000000",
       "toAmountUSD": "3240.00",
       "executionDuration": 90
     },
     "expiresAt": 1711235475
-  },
-  "error": null,
-  "meta": {
-    "requestId": "l2a3b4c5-d6e7-8901-5678-012345678901",
-    "timestamp": 1711234576,
-    "rateLimit": {
-      "limit": 2000,
-      "remaining": 1988,
-      "reset": 1711234627
-    }
   }
 }
 ```
 
-```json 200 Near Intents (Manual Mode)
+```json 200 Manual Deposit Route
 {
   "data": {
-    "type": "near-intents",
-    "tool": "near-intents",
     "depositId": "dep_xyz789",
     "depositAddress": "rDepositXRPAddress",
     "depositMode": "manual",
@@ -146,16 +154,6 @@ The user signs and broadcasts the returned `transactionRequest`. The backend aut
       "executionDuration": 180
     },
     "expiresAt": 1711235475
-  },
-  "error": null,
-  "meta": {
-    "requestId": "m3b4c5d6-e7f8-9012-6789-123456789012",
-    "timestamp": 1711234577,
-    "rateLimit": {
-      "limit": 2000,
-      "remaining": 1987,
-      "reset": 1711234627
-    }
   }
 }
 ```
@@ -175,11 +173,11 @@ const exec = await client.execute({
 });
 
 if (exec.data.transactionRequest) {
-  // LI.FI or Near Intents wallet mode: sign and send
+  // Sign and send the transaction
   const tx = await wallet.sendTransaction(exec.data.transactionRequest);
   console.log("Tx hash:", tx.hash);
 } else if (exec.data.depositAddress) {
-  // Near Intents manual mode: show deposit info
+  // Manual deposit: show deposit info to user
   console.log("Send to:", exec.data.depositAddress);
   console.log("Memo:", exec.data.memo);
 }
@@ -199,26 +197,6 @@ curl -X POST "https://api.hypermid.io/v1/execute" \
     "toAddress": "0xYourAddress",
     "slippage": 0.03
   }'
-```
-
-```go Go
-body := `{
-  "fromChain": 1,
-  "toChain": 42161,
-  "fromToken": "0x0000000000000000000000000000000000000000",
-  "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-  "fromAmount": "1000000000000000000",
-  "fromAddress": "0xYourAddress",
-  "toAddress": "0xYourAddress",
-  "slippage": 0.03
-}`
-
-req, _ := http.NewRequest("POST",
-    "https://api.hypermid.io/v1/execute",
-    strings.NewReader(body))
-req.Header.Set("Content-Type", "application/json")
-req.Header.Set("X-API-Key", "your-api-key")
-resp, _ := http.DefaultClient.Do(req)
 ```
 </CodeGroup>
 

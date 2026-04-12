@@ -13,7 +13,7 @@ Hypermid is a **unified Partner API** that gives you access to cross-chain swaps
     EVM chains, Solana, Bitcoin, NEAR, TON, Tron, XRP, and more — all through one API.
   </Card>
   <Card title="Best Rates" icon="chart-line">
-    Aggregates LI.FI, Near Intents, and other providers to find the optimal route for every swap.
+    Aggregates multiple bridge and DEX providers to find the optimal route for every swap.
   </Card>
   <Card title="Fiat On-Ramp" icon="credit-card">
     Let users buy crypto with fiat currency via the integrated RampNow provider.
@@ -25,10 +25,10 @@ Hypermid is a **unified Partner API** that gives you access to cross-chain swaps
 
 ## How It Works
 
-Hypermid acts as a **server-side proxy** between your application and upstream providers. Your users never interact with LI.FI, Near Intents, or RampNow directly — all traffic flows through the Hypermid API.
+Hypermid acts as a **server-side proxy** between your application and upstream providers. Your users never interact with bridge or DEX providers directly — all traffic flows through the Hypermid API.
 
 ```
-Your App  →  Hypermid API  →  LI.FI / Near Intents / RampNow
+Your App  →  Hypermid API  →  Bridge & DEX Providers
                 ↕
          Partner Dashboard
 ```
@@ -50,13 +50,14 @@ This architecture provides several benefits:
 | **Trading Bots** | Automate cross-chain arbitrage and portfolio rebalancing |
 | **Fiat Gateways** | Let users buy crypto directly in your app with credit card or bank transfer |
 
-## Supported Providers
+## Capabilities
 
-| Provider | Functionality | Chains |
-|----------|--------------|--------|
-| **LI.FI** | Cross-chain swaps and bridges | EVM chains, Solana |
-| **Near Intents** | Intent-based cross-chain transfers | NEAR, TON, Tron, XRP, DOGE, LTC, and more |
-| **RampNow** | Fiat to crypto on-ramp | Multiple chains and fiat currencies |
+| Capability | Description | Chains |
+|------------|------------|--------|
+| **Cross-Chain Swaps** | Bridge and swap tokens across blockchains | EVM chains, Solana, and 90+ more |
+| **Intent-Based Transfers** | Deposit-based transfers for non-EVM chains | NEAR, TON, Tron, XRP, DOGE, LTC, and more |
+| **SuperSwap** | Dedicated PulseChain bridge and DEX routing | PulseChain ↔ All supported chains |
+| **Fiat On-Ramp** | Buy crypto with fiat currency | Multiple chains and fiat currencies |
 
 ## Next Steps
 

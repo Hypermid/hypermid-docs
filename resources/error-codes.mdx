@@ -115,7 +115,7 @@ Every error response includes a machine-readable `code` field in the error objec
       <td>`UPSTREAM_ERROR`</td>
       <td>502</td>
       <td>Error from an upstream provider</td>
-      <td>LI.FI, RampNow, or Near Intents returned an error</td>
+      <td>An upstream routing provider returned an error</td>
       <td>Retry after a brief delay; try excluding the failing tool with `denyTools`</td>
     </tr>
     <tr>
@@ -143,7 +143,7 @@ Every error response includes a machine-readable `code` field in the error objec
       <td>`UPSTREAM_TIMEOUT`</td>
       <td>504</td>
       <td>Upstream provider timed out</td>
-      <td>LI.FI or RampNow took too long to respond</td>
+      <td>An upstream provider took too long to respond</td>
       <td>Retry after a delay; consider using a different tool</td>
     </tr>
   </tbody>

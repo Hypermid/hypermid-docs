@@ -50,29 +50,25 @@ Returns the best available quote for swapping tokens between chains. Hypermid co
   Preferred tool to use if available (e.g., `stargate`).
 </ParamField>
 
-## SuperSwap (PulseChain) Routes
+## SuperSwap Routes
 
-When either `fromChain` or `toChain` is **369** (PulseChain), the API automatically routes through **SuperSwap** using Hyperlane Warp Routes and Piteas DEX. No additional configuration needed.
+When either `fromChain` or `toChain` is a SuperSwap-supported chain (e.g., `369` for PulseChain), the API automatically routes through **SuperSwap**. No additional configuration needed.
 
-### Direct Inbound (e.g., USDC on Base → PLS on PulseChain)
+### Direct Swap (e.g., USDC on Base → PLS on PulseChain)
 
-The user sends USDC directly to the HypermidSender contract. **One signature** required. The response shape matches a standard quote with `transactionRequest`.
+**One signature** required. The response includes a `transactionRequest` to sign and broadcast.
 
-### Multi-step Inbound (e.g., ETH on Base → PLS on PulseChain)
+### Multi-step Swap (e.g., ETH on Base → PLS on PulseChain)
 
-When the source token is not USDC, the API returns a multi-step quote with `singleSignature: true`:
-- **Step 1:** LiFi swaps the source token to USDC and sends it to the InboundReceiver contract
-- **Step 2 (automatic):** The backend bridges USDC to PulseChain and executes the Piteas swap
+When the source token requires conversion, the API returns a multi-step quote with `singleSignature: true`:
+- **Step 1:** Hypermid swaps the source token to USDC on the source chain
+- **Step 2 (automatic):** Hypermid bridges and executes the destination swap
 
-The user signs only Step 1. After it confirms, the frontend must call [`POST /v1/inbound-receiver/register`](/api-reference/inbound-receiver-register) with an **EIP-712 wallet signature** to authorize the deposit routing.
+The user signs only Step 1. After it confirms, the frontend signs an EIP-712 message and calls the confirm endpoint. See [Execute Swap](/api-reference/execute) for details.
 
-### Direct Outbound (e.g., PLS on PulseChain → USDC on Base)
+### Outbound Swap (e.g., PLS on PulseChain → USDC/ETH on Base)
 
-The user calls `outboundSwapPLS()` on the OutboundSender contract. USDC is delivered directly to the user on Base.
-
-### Multi-step Outbound (e.g., PLS on PulseChain → ETH on Base)
-
-Two steps: PLS → USDC on Base (via SuperSwap), then USDC → ETH (via LiFi on Base).
+The user signs one transaction on PulseChain. USDC or the desired token is delivered on the destination chain.
 
 See the [SuperSwap Integration Guide](/guides/superswap) for full details.
 
@@ -175,7 +171,7 @@ See the [SuperSwap Integration Guide](/guides/superswap) for full details.
     "quote": {
       "id": "superswap_abc123",
       "provider": "superswap",
-      "tool": "hyperlane",
+      "tool": "superswap",
       "fromChainId": 8453,
       "toChainId": 369,
       "fromToken": {
@@ -230,7 +226,7 @@ See the [SuperSwap Integration Guide](/guides/superswap) for full details.
         {
           "step": 1,
           "type": "lifi",
-          "description": "Swap ETH → USDC (routed via InboundReceiver)",
+          "description": "Swap ETH → USDC on Base",
           "transactionRequest": {
             "to": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
             "data": "0x...",

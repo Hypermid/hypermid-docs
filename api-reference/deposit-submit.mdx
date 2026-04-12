@@ -1,10 +1,10 @@
 ---
 title: "Submit Deposit"
 openapi: "POST /v1/execute/deposit/submit"
-description: "Notify Hypermid that a Near Intents deposit has been made"
+description: "Notify Hypermid that a manual deposit has been made"
 ---
 
-Submits a notification that a manual deposit has been made for a Near Intents swap. This helps speed up deposit detection for chains where Hypermid cannot automatically monitor for incoming transactions.
+Submits a notification that a manual deposit has been made. This helps speed up deposit detection for chains where Hypermid cannot automatically monitor for incoming transactions.
 
 <ParamField body="depositId" type="string" required>
   The deposit ID returned from the `/v1/execute` endpoint.

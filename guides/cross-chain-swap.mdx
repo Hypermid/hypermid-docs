@@ -186,9 +186,9 @@ curl -X POST "https://api.hypermid.io/v1/execute" \
 
 ### Handling the Response
 
-The execution response contains either a `transactionRequest` (LI.FI routes) or a `depositAddress` (Near Intents routes).
+The execution response contains either a `transactionRequest` (wallet mode) or a `depositAddress` (manual deposit mode).
 
-#### LI.FI Routes (EVM/Solana)
+#### Wallet Mode (EVM/Solana)
 
 ```typescript
 if (execution.data.transactionRequest) {
@@ -211,7 +211,7 @@ if (execution.data.transactionRequest) {
 }
 ```
 
-#### Near Intents Routes
+#### Manual Deposit Mode
 
 ```typescript
 if (execution.data.depositAddress) {
@@ -229,7 +229,7 @@ if (execution.data.depositAddress) {
 
 ## Step 5: Track Status
 
-### LI.FI Route Status
+### Transaction Status
 
 Poll `GET /v1/status` with the transaction hash:
 
@@ -267,9 +267,9 @@ toChain=42161" \
 ```
 </CodeGroup>
 
-### Near Intents Deposit Status
+### Manual Deposit Status
 
-Poll `GET /v1/execute/deposit/status` with the deposit ID:
+For manual deposit routes, poll `GET /v1/execute/deposit/status` with the deposit ID:
 
 ```typescript
 const depositStatus = await client.getDepositStatus({

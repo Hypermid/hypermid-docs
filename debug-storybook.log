@@ -1,0 +1,12 @@
+[17:19:46.197] [INFO] [36mInitializing Storybook[39m
+[17:19:46.361] [DEBUG] Getting package.json info for /Users/rajeshkumarmadhaiyan/hypermid/hypermid-docs/package.json...
+[17:19:46.361] [DEBUG] Getting CLI versions from NPM for storybook...
+[17:19:46.361] [DEBUG] Executing command: pnpm info storybook version
+[17:19:46.788] [INFO] Adding Storybook version 10.3.5 to your project
+[17:19:46.789] [ERROR] Unable to initialize Storybook in this directory.
+
+Storybook couldn't detect a supported framework or configuration for your project. Make sure you're inside a framework project (e.g., React, Vue, Svelte, Angular, Next.js) and that its dependencies are installed.
+
+Tips:
+- Run init in an empty directory or create a new framework app first.
+- If this directory contains unrelated files, try a new directory for Storybook.

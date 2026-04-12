@@ -4,7 +4,7 @@ sidebarTitle: "Chains"
 description: "Complete list of all supported blockchains with chain IDs and slugs"
 ---
 
-Hypermid supports 90+ blockchains across EVM, non-EVM, and Near Intents networks.
+Hypermid supports 90+ blockchains across EVM and non-EVM networks.
 
 ## Unified Chain Identifiers
 
@@ -18,82 +18,83 @@ You can also fetch the full list programmatically via [GET /v1/chains](/api-refe
 
 ## EVM Chains
 
-| Chain | Slug | Chain ID | Providers | Native Token |
-|-------|------|----------|-----------|-------------|
-| Ethereum | `ethereum` | `1` | LiFi, Near Intents | ETH |
-| Optimism | `optimism` | `10` | LiFi, Near Intents | ETH |
-| Flare | `flare` | `14` | LiFi | FLR |
-| Cronos | `cronos` | `25` | LiFi | CRO |
-| Rootstock | `rootstock` | `30` | LiFi | RBTC |
-| Telos | `telos` | `40` | LiFi | TLOS |
-| BNB Chain | `bsc` | `56` | LiFi, Near Intents | BNB |
-| Gnosis | `gnosis` | `100` | LiFi, Near Intents | xDAI |
-| Unichain | `unichain` | `130` | LiFi | ETH |
-| Polygon | `polygon` | `137` | LiFi, Near Intents | POL |
-| Sonic | `sonic` | `146` | LiFi | S |
-| X Layer | `x-layer` | `196` | LiFi, Near Intents | OKB |
-| opBNB | `opbnb` | `204` | LiFi | BNB |
-| Fraxtal | `fraxtal` | `252` | LiFi | frxETH |
-| Boba | `boba` | `288` | LiFi | ETH |
-| zkSync Era | `zksync` | `324` | LiFi | ETH |
-| World Chain | `world-chain` | `480` | LiFi | ETH |
-| Flow | `flow` | `747` | LiFi | FLOW |
-| HyperEVM | `hyperevm` | `999` | LiFi | HYPE |
-| Plasma | `plasma` | `1012` | Near Intents | ETH |
-| Metis | `metis` | `1088` | LiFi | METIS |
-| Lisk | `lisk` | `1135` | LiFi | ETH |
-| Moonbeam | `moonbeam` | `1284` | LiFi | GLMR |
-| Sei | `sei` | `1329` | LiFi | SEI |
-| Gravity | `gravity` | `1625` | LiFi | G |
-| Soneium | `soneium` | `1868` | LiFi | ETH |
-| Ronin | `ronin` | `2020` | LiFi | RON |
-| Abstract | `abstract` | `2741` | LiFi | ETH |
-| Mantle | `mantle` | `5000` | LiFi | MNT |
-| Base | `base` | `8453` | LiFi, Near Intents | ETH |
-| Monad | `monad` | `10143` | Near Intents | MON |
-| Immutable zkEVM | `immutable` | `13371` | LiFi | IMX |
-| Apechain | `apechain` | `33139` | LiFi | APE |
-| Mode | `mode` | `34443` | LiFi | ETH |
-| Arbitrum | `arbitrum` | `42161` | LiFi, Near Intents | ETH |
-| Celo | `celo` | `42220` | LiFi | CELO |
-| Avalanche | `avalanche` | `43114` | LiFi, Near Intents | AVAX |
-| Ink | `ink` | `57073` | LiFi | ETH |
-| Linea | `linea` | `59144` | LiFi | ETH |
-| BOB | `bob` | `60808` | LiFi | ETH |
-| Berachain | `berachain` | `80094` | LiFi, Near Intents | BERA |
-| Blast | `blast` | `81457` | LiFi | ETH |
-| Taiko | `taiko` | `167000` | LiFi | ETH |
-| Scroll | `scroll` | `534352` | LiFi, Near Intents | ETH |
+| Chain | Slug | Chain ID | Native Token |
+|-------|------|----------|-------------|
+| Ethereum | `ethereum` | `1` | ETH |
+| Optimism | `optimism` | `10` | ETH |
+| Flare | `flare` | `14` | FLR |
+| Cronos | `cronos` | `25` | CRO |
+| Rootstock | `rootstock` | `30` | RBTC |
+| Telos | `telos` | `40` | TLOS |
+| BNB Chain | `bsc` | `56` | BNB |
+| Gnosis | `gnosis` | `100` | xDAI |
+| Unichain | `unichain` | `130` | ETH |
+| PulseChain | `pulsechain` | `369` | PLS |
+| Polygon | `polygon` | `137` | POL |
+| Sonic | `sonic` | `146` | S |
+| X Layer | `x-layer` | `196` | OKB |
+| opBNB | `opbnb` | `204` | BNB |
+| Fraxtal | `fraxtal` | `252` | frxETH |
+| Boba | `boba` | `288` | ETH |
+| zkSync Era | `zksync` | `324` | ETH |
+| World Chain | `world-chain` | `480` | ETH |
+| Flow | `flow` | `747` | FLOW |
+| HyperEVM | `hyperevm` | `999` | HYPE |
+| Plasma | `plasma` | `1012` | ETH |
+| Metis | `metis` | `1088` | METIS |
+| Lisk | `lisk` | `1135` | ETH |
+| Moonbeam | `moonbeam` | `1284` | GLMR |
+| Sei | `sei` | `1329` | SEI |
+| Gravity | `gravity` | `1625` | G |
+| Soneium | `soneium` | `1868` | ETH |
+| Ronin | `ronin` | `2020` | RON |
+| Abstract | `abstract` | `2741` | ETH |
+| Mantle | `mantle` | `5000` | MNT |
+| Base | `base` | `8453` | ETH |
+| Monad | `monad` | `10143` | MON |
+| Immutable zkEVM | `immutable` | `13371` | IMX |
+| Apechain | `apechain` | `33139` | APE |
+| Mode | `mode` | `34443` | ETH |
+| Arbitrum | `arbitrum` | `42161` | ETH |
+| Celo | `celo` | `42220` | CELO |
+| Avalanche | `avalanche` | `43114` | AVAX |
+| Ink | `ink` | `57073` | ETH |
+| Linea | `linea` | `59144` | ETH |
+| BOB | `bob` | `60808` | ETH |
+| Berachain | `berachain` | `80094` | BERA |
+| Blast | `blast` | `81457` | ETH |
+| Taiko | `taiko` | `167000` | ETH |
+| Scroll | `scroll` | `534352` | ETH |
 
 ## Non-EVM Chains
 
-| Chain | Slug | Chain ID | Providers | Native Token |
-|-------|------|----------|-----------|-------------|
-| Solana | `solana` | `1151111081099710` | LiFi, Near Intents | SOL |
-| Bitcoin | `bitcoin` | `20000000000001` | LiFi, Near Intents | BTC |
-| Sui | `sui` | `9270000000000000` | LiFi, Near Intents | SUI |
+| Chain | Slug | Chain ID | Native Token |
+|-------|------|----------|-------------|
+| Solana | `solana` | `1151111081099710` | SOL |
+| Bitcoin | `bitcoin` | `20000000000001` | BTC |
+| Sui | `sui` | `9270000000000000` | SUI |
 
-## Near Intents-Only Chains
+## Intent-Based Chains
 
-These chains use intent-based transfers with a deposit model. See the [Near Intents Guide](/guides/near-intents) for details.
+These chains use intent-based transfers with a deposit model. See the [Cross-Chain Swap Guide](/guides/cross-chain-swap) for details.
 
-| Chain | Slug | Chain ID | Native Token | Deposit Mode |
-|-------|------|----------|-------------|-------------|
-| NEAR | `near` | `900000001` | NEAR | Manual |
-| TON | `ton` | `900000002` | TON | Wallet |
-| Tron | `tron` | `900000003` | TRX | Wallet |
-| XRP Ledger | `xrp` | `900000004` | XRP | Manual |
-| Dogecoin | `doge` | `900000005` | DOGE | Manual |
-| Litecoin | `litecoin` | `900000006` | LTC | Manual |
-| Bitcoin Cash | `bitcoin-cash` | `900000007` | BCH | Manual |
-| Stellar | `stellar` | `900000008` | XLM | Manual |
-| Cardano | `cardano` | `900000009` | ADA | Manual |
-| Aptos | `aptos` | `900000010` | APT | Manual |
-| StarkNet | `starknet` | `900000011` | ETH | Manual |
-| Dash | `dash` | `900000012` | DASH | Manual |
-| Zcash | `zcash` | `900000013` | ZEC | Manual |
-| Aleo | `aleo` | `900000014` | ALEO | Manual |
-| ADI | `adi` | `900000015` | ADI | Manual |
+| Chain | Slug | Chain ID | Deposit Mode |
+|-------|------|----------|-------------|
+| NEAR | `near` | `900000001` | Manual |
+| TON | `ton` | `900000002` | Wallet |
+| Tron | `tron` | `900000003` | Wallet |
+| XRP Ledger | `xrp` | `900000004` | Manual |
+| Dogecoin | `doge` | `900000005` | Manual |
+| Litecoin | `litecoin` | `900000006` | Manual |
+| Bitcoin Cash | `bitcoin-cash` | `900000007` | Manual |
+| Stellar | `stellar` | `900000008` | Manual |
+| Cardano | `cardano` | `900000009` | Manual |
+| Aptos | `aptos` | `900000010` | Manual |
+| StarkNet | `starknet` | `900000011` | Manual |
+| Dash | `dash` | `900000012` | Manual |
+| Zcash | `zcash` | `900000013` | Manual |
+| Aleo | `aleo` | `900000014` | Manual |
+| ADI | `adi` | `900000015` | Manual |
 
 ### Deposit Mode Explained
 
@@ -101,7 +102,7 @@ These chains use intent-based transfers with a deposit model. See the [Near Inte
 - **Manual** — The execute endpoint returns a `depositAddress` (and optional `memo`) that the user must send tokens to using their native wallet.
 
 <Note>
-  Partners can override the deposit mode to "manual" for any chain using the `depositMode` parameter in the execute request. See the [Near Intents Guide](/guides/near-intents) for details.
+  Partners can override the deposit mode to "manual" for any chain using the `depositMode` parameter in the execute request.
 </Note>
 
 ## Using Chain Identifiers

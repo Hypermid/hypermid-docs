@@ -1,10 +1,10 @@
 ---
 title: "Get Deposit Status"
 openapi: "GET /v1/execute/deposit/status"
-description: "Check the status of a Near Intents deposit"
+description: "Check the status of a manual deposit"
 ---
 
-Returns the current status of a Near Intents deposit and its associated swap. Use this endpoint for all Near Intents swaps instead of `/v1/status`.
+Returns the current status of a manual deposit and its associated swap. Use this endpoint for deposit-based swap routes instead of `/v1/status`.
 
 <ParamField query="depositId" type="string" required>
   The deposit ID returned from the `/v1/execute` endpoint.

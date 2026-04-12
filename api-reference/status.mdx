@@ -4,7 +4,7 @@ openapi: "GET /v1/status"
 description: "Check the status of a swap transaction"
 ---
 
-Returns the current status of a cross-chain swap transaction. Use this to track the progress of LI.FI-routed swaps after the user has signed and submitted the transaction.
+Returns the current status of a cross-chain swap transaction. Use this to track the progress of swaps after the user has signed and submitted the transaction.
 
 <ParamField query="txHash" type="string" required>
   The transaction hash on the source chain.
@@ -118,14 +118,14 @@ Returns the current status of a cross-chain swap transaction. Use this to track 
 
 ### SuperSwap Sub-Status Values
 
-For PulseChain swaps (provider `superswap`), additional sub-statuses are available:
+For SuperSwap routes (provider `superswap`), additional sub-statuses are available:
 
 | Sub-Status | Description |
 |------------|-------------|
-| `SWAP_IN_PROGRESS` | Piteas swap executing on PulseChain |
-| `FALLBACK_SENT` | Swap failed — USDCh returned to user |
+| `SWAP_IN_PROGRESS` | DEX swap executing on the destination chain |
+| `FALLBACK_SENT` | Swap unavailable — stablecoin returned to user |
 
-Add `provider=superswap` to the query to get SuperSwap-specific status when tracking PulseChain swaps.
+Add `provider=superswap` to the query when tracking SuperSwap transactions.
 
 <CodeGroup>
 ```typescript TypeScript
@@ -171,5 +171,5 @@ resp, _ := http.DefaultClient.Do(req)
 </CodeGroup>
 
 <Tip>
-  For Near Intents deposits, use [GET /v1/execute/deposit/status](/api-reference/deposit-status) instead.
+  For manual deposit routes, use [GET /v1/execute/deposit/status](/api-reference/deposit-status) instead.
 </Tip>

@@ -63,31 +63,32 @@ When only one mode is enabled, the mode toggle is automatically hidden.
 
 Hypermid uses a **unified chain ID system**. You can reference chains by either their **numeric ID** or a **human-readable slug**:
 
-| Chain | Slug | Chain ID | Providers |
-|-------|------|----------|-----------|
-| Ethereum | `ethereum` | `1` | LiFi, Near Intents |
-| Arbitrum | `arbitrum` | `42161` | LiFi, Near Intents |
-| Base | `base` | `8453` | LiFi, Near Intents |
-| Polygon | `polygon` | `137` | LiFi, Near Intents |
-| Optimism | `optimism` | `10` | LiFi, Near Intents |
-| BNB Chain | `bsc` | `56` | LiFi, Near Intents |
-| Avalanche | `avalanche` | `43114` | LiFi, Near Intents |
-| Berachain | `berachain` | `80094` | LiFi, Near Intents |
-| Solana | `solana` | `1151111081099710` | LiFi, Near Intents |
-| Bitcoin | `bitcoin` | `20000000000001` | LiFi, Near Intents |
-| Sui | `sui` | `9270000000000000` | LiFi, Near Intents |
-| NEAR | `near` | `900000001` | Near Intents |
-| TON | `ton` | `900000002` | Near Intents |
-| Tron | `tron` | `900000003` | Near Intents |
-| XRP | `xrp` | `900000004` | Near Intents |
-| Dogecoin | `doge` | `900000005` | Near Intents |
-| Aptos | `aptos` | `900000010` | Near Intents |
-| zkSync Era | `zksync` | `324` | LiFi |
-| Linea | `linea` | `59144` | LiFi |
-| Scroll | `scroll` | `534352` | LiFi, Near Intents |
-| Sonic | `sonic` | `146` | LiFi |
-| Mantle | `mantle` | `5000` | LiFi |
-| Blast | `blast` | `81457` | LiFi |
+| Chain | Slug | Chain ID |
+|-------|------|----------|
+| Ethereum | `ethereum` | `1` |
+| Arbitrum | `arbitrum` | `42161` |
+| Base | `base` | `8453` |
+| Polygon | `polygon` | `137` |
+| Optimism | `optimism` | `10` |
+| PulseChain | `pulsechain` | `369` |
+| BNB Chain | `bsc` | `56` |
+| Avalanche | `avalanche` | `43114` |
+| Berachain | `berachain` | `80094` |
+| Solana | `solana` | `1151111081099710` |
+| Bitcoin | `bitcoin` | `20000000000001` |
+| Sui | `sui` | `9270000000000000` |
+| NEAR | `near` | `900000001` |
+| TON | `ton` | `900000002` |
+| Tron | `tron` | `900000003` |
+| XRP | `xrp` | `900000004` |
+| Dogecoin | `doge` | `900000005` |
+| Aptos | `aptos` | `900000010` |
+| zkSync Era | `zksync` | `324` |
+| Linea | `linea` | `59144` |
+| Scroll | `scroll` | `534352` |
+| Sonic | `sonic` | `146` |
+| Mantle | `mantle` | `5000` |
+| Blast | `blast` | `81457` |
 
 <Tip>
   **Use slugs for non-EVM chains** — `"solana"` is much easier to work with than `1151111081099710`. EVM chains can use either format: `defaultFromChain: 1` or `defaultFromChain: "ethereum"`.

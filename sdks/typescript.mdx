@@ -122,14 +122,14 @@ await client.submitDeposit({
 ### Status Tracking
 
 ```typescript
-// Check LI.FI swap status
+// Check swap status
 const status = await client.getStatus({
   txHash: "0xTxHash",
   fromChain: 1,
   toChain: 42161,
 });
 
-// Check Near Intents deposit status
+// Check manual deposit status
 const depositStatus = await client.getDepositStatus({
   depositId: "dep_abc123",
 });
@@ -200,20 +200,20 @@ await client.deleteWebhook("whk_abc123");
 
 ## Type Guards
 
-The SDK exports type guard functions to help narrow response types:
+The SDK exports type guard functions to help narrow execution response types:
 
 ```typescript
-import { isLiFiExecution, isNearIntentsExecution } from "@hypermid/sdk";
+import { isWalletExecution, isDepositExecution } from "@hypermid/sdk";
 
 const exec = await client.execute({ ... });
 
-if (isLiFiExecution(exec.data)) {
-  // TypeScript knows exec.data.transactionRequest exists
+if (isWalletExecution(exec.data)) {
+  // Wallet mode: sign and broadcast the transaction
   const tx = await wallet.sendTransaction(exec.data.transactionRequest);
 }
 
-if (isNearIntentsExecution(exec.data)) {
-  // TypeScript knows exec.data.depositAddress exists
+if (isDepositExecution(exec.data)) {
+  // Manual deposit mode: show the deposit address to the user
   console.log("Deposit to:", exec.data.depositAddress);
 }
 ```
@@ -249,7 +249,7 @@ console.log("Received:", result.receiving.amount);
 The `executeSwap` method handles:
 1. Getting a quote
 2. Executing the swap
-3. Signing the transaction (for LI.FI routes)
+3. Signing the transaction
 4. Polling for status until completion
 5. Returning the final result
 
