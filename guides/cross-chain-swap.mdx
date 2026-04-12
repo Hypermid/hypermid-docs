@@ -6,9 +6,27 @@ description: "Complete guide to the swap lifecycle: quote, execute, and track"
 
 This guide covers the full lifecycle of a cross-chain swap through Hypermid: discovering chains and tokens, getting a quote, executing the swap, and tracking its status.
 
+## Endpoints You'll Use
+
+| Step | Endpoint | Purpose |
+|------|----------|---------|
+| 1 | [`GET /v1/chains`](/api-reference/chains) | Discover supported blockchains |
+| 2 | [`GET /v1/tokens`](/api-reference/tokens) | List tokens available on a chain |
+| 3 | [`GET /v1/quote`](/api-reference/quote) | Get the best swap price and route |
+| 4 | [`POST /v1/execute`](/api-reference/execute) | Get transaction data to sign |
+| 5 | [`GET /v1/status`](/api-reference/status) | Track swap progress until completion |
+
+<Note>
+  Steps 1-2 are optional if you already know the chain IDs and token addresses. Most integrations start at Step 3.
+</Note>
+
 ## Overview
  
-A cross-chain swap moves tokens from one blockchain to another in a single user action. Hypermid's smart routing engine evaluates multiple bridge strategies in parallel across **90+ supported blockchains** — including EVM chains, Solana, Bitcoin, XRP, Litecoin, TON, and more — and returns the optimal path automatically.
+A cross-chain swap moves tokens from one blockchain to another in a single user action. Hypermid's smart routing engine evaluates multiple bridge strategies in parallel across **90+ supported blockchains** — including EVM chains, Solana, Bitcoin, XRP, PulseChain, TON, and more — and returns the optimal path automatically.
+
+<Tip>
+  **Swapping to/from PulseChain?** See the [PulseChain Swaps guide](/guides/superswap) for specific examples and token addresses.
+</Tip>
  
 ## Swap lifecycle
  

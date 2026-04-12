@@ -1,20 +1,111 @@
 ---
 title: "Quickstart"
 sidebarTitle: "Quickstart"
-description: "Get your first cross-chain swap running in 5 minutes"
+description: "Pick a feature and start building in 5 minutes"
 ---
 
-# Quickstart
+# Choose Your Integration
 
-This guide walks you through getting a quote and executing a cross-chain swap using the Hypermid API. By the end, you'll have a working integration.
+Pick what you want to build. Each guide lists the exact endpoints you need and walks you through step by step.
 
-## Prerequisites
+<CardGroup cols={2}>
+  <Card title="Cross-Chain Swap" icon="arrows-rotate" href="/guides/cross-chain-swap">
+    Swap tokens between any two blockchains (ETH, USDC, SOL, BTC, and more).
 
-- Node.js 18+ (for the TypeScript SDK)
-- A wallet address on the source chain
-- Tokens to swap
+    **Endpoints:** `quote` → `execute` → `status`
 
-## Step 1: Install the SDK
+    **Difficulty:** Easy · 3 endpoints · 5 min setup
+  </Card>
+  <Card title="PulseChain Swap" icon="bolt" href="/guides/superswap">
+    Swap any token to/from PulseChain (PLS, HEX, PLSX).
+
+    **Endpoints:** `quote` → `execute` → `status`
+
+    **Difficulty:** Easy · 3 endpoints · 5 min setup
+  </Card>
+  <Card title="Fiat On-Ramp" icon="credit-card" href="/guides/fiat-onramp">
+    Let users buy crypto with credit card, bank transfer, or Apple Pay.
+
+    **Endpoints:** `onramp/config` → `onramp/quote` → `onramp/checkout` → `onramp/status`
+
+    **Difficulty:** Easy · 4 endpoints · 10 min setup
+  </Card>
+  <Card title="Drop-in Widget" icon="browser" href="/widget/overview">
+    Pre-built swap UI. Embed in your app with one line of code. Zero backend.
+
+    **Endpoints:** None — the widget handles everything
+
+    **Difficulty:** Easiest · 0 endpoints · 2 min setup
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/guides/webhooks">
+    Get real-time notifications when swaps complete, fail, or need attention.
+
+    **Endpoints:** `webhooks/create` → `webhooks/list`
+
+    **Difficulty:** Easy · 2 endpoints · 5 min setup
+  </Card>
+  <Card title="Partner Analytics" icon="chart-line" href="/api-reference/partner-me">
+    Track swap volumes, revenue, and transaction history.
+
+    **Endpoints:** `partner/me` · `partner/stats` · `partner/transactions`
+
+    **Difficulty:** Easy · 3 endpoints · 5 min setup
+  </Card>
+</CardGroup>
+
+---
+
+## Quick Example: Your First Swap in 30 Seconds
+
+Don't want to read a guide? Here's the fastest path:
+
+```bash
+# 1. Get a quote (what will I receive?)
+curl "https://api.hypermid.io/v1/quote?\
+fromChain=8453&toChain=42161&\
+fromToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&\
+toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831&\
+fromAmount=5000000&\
+fromAddress=0xYourWallet&\
+slippage=0.03"
+
+# 2. Sign the transactionRequest from the response with your wallet
+
+# 3. Check status (is it done?)
+curl "https://api.hypermid.io/v1/status?\
+txHash=0xYourTxHash&fromChain=8453&toChain=42161"
+```
+
+That's it. Three API calls. Every swap follows this pattern.
+
+---
+
+## Authentication
+
+<CodeGroup>
+```typescript SDK
+import { Hypermid } from "@hypermid/sdk";
+
+// Anonymous (100 req/min)
+const client = new Hypermid();
+
+// With API key (2,000 req/min + analytics)
+const client = new Hypermid({ apiKey: "your-api-key" });
+```
+
+```bash cURL
+# Anonymous — no header needed
+curl "https://api.hypermid.io/v1/chains"
+
+# With API key
+curl "https://api.hypermid.io/v1/chains" \
+  -H "X-API-Key: your-api-key"
+```
+</CodeGroup>
+
+Get your API key from the [Partner Dashboard](https://app.hypermid.io).
+
+## Install the SDK
 
 <CodeGroup>
 ```bash npm
@@ -30,170 +121,4 @@ yarn add @hypermid/sdk
 ```
 </CodeGroup>
 
-## Step 2: Initialize the Client
-
-<CodeGroup>
-```typescript TypeScript
-import { Hypermid } from "@hypermid/sdk";
-
-const client = new Hypermid({
-  apiKey: "your-api-key", // Optional: omit for anonymous access (100 req/min)
-});
-```
-
-```bash cURL
-# No setup needed — just include the header in requests
-# Anonymous: no header required
-# Partner: add X-API-Key header
-export HYPERMID_API_KEY="your-api-key"
-```
-</CodeGroup>
-
-## Step 3: Get a Quote
-
-Fetch the best available route for swapping ETH on Ethereum to USDC on Arbitrum.
-
-<CodeGroup>
-```typescript TypeScript
-const quote = await client.getQuote({
-  fromChain: 1,           // Ethereum
-  toChain: 42161,         // Arbitrum
-  fromToken: "0x0000000000000000000000000000000000000000", // ETH
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",   // USDC on Arbitrum
-  fromAmount: "100000000000000000", // 0.1 ETH in wei
-  fromAddress: "0xYourWalletAddress",
-});
-
-console.log("Estimated output:", quote.data.estimate.toAmount);
-console.log("Tool used:", quote.data.tool);
-```
-
-```bash cURL
-curl -X GET "https://api.hypermid.io/v1/quote?\
-fromChain=1&\
-toChain=42161&\
-fromToken=0x0000000000000000000000000000000000000000&\
-toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831&\
-fromAmount=100000000000000000&\
-fromAddress=0xYourWalletAddress" \
-  -H "X-API-Key: your-api-key"
-```
-
-```go Go
-package main
-
-import (
-    "fmt"
-    "io"
-    "net/http"
-)
-
-func main() {
-    url := "https://api.hypermid.io/v1/quote?" +
-        "fromChain=1&toChain=42161" +
-        "&fromToken=0x0000000000000000000000000000000000000000" +
-        "&toToken=0xaf88d065e77c8cC2239327C5EDb3A432268e5831" +
-        "&fromAmount=100000000000000000" +
-        "&fromAddress=0xYourWalletAddress"
-
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("X-API-Key", "your-api-key")
-
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-
-    body, _ := io.ReadAll(resp.Body)
-    fmt.Println(string(body))
-}
-```
-</CodeGroup>
-
-## Step 4: Execute the Swap
-
-<CodeGroup>
-```typescript TypeScript
-const execution = await client.execute({
-  fromChain: 1,
-  toChain: 42161,
-  fromToken: "0x0000000000000000000000000000000000000000",
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-  fromAmount: "100000000000000000",
-  fromAddress: "0xYourWalletAddress",
-  toAddress: "0xYourWalletAddress",
-});
-
-// Sign and send the transactionRequest via your wallet
-if (execution.data.transactionRequest) {
-  const tx = await wallet.sendTransaction(execution.data.transactionRequest);
-  console.log("Transaction hash:", tx.hash);
-}
-
-// For deposit routes: send to the provided address
-if (execution.data.depositAddress) {
-  console.log("Send tokens to:", execution.data.depositAddress);
-  console.log("Memo:", execution.data.memo);
-}
-```
-
-```bash cURL
-curl -X POST "https://api.hypermid.io/v1/execute" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{
-    "fromChain": 1,
-    "toChain": 42161,
-    "fromToken": "0x0000000000000000000000000000000000000000",
-    "toToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-    "fromAmount": "100000000000000000",
-    "fromAddress": "0xYourWalletAddress",
-    "toAddress": "0xYourWalletAddress"
-  }'
-```
-</CodeGroup>
-
-## Step 5: Track Status
-
-<CodeGroup>
-```typescript TypeScript
-const status = await client.getStatus({
-  txHash: "0xYourTransactionHash",
-  fromChain: 1,
-  toChain: 42161,
-});
-
-console.log("Status:", status.data.status);
-// Possible values: "PENDING", "DONE", "FAILED", "NOT_FOUND"
-```
-
-```bash cURL
-curl -X GET "https://api.hypermid.io/v1/status?\
-txHash=0xYourTransactionHash&\
-fromChain=1&\
-toChain=42161" \
-  -H "X-API-Key: your-api-key"
-```
-</CodeGroup>
-
-<Tip>
-  For deposit-based routes, use `GET /v1/execute/deposit/status` with the `depositId` returned from the execute step instead of `GET /v1/status`.
-</Tip>
-
-## What's Next?
-
-<CardGroup cols={2}>
-  <Card title="Cross-Chain Swap Guide" icon="arrows-rotate" href="/guides/cross-chain-swap">
-    Understand the full swap lifecycle with error handling.
-  </Card>
-  <Card title="Deposit Routes" icon="bolt" href="/guides/cross-chain-swap">
-    Learn how intent-based swaps work for non-EVM chains.
-  </Card>
-  <Card title="Fiat On-Ramp" icon="credit-card" href="/guides/fiat-onramp">
-    Let users buy crypto with fiat currency.
-  </Card>
-  <Card title="API Reference" icon="book" href="/api-reference/overview">
-    Explore every endpoint in detail.
-  </Card>
-</CardGroup>
+Or use the API directly with any HTTP client — no SDK required.

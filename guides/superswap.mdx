@@ -1,175 +1,228 @@
 ---
-title: "SuperSwap"
-description: "Cross-chain swap protocol powered by Hypermid"
+title: "PulseChain Swap"
+sidebarTitle: "PulseChain Swap"
+description: "Swap any token to and from PulseChain"
 ---
 
-# SuperSwap Integration Guide
+Swap any token on any chain to PulseChain tokens (PLS, HEX, PLSX) — and back. Uses the same endpoints as every other Hypermid swap.
 
-SuperSwap enables cross-chain swaps between any supported blockchain. It integrates seamlessly into the Hypermid API — when a swap involves a SuperSwap-supported chain, the API automatically selects the optimal route.
+## Endpoints You'll Use
 
-```mermaid
-graph LR
-    A[User Wallet] -->|1. Sign tx| B[Hypermid Bridge]
-    B -->|2. Cross-chain transfer| C[Destination Chain]
-    C -->|3. DEX swap| D[User receives tokens]
-```
+| Step | Endpoint | Purpose |
+|------|----------|---------|
+| 1 | [`GET /v1/quote`](/api-reference/quote) | Get the swap price and route |
+| 2 | [`POST /v1/execute`](/api-reference/execute) | Get transaction data to sign |
+| 3 | [`GET /v1/status`](/api-reference/status) | Track swap progress |
+| 3b | [`POST /v1/inbound-receiver/register`](/api-reference/confirm-deposit) | Confirm deposit (only some routes — see below) |
 
-## Supported Chains
+---
 
-| Chain | Chain ID | Direction | Status |
-|-------|----------|-----------|--------|
-| Ethereum | 1 | Inbound & Outbound | Active |
-| Base | 8453 | Inbound & Outbound | Active |
-| Arbitrum | 42161 | Inbound & Outbound | Active |
-| Polygon | 137 | Inbound & Outbound | Active |
-| Optimism | 10 | Inbound & Outbound | Active |
-| Unichain | 130 | Inbound & Outbound | Active |
-| PulseChain | 369 | Inbound & Outbound | Active |
-| Solana | — | Inbound | Coming Soon |
-| Bitcoin | — | Inbound | Coming Soon |
+## Quick Integration (5 minutes)
 
-## Supported Directions
-
-| Direction | Example | User Signatures |
-|-----------|---------|-----------------|
-| **Direct** | USDC on Base → PLS on PulseChain | 1 transaction |
-| **Multi-step** | ETH on Base → PLS on PulseChain | 1 transaction + 1 EIP-712 sign |
-| **Outbound Direct** | PLS → USDC on Base | 1 transaction |
-| **Outbound Multi-step** | PLS → ETH on Base | 1 transaction |
-
-## Quick Start
-
-### 1. Get a Quote
-
-Use the standard [`GET /v1/quote`](/api-reference/quote) endpoint. The API detects SuperSwap routes automatically.
+Copy this code. It handles all PulseChain swap types.
 
 <CodeGroup>
-```bash Direct Swap (USDC → PLS)
+```typescript TypeScript
+import { Hypermid } from "@hypermid/sdk";
+
+const client = new Hypermid({ apiKey: "your-api-key" });
+
+// 1. Get a quote
+const quote = await client.getQuote({
+  fromChain: 8453,          // Base
+  toChain: 369,             // PulseChain
+  fromToken: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
+  toToken: "0xA1077a294dDE1B09bB078844df40758a5D0f9a27",   // PLS
+  fromAmount: "5000000",    // $5 USDC
+  fromAddress: "0xYourWallet",
+  slippage: 0.03,
+});
+
+console.log("You'll receive:", quote.data.estimate.toAmount, "PLS");
+console.log("Estimated time:", quote.data.estimate.executionDuration, "seconds");
+
+// 2. Sign and broadcast
+const tx = await wallet.sendTransaction(quote.data.transactionRequest);
+console.log("Tx hash:", tx.hash);
+
+// 3. Track status
+let status;
+do {
+  await new Promise(r => setTimeout(r, 10000)); // wait 10s
+  status = await client.getStatus({ txHash: tx.hash, fromChain: 8453, toChain: 369 });
+  console.log("Status:", status.data.status);
+} while (status.data.status === "PENDING");
+
+console.log("Done! Received:", status.data.receiving?.amount);
+```
+
+```bash cURL
+# 1. Get a quote
 curl "https://api.hypermid.io/v1/quote?\
-fromChain=8453&\
-toChain=369&\
+fromChain=8453&toChain=369&\
 fromToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&\
 toToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
-fromAmount=5000000&\
-fromAddress=0xYourWallet&\
-slippage=0.03" \
-  -H "X-API-Key: your-api-key"
-```
+fromAmount=5000000&fromAddress=0xYourWallet&slippage=0.03"
 
-```bash Multi-step Swap (ETH → PLS)
-curl "https://api.hypermid.io/v1/quote?\
-fromChain=8453&\
-toChain=369&\
-fromToken=0x0000000000000000000000000000000000000000&\
-toToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
-fromAmount=1000000000000000&\
-fromAddress=0xYourWallet&\
-slippage=0.03" \
-  -H "X-API-Key: your-api-key"
-```
+# 2. Sign the transactionRequest from the response with your wallet
 
-```bash Outbound Swap (PLS → USDC)
-curl "https://api.hypermid.io/v1/quote?\
-fromChain=369&\
-toChain=8453&\
-fromToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
-toToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&\
-fromAmount=200000000000000000000000&\
-fromAddress=0xYourWallet&\
-slippage=50" \
-  -H "X-API-Key: your-api-key"
+# 3. Track status (poll every 10 seconds)
+curl "https://api.hypermid.io/v1/status?\
+txHash=0xYourTxHash&fromChain=8453&toChain=369"
 ```
 </CodeGroup>
 
-### 2. Execute the Transaction
+### More Examples
 
-For **direct** quotes, sign and broadcast the `transactionRequest` from the response.
+<CodeGroup>
+```bash PLS → USDC on Base (outbound)
+curl "https://api.hypermid.io/v1/quote?\
+fromChain=369&toChain=8453&\
+fromToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
+toToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&\
+fromAmount=200000000000000000000000&\
+fromAddress=0xYourWallet&slippage=0.03"
+```
 
-For **multi-step** quotes (where `singleSignature: true`):
+```bash PLS → ETH on Base (outbound multi-step)
+curl "https://api.hypermid.io/v1/quote?\
+fromChain=369&toChain=8453&\
+fromToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
+toToken=0x0000000000000000000000000000000000000000&\
+fromAmount=200000000000000000000000&\
+fromAddress=0xYourWallet&slippage=0.03"
+```
+
+```bash ETH on Ethereum → PLS (from any chain)
+curl "https://api.hypermid.io/v1/quote?\
+fromChain=1&toChain=369&\
+fromToken=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&\
+toToken=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&\
+fromAmount=5000000&fromAddress=0xYourWallet&slippage=0.03"
+```
+</CodeGroup>
+
+---
+
+## Standard Integration (30 minutes)
+
+Add error handling, handle both response types, and confirm deposits when needed.
 
 ```typescript
-import { createWalletClient, custom } from 'viem';
-import { base } from 'viem/chains';
+async function swapToPulseChain(params: {
+  fromChain: number;
+  fromToken: string;
+  toToken: string;
+  fromAmount: string;
+  fromAddress: string;
+}) {
+  // 1. Get quote
+  const quote = await client.getQuote({
+    ...params,
+    toChain: 369,
+    slippage: 0.03,
+  });
 
-const walletClient = createWalletClient({
-  chain: base,
-  transport: custom(window.ethereum),
-});
+  if (!quote.data) throw new Error(quote.error?.message || "No route found");
 
-// Step 1: Sign and broadcast the swap transaction
-const txHash = await walletClient.sendTransaction(
-  quote.steps[0].transactionRequest
-);
+  // 2. Sign the transaction
+  const txRequest = quote.data.steps?.[0]?.transactionRequest
+    || quote.data.transactionRequest;
 
-// Wait for confirmation
-await publicClient.waitForTransactionReceipt({ hash: txHash });
+  const txHash = await wallet.sendTransaction(txRequest);
+  await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-// Step 2: Authorize the deposit routing (gasless wallet signature)
-const { afterStep1 } = quote;
-const signature = await walletClient.signTypedData({
-  domain: afterStep1.eip712.domain,
-  types: afterStep1.eip712.types,
-  primaryType: afterStep1.eip712.primaryType,
-  message: {
-    ...afterStep1.eip712.message,
-    txHash,  // Fill in the actual tx hash
-  },
-});
+  // 3. Confirm deposit (only if the quote says to)
+  if (quote.data.afterStep1) {
+    const signature = await wallet.signTypedData({
+      ...quote.data.afterStep1.eip712,
+      message: { ...quote.data.afterStep1.eip712.message, txHash },
+    });
 
-// Step 3: Confirm the deposit
-await fetch("https://api.hypermid.io/v1/inbound-receiver/register", {
+    const res = await fetch(quote.data.afterStep1.action, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...quote.data.afterStep1.body, txHash, signature }),
+    });
+
+    if (!res.ok) throw new Error("Deposit confirmation failed");
+  }
+
+  // 4. Poll status
+  while (true) {
+    const status = await client.getStatus({
+      txHash,
+      fromChain: params.fromChain,
+      toChain: 369,
+    });
+
+    if (status.data.status === "DONE") return status.data;
+    if (status.data.status === "FAILED") throw new Error("Swap failed");
+
+    await new Promise(r => setTimeout(r, 10000));
+  }
+}
+```
+
+<Tip>
+  The `afterStep1` field only appears when a confirmation is needed (non-stablecoin → PulseChain routes). For USDC input or outbound swaps, it's not present — you just sign one transaction.
+</Tip>
+
+---
+
+## Advanced Integration (1 hour)
+
+### Add Webhooks
+
+Get notified when swaps complete instead of polling:
+
+```typescript
+// Create a webhook
+await fetch("https://api.hypermid.io/v1/partner/webhooks", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", "X-API-Key": "your-api-key" },
   body: JSON.stringify({
-    ...afterStep1.body,
-    txHash,
-    signature,
+    url: "https://your-server.com/webhook",
+    events: ["swap.completed", "swap.failed"],
   }),
 });
-
-// Done! Hypermid handles the rest automatically (~5 min)
 ```
 
-### 3. Check Status
+See the [Webhooks guide](/guides/webhooks) for full setup.
 
-```bash
-curl "https://api.hypermid.io/v1/status?\
-txHash=0xYourTxHash&\
-fromChain=8453&\
-toChain=369&\
-provider=superswap" \
-  -H "X-API-Key: your-api-key"
-```
+### Handle Deposit-Based Routes
 
-## Pricing
+If the user is swapping from a non-EVM chain (XRP, Dogecoin, etc.) to PulseChain, the execute response may include a `depositAddress` instead of a `transactionRequest`. See [Execute Swap](/api-reference/execute) for how to handle both shapes.
 
-SuperSwap quotes include all fees, gas costs, and price impact in the estimated output amount. There are no hidden fees — what you see in the quote is what you get.
+### Track Detailed Status
 
-The `estimate.toAmount` in the quote response is the final amount the user receives after all costs.
-
-## Status Values
+PulseChain swaps have additional status detail:
 
 | Status | SubStatus | Description |
 |--------|-----------|-------------|
 | `PENDING` | `WAIT_SOURCE_CONFIRMATIONS` | Transaction submitted |
-| `PENDING` | `BRIDGE_IN_PROGRESS` | Cross-chain transfer in progress (~3-5 min) |
-| `PENDING` | `SWAP_IN_PROGRESS` | DEX swap executing on destination chain |
-| `DONE` | `COMPLETED` | Output tokens delivered to user |
-| `DONE` | `FALLBACK_SENT` | Swap unavailable — stablecoin returned to user |
-| `FAILED` | `BRIDGE_TIMEOUT` | Bridge did not complete within timeout |
+| `PENDING` | `BRIDGE_IN_PROGRESS` | Cross-chain transfer (~3-5 min) |
+| `PENDING` | `SWAP_IN_PROGRESS` | DEX swap on destination |
+| `DONE` | `COMPLETED` | Tokens delivered |
+| `DONE` | `FALLBACK_SENT` | Swap unavailable — stablecoin returned |
+| `FAILED` | `BRIDGE_TIMEOUT` | Bridge didn't complete in 30 min |
 
-## Execution Time
+---
 
-| Route | Estimated Time |
-|-------|---------------|
-| Direct swap | ~3-5 minutes |
-| Multi-step swap | ~5-7 minutes |
+## Supported Chains
 
-If the destination swap is unavailable after 3 retries, the bridged stablecoin is returned to the user automatically as a fallback.
+PulseChain connects with:
 
-## Supported Tokens
+| Chain | Chain ID |
+|-------|----------|
+| Ethereum | 1 |
+| Base | 8453 |
+| Arbitrum | 42161 |
+| Polygon | 137 |
+| Optimism | 10 |
+| Unichain | 130 |
 
-SuperSwap supports all major tokens on connected chains. Here are the most popular PulseChain tokens:
+## Popular PulseChain Tokens
 
 | Token | Symbol | Decimals |
 |-------|--------|----------|
@@ -178,12 +231,21 @@ SuperSwap supports all major tokens on connected chains. Here are the most popul
 | PulseX | PLSX | 18 |
 | Incentive | INC | 18 |
 | Hedron | HDRN | 9 |
-| LOAN | LOAN | 18 |
 | Tether USD | USDT | 6 |
 | Dai | DAI | 18 |
-| Wrapped Bitcoin | WBTC | 8 |
-| Ethereum | ETH | 18 |
 
 <Note>
-When swapping to PLS (the native token), you can use either the zero address or the WPLS address (`0xA1077a294dDE1B09bB078844df40758a5D0f9a27`). The API handles the conversion automatically.
+  For PLS, use the WPLS address `0xA1077a294dDE1B09bB078844df40758a5D0f9a27` or the zero address. The API handles both.
 </Note>
+
+## Pricing
+
+All fees are included in the quote. `estimate.toAmount` is what you actually receive — no hidden costs.
+
+## Timing
+
+| Route | Estimated Time |
+|-------|---------------|
+| Stablecoin → PulseChain | ~3-5 minutes |
+| Any token → PulseChain | ~5-7 minutes |
+| PulseChain → any chain | ~3-5 minutes |

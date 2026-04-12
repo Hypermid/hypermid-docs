@@ -50,27 +50,13 @@ Returns the best available quote for swapping tokens between chains. Hypermid co
   Preferred tool to use if available (e.g., `stargate`).
 </ParamField>
 
-## SuperSwap Routes
+## PulseChain Swaps
 
-When either `fromChain` or `toChain` is a SuperSwap-supported chain (e.g., `369` for PulseChain), the API automatically routes through **SuperSwap**. No additional configuration needed.
+PulseChain (chain ID `369`) works with the same endpoint — no special configuration. Just set `fromChain` or `toChain` to `369`.
 
-### Direct Swap (e.g., USDC on Base → PLS on PulseChain)
+Some routes return a `steps` array instead of a single `transactionRequest`. Check the [Execute Swap](/api-reference/execute) page for how to handle both.
 
-**One signature** required. The response includes a `transactionRequest` to sign and broadcast.
-
-### Multi-step Swap (e.g., ETH on Base → PLS on PulseChain)
-
-When the source token requires conversion, the API returns a multi-step quote with `singleSignature: true`:
-- **Step 1:** Hypermid swaps the source token to USDC on the source chain
-- **Step 2 (automatic):** Hypermid bridges and executes the destination swap
-
-The user signs only Step 1. After it confirms, the frontend signs an EIP-712 message and calls the confirm endpoint. See [Execute Swap](/api-reference/execute) for details.
-
-### Outbound Swap (e.g., PLS on PulseChain → USDC/ETH on Base)
-
-The user signs one transaction on PulseChain. USDC or the desired token is delivered on the destination chain.
-
-See the [SuperSwap Integration Guide](/guides/superswap) for full details.
+For examples and a walkthrough, see the [PulseChain Swaps guide](/guides/superswap).
 
 <ResponseExample>
 ```json 200

@@ -1,15 +1,13 @@
 ---
 title: "Execute Swap"
 openapi: "POST /v1/execute"
-description: "Execute a cross-chain swap"
+description: "Get transaction data for a swap"
 ---
 
-Initiates a cross-chain swap execution. Returns a `transactionRequest` to be signed and sent by the user's wallet, or a `depositAddress` for manual deposit flows.
-
-For SuperSwap routes, the response contains the bridge transaction for the user to sign. The backend automatically handles cross-chain delivery and destination swaps.
+Returns the transaction data for a swap. Sign it with the user's wallet and broadcast it.
 
 <ParamField body="fromChain" type="number" required>
-  Source chain ID.
+  Source chain ID (e.g., `1` for Ethereum, `8453` for Base, `369` for PulseChain).
 </ParamField>
 
 <ParamField body="toChain" type="number" required>
@@ -17,7 +15,7 @@ For SuperSwap routes, the response contains the bridge transaction for the user 
 </ParamField>
 
 <ParamField body="fromToken" type="string" required>
-  Source token contract address.
+  Source token contract address. Use `0x0000000000000000000000000000000000000000` for native tokens (ETH, PLS, etc.).
 </ParamField>
 
 <ParamField body="toToken" type="string" required>
@@ -25,11 +23,11 @@ For SuperSwap routes, the response contains the bridge transaction for the user 
 </ParamField>
 
 <ParamField body="fromAmount" type="string" required>
-  Amount to swap in the smallest unit.
+  Amount in the smallest unit (e.g., wei). Must be a string to handle large numbers.
 </ParamField>
 
 <ParamField body="fromAddress" type="string" required>
-  Sender wallet address on the source chain.
+  Sender wallet address.
 </ParamField>
 
 <ParamField body="toAddress" type="string" required>
@@ -37,70 +35,53 @@ For SuperSwap routes, the response contains the bridge transaction for the user 
 </ParamField>
 
 <ParamField body="slippage" type="number">
-  Maximum slippage tolerance. Default: `0.03`.
+  Maximum slippage as a decimal (e.g., `0.03` for 3%). Default: `0.03`.
 </ParamField>
 
 <ParamField body="tool" type="string">
-  Specific tool to use. If omitted, the best tool is selected automatically.
+  Specific routing tool. Omit to let Hypermid choose the best automatically.
 </ParamField>
 
 <ParamField body="depositMode" type="string">
-  Override deposit mode. Set to `"manual"` to force manual deposit flow for intent-based routes.
+  Set to `"manual"` to force manual deposit flow for non-EVM chains.
 </ParamField>
 
-## Multi-step Swap Execution
+## Response Types
 
-For multi-step swaps (where the quote has `singleSignature: true` and `steps[1].automated: true`), the execution flow requires an additional confirmation step:
+The response has one of two shapes depending on the route:
 
-1. **Sign and broadcast** the transaction from `steps[0].transactionRequest`
-2. **Wait for confirmation** on the source chain
-3. **Sign an EIP-712 authorization message** (gasless wallet signature — no transaction cost)
-4. **Call `POST /v1/inbound-receiver/register`** with the tx hash + signature
+### Transaction Request (most swaps)
 
-The backend then automatically handles bridging and destination-chain execution.
-
-### EIP-712 Authorization
-
-The quote response includes the full EIP-712 signing specification in `afterStep1.eip712`. The wallet must sign a typed data message authorizing the routing parameters:
+Sign it and broadcast.
 
 ```typescript
-// After Step 1 confirms:
-const { afterStep1 } = quote;
-
-const signature = await walletClient.signTypedData({
-  domain: afterStep1.eip712.domain,
-  types: afterStep1.eip712.types,
-  primaryType: afterStep1.eip712.primaryType,
-  message: {
-    ...afterStep1.eip712.message,
-    txHash: step1TxHash,  // Actual tx hash from Step 1
-  },
-});
-
-// Confirm the deposit
-await fetch("https://api.hypermid.io/v1/inbound-receiver/register", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    ...afterStep1.body,
-    txHash: step1TxHash,
-    signature,
-  }),
-});
+const tx = await wallet.sendTransaction(exec.data.transactionRequest);
 ```
 
-The confirm endpoint verifies the transaction on-chain and validates the wallet signature before starting the automatic bridge.
+### Deposit Address (XRP, Dogecoin, Stellar, etc.)
+
+Show the address to the user. They send tokens from their native wallet.
+
+```typescript
+console.log("Send to:", exec.data.depositAddress);
+console.log("Memo:", exec.data.memo); // Required for XRP, Stellar
+```
+
+Track deposit-based swaps with [`GET /v1/execute/deposit/status`](/api-reference/deposit-status).
+
+<Tip>
+  **Some PulseChain routes** require a confirmation step after the transaction. If the quote response includes `afterStep1`, see [Confirm Deposit](/api-reference/confirm-deposit).
+</Tip>
 
 <ResponseExample>
-```json 200 Standard Route
+```json 200 Transaction Request
 {
   "data": {
     "transactionRequest": {
-      "to": "0xBridgeContractAddress",
+      "to": "0xContractAddress",
       "data": "0x2646478b...",
       "value": "1000000000000000000",
       "gasLimit": "350000",
-      "gasPrice": "20000000000",
       "chainId": 1
     },
     "estimate": {
@@ -114,35 +95,10 @@ The confirm endpoint verifies the transaction on-chain and validates the wallet 
 }
 ```
 
-```json 200 Intent-based Route
+```json 200 Deposit Address
 {
   "data": {
     "depositId": "dep_abc123def456",
-    "depositAddress": "0xDepositContractAddress",
-    "depositMode": "wallet",
-    "memo": null,
-    "transactionRequest": {
-      "to": "0xDepositContractAddress",
-      "data": "0xa9059cbb...",
-      "value": "1000000000000000000",
-      "gasLimit": "100000",
-      "chainId": 1
-    },
-    "estimate": {
-      "fromAmount": "1000000000000000000",
-      "toAmount": "3240000000",
-      "toAmountUSD": "3240.00",
-      "executionDuration": 90
-    },
-    "expiresAt": 1711235475
-  }
-}
-```
-
-```json 200 Manual Deposit Route
-{
-  "data": {
-    "depositId": "dep_xyz789",
     "depositAddress": "rDepositXRPAddress",
     "depositMode": "manual",
     "memo": "12345678",
@@ -173,13 +129,11 @@ const exec = await client.execute({
 });
 
 if (exec.data.transactionRequest) {
-  // Sign and send the transaction
   const tx = await wallet.sendTransaction(exec.data.transactionRequest);
   console.log("Tx hash:", tx.hash);
 } else if (exec.data.depositAddress) {
-  // Manual deposit: show deposit info to user
   console.log("Send to:", exec.data.depositAddress);
-  console.log("Memo:", exec.data.memo);
+  if (exec.data.memo) console.log("Memo:", exec.data.memo);
 }
 ```
 
@@ -201,5 +155,5 @@ curl -X POST "https://api.hypermid.io/v1/execute" \
 </CodeGroup>
 
 <Warning>
-  The `transactionRequest` data is time-sensitive. Execute the transaction within a few minutes of receiving the response, as prices and gas estimates may change.
+  Transaction data is time-sensitive. Sign and broadcast within a few minutes — prices and gas estimates change.
 </Warning>

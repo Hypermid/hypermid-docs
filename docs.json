@@ -73,22 +73,23 @@
             "pages": ["api-reference/overview"]
           },
           {
-            "group": "Swap",
+            "group": "Discovery",
             "pages": [
               "api-reference/chains",
               "api-reference/tokens",
               "api-reference/connections",
               "api-reference/tools",
-              "api-reference/gas-prices",
-              "api-reference/quote",
-              "api-reference/routes",
-              "api-reference/status"
+              "api-reference/gas-prices"
             ]
           },
           {
-            "group": "Execute",
+            "group": "Swap",
             "pages": [
+              "api-reference/quote",
+              "api-reference/routes",
               "api-reference/execute",
+              "api-reference/confirm-deposit",
+              "api-reference/status",
               "api-reference/deposit-submit",
               "api-reference/deposit-status"
             ]
