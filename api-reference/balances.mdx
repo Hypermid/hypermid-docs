@@ -20,7 +20,7 @@ Balances include USD pricing, spam filtering, and are grouped by chain ID.
 ```json 200
 {
   "data": {
-    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "address": "0x0101e82F16792A3368Ca5c62c263F56a99C46c1a",
     "totalBalanceUSD": "5432.10",
     "balances": {
       "1": [
@@ -33,19 +33,19 @@ Balances include USD pricing, spam filtering, and are grouped by chain ID.
           "balance": "1.5",
           "priceUSD": 3250.00,
           "balanceUSD": 4875.00,
-          "logoURI": "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+          "logoURI": "https://static.alchemyapi.io/images/assets/279.png",
           "providers": ["alchemy"]
         },
         {
           "chainId": 1,
-          "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
           "symbol": "USDC",
           "name": "USD Coin",
           "decimals": 6,
           "balance": "500.00",
           "priceUSD": 1.00,
           "balanceUSD": 500.00,
-          "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png",
+          "logoURI": "https://static.alchemyapi.io/images/assets/3408.png",
           "providers": ["alchemy"]
         }
       ],
@@ -67,12 +67,53 @@ Balances include USD pricing, spam filtering, and are grouped by chain ID.
   },
   "error": null,
   "meta": {
-    "requestId": "uuid",
-    "timestamp": 1711234572
+    "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "timestamp": 1711234568,
+    "rateLimit": {
+      "limit": 2000,
+      "remaining": 1998,
+      "reset": 1711234627
+    }
   }
 }
 ```
 </ResponseExample>
+
+<CodeGroup>
+```typescript TypeScript
+const balances = await client.getBalances({
+  address: "0x0101e82F16792A3368Ca5c62c263F56a99C46c1a",
+  chainIds: [1, 8453, 369],
+});
+
+console.log("Total USD:", balances.totalBalanceUSD);
+
+// Get ETH balance on Ethereum
+const ethBalances = balances.balances["1"];
+const eth = ethBalances?.find(t => t.symbol === "ETH");
+console.log("ETH balance:", eth?.balance);
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/balances?address=0x0101e82F16792A3368Ca5c62c263F56a99C46c1a&chainIds=1,8453,369" \
+  -H "X-API-Key: your-api-key"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.hypermid.io/v1/balances",
+    params={
+        "address": "0x0101e82F16792A3368Ca5c62c263F56a99C46c1a",
+        "chainIds": "1,8453,369"
+    },
+    headers={"X-API-Key": "your-api-key"}
+)
+balances = response.json()["data"]
+print(f"Total: ${balances['totalBalanceUSD']}")
+```
+</CodeGroup>
 
 ## Supported Chains
 
@@ -85,6 +126,6 @@ Balances include USD pricing, spam filtering, and are grouped by chain ID.
 ## Notes
 
 - Spam tokens are automatically filtered out
-- Zero balances are excluded
+- Zero balances are excluded from the response
 - Results are sorted by USD value (highest first) within each chain
-- PulseChain balances use direct RPC since Alchemy doesn't support PulseChain
+- PulseChain balances use direct RPC since Alchemy does not support PulseChain
