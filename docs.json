@@ -14,7 +14,13 @@
   },
   "favicon": "/branding/favicon.svg",
   "fonts": {
-    "family": "Sora"
+    "heading": {
+      "family": "Syne",
+      "weight": 600
+    },
+    "body": {
+      "family": "Sora"
+    }
   },
   "appearance": {
     "default": "system"
