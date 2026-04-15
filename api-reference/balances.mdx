@@ -1,0 +1,90 @@
+---
+title: "Get Balances"
+openapi: "GET /v1/balances"
+description: "Get token balances for a wallet address across chains"
+---
+
+Returns token balances for a wallet address across multiple blockchains. Uses Alchemy Portfolio API (40+ EVM chains + Solana), PulseChain direct RPC, and Blockstream API (Bitcoin).
+
+Balances include USD pricing, spam filtering, and are grouped by chain ID.
+
+<ParamField query="address" type="string" required>
+  Wallet address. Supports EVM (`0x...`), Solana (base58), and Bitcoin (legacy, segwit, taproot).
+</ParamField>
+
+<ParamField query="chainIds" type="string">
+  Comma-separated chain IDs to filter. Omit to return balances across all supported chains. Example: `1,42161,8453,369`
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "address": "0x1234567890abcdef1234567890abcdef12345678",
+    "totalBalanceUSD": "5432.10",
+    "balances": {
+      "1": [
+        {
+          "chainId": 1,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ethereum",
+          "decimals": 18,
+          "balance": "1.5",
+          "priceUSD": 3250.00,
+          "balanceUSD": 4875.00,
+          "logoURI": "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+          "providers": ["alchemy"]
+        },
+        {
+          "chainId": 1,
+          "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "balance": "500.00",
+          "priceUSD": 1.00,
+          "balanceUSD": 500.00,
+          "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png",
+          "providers": ["alchemy"]
+        }
+      ],
+      "369": [
+        {
+          "chainId": 369,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "PLS",
+          "name": "Pulse",
+          "decimals": 18,
+          "balance": "100000",
+          "priceUSD": 0,
+          "balanceUSD": 0,
+          "logoURI": "",
+          "providers": ["superswap"]
+        }
+      ]
+    }
+  },
+  "error": null,
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": 1711234572
+  }
+}
+```
+</ResponseExample>
+
+## Supported Chains
+
+| Source | Chains |
+|--------|--------|
+| Alchemy Portfolio API | 40+ EVM chains (Ethereum, Arbitrum, Base, Polygon, Optimism, etc.) + Solana |
+| PulseChain RPC | PulseChain (369) — PLS, USDCh, HEX, PLSX, INC |
+| Blockstream API | Bitcoin |
+
+## Notes
+
+- Spam tokens are automatically filtered out
+- Zero balances are excluded
+- Results are sorted by USD value (highest first) within each chain
+- PulseChain balances use direct RPC since Alchemy doesn't support PulseChain

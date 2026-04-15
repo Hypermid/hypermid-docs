@@ -86,7 +86,9 @@
               "api-reference/tokens",
               "api-reference/connections",
               "api-reference/tools",
-              "api-reference/gas-prices"
+              "api-reference/gas-prices",
+              "api-reference/balances",
+              "api-reference/allowance"
             ]
           },
           {

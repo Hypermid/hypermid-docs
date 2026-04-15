@@ -1,0 +1,57 @@
+---
+title: "Check Allowance"
+openapi: "GET /v1/allowance"
+description: "Check ERC20 token allowance for a given owner/spender pair"
+---
+
+Checks the ERC20 token allowance for a given owner and spender address on an EVM chain. This is used to determine if a token approval transaction is needed before executing a swap.
+
+For native tokens (ETH, PLS, etc.), returns max uint256 since native tokens don't require approval.
+
+<ParamField query="chainId" type="number" required>
+  Chain ID (e.g. `1` for Ethereum, `8453` for Base, `369` for PulseChain)
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  ERC20 token contract address. Use `0x0000000000000000000000000000000000000000` for native tokens.
+</ParamField>
+
+<ParamField query="owner" type="string" required>
+  Wallet address that owns the tokens
+</ParamField>
+
+<ParamField query="spender" type="string" required>
+  Contract address that is approved to spend tokens (e.g. bridge or DEX router contract)
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "chainId": 8453,
+    "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "owner": "0x1234567890abcdef1234567890abcdef12345678",
+    "spender": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "allowance": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+    "isApproved": true
+  },
+  "error": null,
+  "meta": {
+    "requestId": "uuid",
+    "timestamp": 1711234572
+  }
+}
+```
+</ResponseExample>
+
+## Supported Chains
+
+Supports 20+ EVM chains including Ethereum, Arbitrum, Base, Polygon, Optimism, PulseChain, and more.
+
+Non-EVM chains (Solana, Bitcoin, TON, etc.) do not have ERC20 allowances and will return an error.
+
+## Notes
+
+- Native tokens always return max allowance and `isApproved: true`
+- Uses public RPCs with environment variable overrides (`RPC_{chainId}`)
+- The `allowance` value is returned as a string (raw wei value)
