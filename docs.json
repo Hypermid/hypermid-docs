@@ -3,9 +3,9 @@
   "theme": "aspen",
   "name": "Hypermid",
   "colors": {
-    "primary": "#44E1AA",
-    "light": "#44E1AA",
-    "dark": "#44E1AA"
+    "primary": "#5B3CF5",
+    "light": "#7C5CFC",
+    "dark": "#5B3CF5"
   },
   "logo": {
     "light": "/branding/wordmark-light.svg",
@@ -21,8 +21,8 @@
   },
   "background": {
     "decoration": "gradient",
-    "light": "#E0E6F6",
-    "dark": "#0F171F"
+    "light": "#F9F8F5",
+    "dark": "#0A0A0A"
   },
   "navbar": {
     "links": [
