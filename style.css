@@ -1,0 +1,49 @@
+/* Hypermid docs custom styles */
+
+/* Reduce body text size for better density */
+.prose p,
+.prose ul,
+.prose ol,
+.prose li,
+.prose table,
+.mdx-content p,
+.mdx-content ul,
+.mdx-content ol,
+.mdx-content li {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* Slightly smaller headings */
+.prose h1,
+.mdx-content h1 {
+  font-size: 1.875rem;
+}
+
+.prose h2,
+.mdx-content h2 {
+  font-size: 1.5rem;
+}
+
+.prose h3,
+.mdx-content h3 {
+  font-size: 1.125rem;
+}
+
+/* Code blocks - keep readable */
+.prose pre code,
+.mdx-content pre code {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Inline code */
+.prose code,
+.mdx-content code {
+  font-size: 0.875em;
+}
+
+/* API reference param fields - tighter */
+.param-field-description {
+  font-size: 13px;
+}

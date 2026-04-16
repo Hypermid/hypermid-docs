@@ -2,6 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
   "name": "Hypermid",
+  "styling": {
+    "codeblocks": "system"
+  },
+  "styles": ["style.css"],
   "colors": {
     "primary": "#5B3CF5",
     "light": "#7C5CFC",
@@ -11,7 +15,7 @@
     "light": "/branding/wordmark-light.svg",
     "dark": "/branding/wordmark-dark.svg",
     "href": "https://hypermid.io",
-    "width": 300
+    "width": 400
   },
   "favicon": "/branding/favicon.svg",
   "fonts": {
@@ -87,8 +91,7 @@
               "api-reference/connections",
               "api-reference/tools",
               "api-reference/gas-prices",
-              "api-reference/balances",
-              "api-reference/allowance"
+              "api-reference/balances"
             ]
           },
           {
