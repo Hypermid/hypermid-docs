@@ -147,13 +147,58 @@ fromAddress=0xYourWallet&slippage=0.03"
 
 Outbound swaps send tokens from PulseChain to another chain. The user always signs just one transaction on PulseChain.
 
+### Outbound — Direct USDCh Bridge (fee-free) {#outbound-direct-usdch}
+
+**When:** Source is USDCh (`0xa5B0D537CeBE97f087Dc5FE5732d70719caaEc1D`) AND destination is canonical USDC on the target chain.
+
+**User signs:** 1 transaction on PulseChain (+ 1 approval if first use)
+
+**How it works:** USDCh on PulseChain is itself a Hyperlane Warp Route (EvmHypSynthetic), so the API builds a direct `transferRemote()` call on the token contract. No Piteas DEX step, no Hypermid Sender contract, no protocol fee — **the user receives USDC 1:1 minus only the Hyperlane gas payment (in PLS)**.
+
+<Note>
+  This is the fastest and cheapest possible outbound from PulseChain. The approval is "token approves itself" — `usdch.approve(USDCH_ADDRESS, amount)` — because the EvmHypSynthetic contract IS the token.
+</Note>
+
+<CodeGroup>
+```typescript TypeScript
+// USDCh on PulseChain → USDC on Base (direct, no fee)
+const quote = await client.getQuote({
+  fromChain: 369,
+  toChain:   8453,
+  fromToken: "0xa5B0D537CeBE97f087Dc5FE5732d70719caaEc1D", // USDCh
+  toToken:   "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
+  fromAmount: "10000000", // 10 USDCh (6 decimals)
+  fromAddress: "0xYourWallet",
+});
+
+// quote.data.quote.feeBreakdown.totalFeeBps === 0
+// quote.data.quote.estimatedOutput === "10000000"  (1:1)
+// quote.data.quote.transactionRequest.to === USDCh address (Warp Route)
+// quote.data.quote.transactionRequest.value === Hyperlane gas in PLS
+
+const tx = await wallet.sendTransaction(quote.data.quote.transactionRequest);
+// USDC arrives on Base in ~3 minutes
+```
+
+```bash cURL
+curl "https://api.hypermid.io/v1/quote?\
+fromChain=369&toChain=8453&\
+fromToken=0xa5B0D537CeBE97f087Dc5FE5732d70719caaEc1D&\
+toToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&\
+fromAmount=10000000&\
+fromAddress=0xYourWallet"
+```
+</CodeGroup>
+
+Supported destinations: Ethereum (1), Optimism (10), Polygon (137), Base (8453), Arbitrum (42161), Unichain (130).
+
 ### Outbound — Single Step
 
-**When:** The destination token is USDC
+**When:** Source is NOT USDCh (e.g. PLS, HEX) AND destination is USDC.
 
 **User signs:** 1 transaction on PulseChain
 
-**How it works:** PLS is swapped to a stablecoin, bridged, and USDC arrives on the destination chain.
+**How it works:** Source token is swapped to USDCh via Piteas, routed through the Hypermid OutboundSender contract, and canonical USDC arrives on the destination chain.
 
 <CodeGroup>
 ```typescript TypeScript
@@ -291,6 +336,15 @@ If the destination swap isn't available after 3 retries, the bridged stablecoin 
 ## Pricing
 
 All fees are included in the quote. `estimate.toAmount` is what you receive — no hidden costs.
+
+| Route | Hypermid fee | DEX slippage | Hyperlane gas |
+|---|---|---|---|
+| Inbound (any → PulseChain) | 0.30% of input | On Piteas leg | Paid from input |
+| Outbound single-step (non-USDCh → USDC) | 0.30% of bridged amount | On Piteas leg | Paid from input |
+| Outbound multi-step (non-USDCh → non-USDC) | 0.30% of bridged amount | On both Piteas + LiFi legs | Paid from input |
+| **Outbound direct (USDCh → USDC)** | **0%** | None (1:1 bridge) | Paid in PLS by user (native gas) |
+
+The direct USDCh → USDC path has no Hypermid fee because the user interacts with the Hyperlane Warp Route contract directly — no Hypermid smart contract is in the path.
 
 ## Status Values
 

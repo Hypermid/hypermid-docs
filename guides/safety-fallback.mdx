@@ -65,6 +65,10 @@ INITIATED → BRIDGING → BRIDGE_CONFIRMED → SWAPPING → COMPLETED
 
 The user receives their requested token in their wallet on PulseChain within ~5 minutes. If the output is NOT native PLS, the protocol also airdrops a small amount of PLS to the user's wallet so they have gas to transact the new token (gas sponsorship).
 
+<Note>
+  **Exception for `USDCh → USDC` outbound:** that specific route uses the [direct Warp Route path](/guides/superswap#outbound-direct-usdch) which has no DEX step, no Hypermid fee, and therefore no fallback path — it either succeeds 1:1 or the source tx reverts before any funds leave the user's wallet. If you ever do see a `FALLBACK_SENT` for this route, it's a bug — please contact support with the tx hash.
+</Note>
+
 ### 2. DEX swap fails after retries (`FALLBACK_SENT`) ⚠️ {#fallback-recovery}
 
 **What happened:** The bridge delivered USDCh on PulseChain, but the Piteas DEX swap reverted 3 times in a row. This can happen when:

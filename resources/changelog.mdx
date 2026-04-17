@@ -11,6 +11,23 @@ All notable changes to the Hypermid API are documented here. Follow this page to
 
 ## April 2026
 
+### 2026-04-17 — Direct USDCh → USDC outbound bridge (0% fee)
+
+When the outbound source is USDCh and the destination is canonical USDC,
+`/v1/quote` now returns a **fee-free direct Warp Route bridge** instead
+of routing through the Hypermid OutboundSender + Piteas. The user signs
+a single `transferRemote()` call directly on the USDCh Warp Route and
+receives USDC 1:1 on the destination chain.
+
+- **Hypermid fee**: 0 (no contract in the path)
+- **DEX slippage**: none (1:1 bridge)
+- **Only cost**: Hyperlane gas, paid in PLS from the user's native balance
+
+Quote response shape is unchanged — check `feeBreakdown.totalFeeBps === 0`
+and `estimatedOutput === fromAmount` to confirm this path was used. See
+the [SuperSwap guide](/guides/superswap#outbound-direct-usdch) for the
+full flow.
+
 ### 2026-04-16 — SDK 1.2.0: `InboundReceiverParams` shape fix (breaking)
 
 TypeScript SDK bumped to **1.2.0**. The `registerInboundReceiver()` params
