@@ -1,0 +1,214 @@
+---
+title: "Safety & Fund Recovery"
+sidebarTitle: "Safety & Fallback"
+description: "How SuperSwap guarantees no user funds are ever stuck, and what to do in each failure case"
+---
+
+Cross-chain swaps touch three systems (bridge, DEX, destination chain), any of which can fail. SuperSwap is built so that **no user funds are ever stranded** — every failure mode has an automatic or guided recovery path. This page documents all of them.
+
+<Note>
+  This guide is specific to **SuperSwap** routes (anything touching PulseChain, `toChain=369` or `fromChain=369`). LI.FI and Near Intents routes have their own recovery models — see the [Error Handling](/guides/error-handling) guide for those.
+</Note>
+
+## The Guarantee
+
+For every SuperSwap transaction your user signs, **one of three things happens**:
+
+1. The swap completes and the user receives their destination token. ✅
+2. The DEX leg fails after 3 automatic retries — bridged USDCh lands in the user's wallet as a fallback. ⚠️
+3. The flow is abandoned by the user (step 1 signed, step 2 not signed) — funds wait in the InboundReceiver contract until the user or support completes the flow. 🔁
+
+Funds are never lost to our infrastructure. The worst-case on the happy or fallback path is that the user receives a stablecoin on PulseChain (USDCh) instead of their requested token, which they can swap at their leisure.
+
+## The SuperSwap State Machine
+
+Poll `GET /v1/status?provider=superswap&txHash=...&fromChain=...&toChain=369` to observe the state. Every swap moves through the following sequence:
+
+```
+┌─────────────┐     ┌──────────┐     ┌───────────────────┐     ┌──────────┐     ┌───────────┐
+│  INITIATED  │ ──▶ │ BRIDGING │ ──▶ │ BRIDGE_CONFIRMED  │ ──▶ │ SWAPPING │ ──▶ │ COMPLETED │
+└─────────────┘     └──────────┘     └───────────────────┘     └──────────┘     └───────────┘
+                                              │                      │                 ✅
+                                              │                      │
+                                              │                      └── 3 retries failed ──▶ ┌────────────────┐
+                                              │                                               │ FALLBACK_SENT  │
+                                              │                                               │ (USDCh to user)│
+                                              │                                               └────────────────┘
+                                              │                                                       ⚠️
+                                              └── unrecoverable (rare) ───▶ ┌────────┐
+                                                                            │ FAILED │
+                                                                            └────────┘
+                                                                               ❌
+```
+
+| Status | Meaning | Terminal? | User action |
+|--------|---------|-----------|-------------|
+| `INITIATED` | Deposit registered on InboundReceiver, waiting for bridge dispatch | no | Wait |
+| `BRIDGING` | Hyperlane message in flight from source chain | no | Wait (~2–3 min) |
+| `BRIDGE_CONFIRMED` | Message delivered on PulseChain, about to call DEX | no | Wait |
+| `SWAPPING` | Piteas DEX swap executing | no | Wait |
+| `COMPLETED` | Output token delivered to user's wallet | yes ✅ | Stop polling |
+| `FALLBACK_SENT` | DEX swap failed after 3 retries — USDCh sent to user | yes ⚠️ | See [Fallback Recovery](#fallback-recovery) |
+| `FAILED` | Unrecoverable failure (very rare) | yes ❌ | [Contact support](#support-recovery) |
+
+Suggested poll interval: **5 seconds**. Typical time-to-`COMPLETED` is 3–5 minutes (Hyperlane delivery dominates).
+
+## Failure Modes and Recovery
+
+### 1. Happy path ✅
+
+Normal execution. Nothing to handle.
+
+```
+INITIATED → BRIDGING → BRIDGE_CONFIRMED → SWAPPING → COMPLETED
+```
+
+The user receives their requested token in their wallet on PulseChain within ~5 minutes. If the output is NOT native PLS, the protocol also airdrops a small amount of PLS to the user's wallet so they have gas to transact the new token (gas sponsorship).
+
+### 2. DEX swap fails after retries (`FALLBACK_SENT`) ⚠️ {#fallback-recovery}
+
+**What happened:** The bridge delivered USDCh on PulseChain, but the Piteas DEX swap reverted 3 times in a row. This can happen when:
+- The output token has very thin liquidity at this size
+- Piteas is temporarily unavailable or returning stale quotes
+- Slippage is too tight for current market conditions
+
+**What happens automatically:** The executor calls `sendFallback(claimId, reason)` on the Receiver contract, which transfers the bridged USDCh directly to the user's wallet. Status transitions to `FALLBACK_SENT`.
+
+**What the user sees:** USDCh (`0xa5B0D537CeBE97f087Dc5FE5732d70719caaEc1D`) in their PulseChain wallet, instead of the requested token.
+
+**What the user / integrator does:** Nothing required — funds are safely in their wallet. They can:
+- Swap USDCh manually on [piteas.io](https://piteas.io) when liquidity recovers
+- Use USDCh directly (it's a working PulseChain stablecoin)
+- Keep it as a stablecoin balance
+
+**UI guidance:** When you see `FALLBACK_SENT` in status, display a message like:
+
+> "Your bridge completed, but the PLS swap couldn't execute at current rates. You've received USDCh (a PulseChain stablecoin) in your wallet instead. You can swap it to PLS later at [piteas.io](https://piteas.io), or hold it as a dollar-pegged balance."
+
+### 3. Multi-step flow abandoned by the user 🔁 {#abandoned-flow}
+
+**What happened:** For non-USDC source tokens (e.g. ETH → PLS), the user signed **step 1** (LiFi swap into the InboundReceiver) but never signed **step 2** (the EIP-712 registration) — they closed the tab, denied the signature prompt, or lost connection.
+
+**What happens automatically:** The USDC sits in the InboundReceiver contract on the source chain. A background scanner logs `[InboundReceiver] Unregistered USDC deposit ...` once per deposit (deduped) so support has a record.
+
+**What the user does to recover:** Re-run the registration call with the original tx hash. They need to call `POST /v1/inbound-receiver/register` with the EIP-712 signature. If your integration lost state, this flow can be reconstructed:
+
+```ts
+// 1. Ask the user for their Step 1 tx hash (they have it in their wallet history)
+const txHash = "0x…"; // from user input
+
+// 2. Build the EIP-712 message using the canonical domain
+const eip712 = {
+  domain: {
+    name: "HypermidInboundReceiver",
+    version: "1",
+    chainId: 8453, // source chain of Step 1
+  },
+  types: {
+    RegisterDeposit: [
+      { name: "txHash",            type: "bytes32" },
+      { name: "toAddress",         type: "address" },
+      { name: "outputToken",       type: "address" },
+      { name: "destinationDomain", type: "uint32"  },
+    ],
+  },
+  primaryType: "RegisterDeposit",
+  message: {
+    txHash,
+    toAddress: userAddress,
+    outputToken: "0xA1077a294dDE1B09bB078844df40758a5D0f9a27", // e.g. WPLS
+    destinationDomain: 369,
+  },
+};
+
+// 3. Have the user sign (gasless)
+const signature = await wallet.signTypedData(eip712);
+
+// 4. POST to the API
+await fetch("https://api.hypermid.io/v1/inbound-receiver/register", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    txHash,
+    fromAddress: userAddress,
+    toAddress: userAddress,
+    outputToken: eip712.message.outputToken,
+    destinationDomain: 369,
+    signature,
+  }),
+});
+```
+
+The backend verifies the tx receipt and proceeds as if the user had signed Step 2 originally.
+
+<Note>
+The signature **must** be produced by the same wallet that sent the Step 1 transaction (`tx.from`). The backend checks this and rejects mismatches with `INVALID_SIGNATURE`.
+</Note>
+
+### 4. Bridge message delivered but executor RPC flaky 🔁
+
+**What happened:** Hyperlane delivered USDCh to the Receiver contract, but the backend's PulseChain RPC is returning stale data or 5xx errors. The executor can't call `executeSwap()` yet.
+
+**What happens automatically:** The executor retries on its standard interval, with automatic failover across 4+ PulseChain RPC endpoints (Pulse mainnet, g4mm4, publicnode, etc.). Status stays `BRIDGE_CONFIRMED` until the RPC recovers.
+
+**What the user does:** Wait. In almost all cases this resolves within 1–2 minutes.
+
+### 5. Hyperlane message fails to deliver (extremely rare)
+
+**What happened:** The source-chain transaction emitted a valid Hyperlane dispatch but the message was never delivered on PulseChain. This is vanishingly rare; Hyperlane has its own redundant relayer infrastructure.
+
+**What happens automatically:** None at the protocol level. If you see status stuck in `BRIDGING` for more than 1 hour, contact support.
+
+**What support does:** Hyperlane exposes manual delivery tools; support can nudge the message through if needed.
+
+### 6. PLS gas sponsorship fails (non-PLS output)
+
+**What happened:** Your user received WPLS or HEX, but the post-swap PLS airdrop (so they have gas to transact their new token) didn't go through — typically because the executor's own PLS balance is temporarily depleted.
+
+**What happens automatically:** The swap itself completes normally; only the gas sponsorship skipped. Status is still `COMPLETED`.
+
+**What the user does:** Fund their PulseChain wallet with PLS from an exchange, or ask support for a small top-up.
+
+### 7. User sent tokens to the wrong address
+
+**Out of protocol scope.** If a user sends USDC to an address unrelated to the InboundReceiver, we can't recover it — that tx never touched our infrastructure. Direct users to the original recipient's owner.
+
+## What Your Integration Should Do {#integration-guidance}
+
+When handling SuperSwap on the frontend:
+
+1. **Always poll `/v1/status` until a terminal state.** Don't assume `COMPLETED` after a fixed timeout.
+2. **Handle `FALLBACK_SENT` as a success-with-caveat**, not a failure. The user got their money; they just got USDCh instead of their requested token. Your error-handling UI shouldn't scare them.
+3. **Retain the Step 1 tx hash** for multi-step flows — store it in local storage or your DB so users can resume the registration if they drop off.
+4. **Don't let users retry Step 1 on a transient error.** If registration fails, send them back to the signature prompt, not the swap prompt — the funds are already bridged, they just need to sign.
+5. **Display the `afterStep1` flow as 2 actions**, not 1. Users who think they've already paid will bail on the EIP-712 prompt ("why am I signing again?"). Label it clearly: "Authorize delivery on PulseChain — free, no gas."
+
+## Support Recovery {#support-recovery}
+
+For `FAILED` statuses or edge cases not covered above, open a support ticket with:
+
+- **Source tx hash** (the LiFi or direct swap tx on the source chain)
+- **Wallet address** (the user's address, same one that signed)
+- **Requested output token** (e.g. WPLS address on PulseChain)
+- **Timestamp** (approx)
+- **Status transitions observed** (copy the `/v1/status` responses)
+
+Support can query the on-chain claim state, trigger manual `sendFallback()`, or nudge Hyperlane delivery — whichever the situation needs.
+
+**Contact:** [support@hypermid.io](mailto:support@hypermid.io) or [status.hypermid.io](https://stats.uptimerobot.com/gv0pCsjhHC) for live incident visibility.
+
+## Key Contract Addresses
+
+For direct on-chain recovery verification:
+
+| Contract | Chain | Address |
+|---|---|---|
+| InboundReceiver | Base | `0x4b2C166EF372aa7f7cf8fC476DE3D3E69926cf78` |
+| HypermidSender (Base) | Base | `0x1F5aF4535230a5D14336b436080a05Cf61611608` |
+| HypermidSender (ETH / Arb / OP / Polygon / Unichain) | Multi | `0x191741c8aAd6Cd33A5Bd5B4B8C2406d411716268` |
+| HypermidReceiver | PulseChain | `0x191741c8aAd6Cd33A5Bd5B4B8C2406d411716268` |
+| USDCh token | PulseChain | `0xa5B0D537CeBE97f087Dc5FE5732d70719caaEc1D` |
+| Piteas Router | PulseChain | `0x6BF228eb7F8ad948d37deD07E595EfddfaAF88A6` |
+| Hyperlane Mailbox | PulseChain | `0x56176C7Fb66FdD70ef962Ae53a46A226c7F6a2Cc` |
+
+View any of these on [Otterscan](https://otter.pulsechain.com) (PulseChain) or the respective block explorer.

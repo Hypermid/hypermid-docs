@@ -194,3 +194,9 @@ resp, _ := http.DefaultClient.Do(req)
 <Tip>
   For manual deposit routes, use [GET /v1/execute/deposit/status](/api-reference/deposit-status) instead.
 </Tip>
+
+## SuperSwap Refunds & Fallback
+
+For SuperSwap (PulseChain) polls, the terminal states `COMPLETED`, `FALLBACK_SENT`, and `FAILED` each require different UX. In particular `FALLBACK_SENT` is a **success-with-caveat** — the user received bridged USDCh instead of their requested token because the DEX leg couldn't execute; treat it as "swap complete, with a substituted output," not as a failure.
+
+See the [Safety & Fallback guide](/guides/safety-fallback) for the full state machine, every failure scenario, and suggested UI copy for each terminal state.

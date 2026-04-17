@@ -59,6 +59,7 @@
             "pages": [
               "guides/cross-chain-swap",
               "guides/superswap",
+              "guides/safety-fallback",
               "guides/fiat-onramp",
               "guides/error-handling",
               "guides/webhooks"

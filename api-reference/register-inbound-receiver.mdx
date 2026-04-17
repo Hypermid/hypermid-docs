@@ -112,3 +112,9 @@ if (quote.data.afterStep1) {
 }
 ```
 </ResponseExample>
+
+## Refunds & Fallback
+
+If the bridge lands on PulseChain but the DEX swap fails after 3 retries, the backend automatically sends the bridged USDCh to the user's wallet — the user never loses funds. If the user signed Step 1 but abandoned Step 2, they can resume by calling this endpoint later with the original tx hash.
+
+See the [Safety & Fallback guide](/guides/safety-fallback) for the full state machine, every failure scenario, and the recovery script for abandoned flows.

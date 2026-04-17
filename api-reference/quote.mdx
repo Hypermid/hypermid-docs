@@ -299,3 +299,9 @@ req.Header.Set("X-API-Key", "your-api-key")
 resp, _ := http.DefaultClient.Do(req)
 ```
 </CodeGroup>
+
+## SuperSwap Refunds & Fallback
+
+Quotes for PulseChain destinations can return `provider: "superswap"` in either a direct or multi-step shape. If the DEX leg later fails at execution time, the protocol automatically returns the bridged USDCh to the user's wallet — the user always ends up with spendable funds on PulseChain, even in the failure case.
+
+See the [Safety & Fallback guide](/guides/safety-fallback) for the state machine, all failure modes, and what to display on each terminal state.
