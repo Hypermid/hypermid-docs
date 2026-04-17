@@ -78,7 +78,7 @@ Every error response includes a machine-readable `code` field in the error objec
       <td>`RATE_LIMIT`</td>
       <td>429</td>
       <td>Too many requests</td>
-      <td>Exceeded 100 req/min (anonymous) or 2000 req/min (partner)</td>
+      <td>Exceeded 30 req/min (anonymous) or 100 req/min (partner)</td>
       <td>Wait until `meta.rateLimit.reset` and implement exponential backoff</td>
     </tr>
   </tbody>

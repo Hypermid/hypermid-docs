@@ -116,16 +116,37 @@ Returns the current status of a cross-chain swap transaction. Use this to track 
 | `PARTIAL` | Partially completed (refund may follow) |
 | `REFUNDED` | Transaction was refunded |
 
-### SuperSwap Sub-Status Values
+### SuperSwap Status Values
 
-For SuperSwap routes (provider `superswap`), additional sub-statuses are available:
+For SuperSwap routes (`provider=superswap`), the `status` field moves through a
+specific sequence. Add `provider=superswap` to the query when polling:
 
-| Sub-Status | Description |
-|------------|-------------|
-| `SWAP_IN_PROGRESS` | DEX swap executing on the destination chain |
-| `FALLBACK_SENT` | Swap unavailable — stablecoin returned to user |
+| Status | Description | Terminal? |
+|--------|-------------|-----------|
+| `INITIATED` | Deposit registered, waiting for bridge | no |
+| `BRIDGING` | Hyperlane message in flight from source chain | no |
+| `BRIDGE_CONFIRMED` | Bridge delivered on PulseChain — preparing DEX swap | no |
+| `SWAPPING` | Piteas DEX swap executing on PulseChain | no |
+| `COMPLETED` | Output token delivered to the user's wallet | yes ✅ |
+| `FAILED` | Unrecoverable failure — funds may need manual recovery | yes ❌ |
+| `FALLBACK_SENT` | DEX swap failed — USDCh sent to user as fallback | yes ⚠️ |
 
-Add `provider=superswap` to the query when tracking SuperSwap transactions.
+Suggested poll interval: 5 seconds. Typical time to `COMPLETED` is 3–5 minutes
+(Hyperlane delivery dominates). Stop polling once a terminal status is reached.
+
+```typescript
+// Poll until complete
+while (true) {
+  const { data } = await client.getStatus({
+    provider: "superswap",
+    txHash,
+    fromChain,
+    toChain,
+  });
+  if (["COMPLETED", "FAILED", "FALLBACK_SENT"].includes(data.status)) break;
+  await new Promise(r => setTimeout(r, 5000));
+}
+```
 
 <CodeGroup>
 ```typescript TypeScript

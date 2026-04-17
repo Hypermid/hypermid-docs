@@ -9,6 +9,69 @@ All notable changes to the Hypermid API are documented here. Follow this page to
 
 ---
 
+## April 2026
+
+### 2026-04-16 — SDK 1.2.0: `InboundReceiverParams` shape fix (breaking)
+
+TypeScript SDK bumped to **1.2.0**. The `registerInboundReceiver()` params
+interface has been corrected to match the API — the previous shape was never
+actually accepted by the backend and all calls were silently failing.
+
+<Warning>
+If you used `hm.registerInboundReceiver()` in your integration, update the
+call — the old shape no longer compiles.
+</Warning>
+
+```ts
+// Before (1.1.0) — wrong shape, API rejected these calls
+await hm.registerInboundReceiver({
+  txHash,
+  fromChain: 8453,
+  toChain: 369,
+  receiverAddress: "0x…",
+  outputToken: "0x…",
+});
+
+// After (1.2.0) — matches what POST /v1/inbound-receiver/register actually accepts
+await hm.registerInboundReceiver({
+  txHash,
+  fromAddress: "0x…",        // tx sender
+  toAddress: "0x…",          // destination on PulseChain
+  outputToken: "0x…",        // desired PulseChain token
+  destinationDomain: 369,
+  signature: "0x…",          // required EIP-712 signature
+});
+```
+
+### 2026-04-16 — Multi-step SuperSwap (ETH/any token → PulseChain)
+
+`/v1/quote` now returns a multi-step response shape when the source token is
+NOT USDC on a supported Sender chain. The frontend widget and SDK handle this
+automatically; direct API consumers should check `response.data.quote.type`:
+
+- `type: "multi-step"` → Use `steps[0].transactionRequest` to send, then
+  register the deposit with the `afterStep1` payload (see
+  [register-inbound-receiver](/api-reference/register-inbound-receiver)).
+- No `type` field → Direct single-tx SuperSwap (e.g. USDC on Base → PLS).
+
+### 2026-04-16 — PulseChain bridge status detection fix
+
+The backend was polling the wrong contract for Hyperlane message delivery on
+PulseChain, so inbound SuperSwaps appeared stuck even after the bridge landed.
+Delivery is now detected correctly using the Hyperlane registry Mailbox
+(`0x56176C7F…`). Existing in-flight swaps resolve on the next poll after
+deploy — no action required from integrators.
+
+### 2026-04-16 — `/v1/balances` reliability
+
+Multi-chain bulk calls to Alchemy could silently drop entire 5-chain chunks
+when one flaky network was in the batch (users most-often saw Base missing).
+The endpoint now retries each network individually when a chunk returns
+empty, and groups high-traffic chains into the first request. No API shape
+change — just more complete results.
+
+---
+
 ## March 2026
 
 ### 2026-03-15 — Near Intents ADI Chain Support

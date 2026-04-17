@@ -58,8 +58,8 @@ This means no provider has a viable route for your specific parameters. Try:
 
 ### Rate limit exceeded
 
-- Anonymous users: 100 requests/min
-- Partners: 2,000 requests/min
+- Anonymous users: 30 requests/min (per IP)
+- Partners: 100 requests/min (per API key)
 - Implement exponential backoff using the `meta.rateLimit.reset` timestamp
 - Consider caching responses for `GET /v1/chains` and `GET /v1/tokens` (they don't change frequently)
 

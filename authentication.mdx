@@ -11,7 +11,7 @@ Hypermid uses an **open access model** — you can start making API calls immedi
 
 | Feature | Anonymous | Partner |
 |---------|-----------|---------|
-| **Rate Limit** | 100 requests/min | 2,000 requests/min |
+| **Rate Limit** | 30 requests/min | 100 requests/min |
 | **Fee** | 30 bps (0.30%) | Custom (negotiable) |
 | **Dashboard** | No | Yes |
 | **Analytics** | No | Yes |
@@ -26,7 +26,7 @@ No authentication is required. Simply make requests to the API without any heade
 curl https://api.hypermid.io/v1/chains
 ```
 
-Anonymous access is subject to a 100 requests/minute rate limit and a fixed 30 basis point fee on all swaps.
+Anonymous access is subject to a 30 requests/minute rate limit (per IP) and a fixed 30 basis point fee on all swaps. These limits are designed for typical human-driven widget usage.
 
 ## Partner Access
 
