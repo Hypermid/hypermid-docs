@@ -1,81 +1,113 @@
 ---
 title: "Authentication"
 sidebarTitle: "Authentication"
-description: "API keys, rate limits, and the Hypermid access model"
+description: "Open API access by default — add a Partner key for higher limits and analytics"
 ---
 
 
-Hypermid uses an **open access model** — you can start making API calls immediately without an API key. When you're ready for higher rate limits and custom fee tiers, register for a Partner API key.
+Hypermid uses an **open access model**: every endpoint works without authentication on the anonymous tier. Partner API keys are optional — they unlock higher rate limits, custom fee terms, webhook events scoped to your traffic, and the Partner Dashboard.
 
-## Access Tiers
+## Access tiers
 
-| Feature | Anonymous | Partner |
-|---------|-----------|---------|
-| **Rate Limit** | 30 requests/min | 100 requests/min |
-| **Fee** | 30 bps (0.30%) | Custom (negotiable) |
-| **Dashboard** | No | Yes |
-| **Analytics** | No | Yes |
-| **Webhooks** | No | Yes |
-| **Priority Support** | No | Yes |
+| | Anonymous | Partner |
+|---|---|---|
+| **Signup required** | No | Yes |
+| **Rate limit — heavy endpoints**<br/>(`quote`, `execute`, `routes`, `status`) | 30 req/min | 2,000 req/min |
+| **Rate limit — read endpoints**<br/>(`chains`, `tokens`, `balances`, `gas`, `tools`, `connections`, `ping`) | 240 req/min | 6,000 req/min |
+| **Default fee** | 30 bps (0.30%) | Custom / negotiable |
+| **Partner Dashboard** | — | ✓ |
+| **Analytics & transactions** | — | ✓ |
+| **Webhooks** | — | ✓ |
+| **Priority support** | — | ✓ |
 
-## Anonymous Access
+The split-bucket design lets cache-friendly reads (chains, balances) be high-volume without burning the heavy budget that hits paid upstreams.
 
-No authentication is required. Simply make requests to the API without any headers:
+## Anonymous access
+
+No authentication is required. Just call the API:
 
 ```bash
 curl https://api.hypermid.io/v1/chains
 ```
 
-Anonymous access is subject to a 30 requests/minute rate limit (per IP) and a fixed 30 basis point fee on all swaps. These limits are designed for typical human-driven widget usage.
+Or via any SDK with no `apiKey`:
 
-## Partner Access
+```typescript
+import { Hypermid } from "@hypermid/sdk";
+const client = new Hypermid();
+```
 
-To use a Partner API key, include the `X-API-Key` header in every request:
+Anonymous traffic is rate-limited per IP. The 30/min heavy + 240/min read split is designed for typical human-driven widget usage and indie projects. If you need more headroom, register for a partner key.
+
+## Partner access
+
+To use a partner key, send it in the `X-API-Key` header on every request:
 
 <CodeGroup>
 ```bash cURL
 curl https://api.hypermid.io/v1/chains \
-  -H "X-API-Key: hm_live_abc123def456"
+  -H "X-API-Key: pk_live_yourkey"
 ```
 
 ```typescript TypeScript
 import { Hypermid } from "@hypermid/sdk";
 
 const client = new Hypermid({
-  apiKey: "hm_live_abc123def456",
+  apiKey: process.env.HYPERMID_API_KEY,
 });
 ```
 
+```python Python
+from hypermid import Hypermid, HypermidConfig
+import os
+
+hm = Hypermid(HypermidConfig(api_key=os.environ["HYPERMID_API_KEY"]))
+```
+
 ```go Go
-req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/chains", nil)
-req.Header.Set("X-API-Key", "hm_live_abc123def456")
+import hypermid "github.com/Hypermid/hypermid-sdk-go"
+
+client := hypermid.New(&hypermid.Config{
+    APIKey: os.Getenv("HYPERMID_API_KEY"),
+})
+```
+
+```rust Rust
+use hypermid_sdk::{Hypermid, HypermidConfig};
+
+let client = Hypermid::new(HypermidConfig {
+    api_key: Some(std::env::var("HYPERMID_API_KEY")?),
+    ..Default::default()
+});
 ```
 </CodeGroup>
 
-### Getting an API Key
+Keys are prefixed `pk_live_` followed by a random ID — e.g. `pk_live_a1b2c3d4e5f6g7h8`. Treat the full value as a secret.
+
+### Getting a partner key
 
 <Steps>
-  <Step title="Sign Up">
-    Create an account at [partner.hypermid.io](https://partner.hypermid.io/login).
+  <Step title="Request access">
+    Apply at [partner.hypermid.io](https://partner.hypermid.io/login). Partner accounts are reviewed and provisioned by the Hypermid team — typical turnaround is 1–2 business days. You'll receive a magic-link email once approved.
   </Step>
-  <Step title="Create a Partner Project">
-    Navigate to Settings and create a new partner project.
+  <Step title="Log in">
+    Use the magic link, then log in any time at [partner.hypermid.io/login](https://partner.hypermid.io/login).
   </Step>
-  <Step title="Generate API Key">
-    Generate your API key from the project settings page. You'll receive a key in the format `hm_live_...`.
+  <Step title="Copy your API key">
+    Go to **API Keys** in the partner portal. Your Primary key is shown there — copy the full `pk_live_...` value once and store it securely (env var or secret manager).
   </Step>
-  <Step title="Use the Key">
-    Include the key in the `X-API-Key` header of every request.
+  <Step title="Use it">
+    Include the key in the `X-API-Key` header on every API call, or pass it to the SDK constructor.
   </Step>
 </Steps>
 
 <Warning>
-  Keep your API key secret. Do not expose it in client-side code or public repositories. All API calls should be made from your backend server.
+  Treat partner keys as secrets. **Never expose them in frontend JavaScript, mobile apps, browser extensions, or public repositories.** All authenticated API calls should originate from your backend server. If a key is ever leaked, rotate it immediately from the API Keys page.
 </Warning>
 
-## Rate Limits
+## Rate limits
 
-Rate limit information is included in the `meta.rateLimit` object of every response:
+Every response includes rate-limit headers in `meta.rateLimit`. Use these to back off proactively before you hit a 429:
 
 ```json
 {
@@ -86,7 +118,7 @@ Rate limit information is included in the `meta.rateLimit` object of every respo
     "timestamp": 1711234567,
     "rateLimit": {
       "limit": 2000,
-      "remaining": 1999,
+      "remaining": 1872,
       "reset": 1711234627
     }
   }
@@ -94,28 +126,30 @@ Rate limit information is included in the `meta.rateLimit` object of every respo
 ```
 
 | Field | Description |
-|-------|-------------|
-| `limit` | Maximum requests allowed per window |
+|---|---|
+| `limit` | Maximum requests allowed in the current 60s window for this tier+bucket |
 | `remaining` | Requests remaining in the current window |
-| `reset` | Unix timestamp when the window resets |
+| `reset` | Unix timestamp (seconds) when the window resets |
 
-### Rate Limit Exceeded
+The `limit` field reflects whichever bucket your call landed in — heavy or read — so the same key may show different limits on different endpoints in the same minute.
 
-When you exceed the rate limit, you'll receive a `429` response with the `RATE_LIMIT` error code:
+### Hitting a 429
+
+When you exceed the limit, you get HTTP `429` with a `RATE_LIMIT` error:
 
 ```json
 {
   "data": null,
   "error": {
     "code": "RATE_LIMIT",
-    "message": "Rate limit exceeded. Try again in 30 seconds.",
+    "message": "Rate limit exceeded. Retry after the reset timestamp.",
     "details": {}
   },
   "meta": {
     "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "timestamp": 1711234567,
     "rateLimit": {
-      "limit": 100,
+      "limit": 2000,
       "remaining": 0,
       "reset": 1711234627
     }
@@ -124,12 +158,12 @@ When you exceed the rate limit, you'll receive a `429` response with the `RATE_L
 ```
 
 <Tip>
-  Implement exponential backoff when you receive a `429` response. Use the `meta.rateLimit.reset` timestamp to determine when you can resume requests.
+  Use `meta.rateLimit.reset` (Unix seconds) to compute exact backoff. Most SDKs handle this automatically — see the per-language docs for retry behaviour.
 </Tip>
 
-## Security Best Practices
+## Security best practices
 
-1. **Server-side only** — Never include your API key in frontend JavaScript, mobile apps, or any client-side code.
-2. **Environment variables** — Store your API key in environment variables, not in source code.
-3. **Key rotation** — Rotate your keys periodically via the Partner Dashboard.
-4. **Monitor usage** — Check the dashboard regularly for unexpected usage patterns.
+1. **Server-side only** — Never include your API key in frontend JavaScript, mobile apps, or any client-side code. Use the anonymous tier for client-side calls; route partner-authenticated traffic through your backend.
+2. **Environment variables** — Store keys in env vars or a secret manager (1Password / Vault / AWS Secrets Manager), never in source code or config files committed to git.
+3. **Key rotation** — Rotate periodically and immediately if you suspect compromise. Rotation is one click in the partner portal's **API Keys** page.
+4. **Monitor usage** — Check the partner dashboard for unexpected request patterns or geographic anomalies. Anything that doesn't match your traffic profile is worth investigating.
