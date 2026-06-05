@@ -4,103 +4,365 @@ sidebarTitle: "Rust"
 description: "Rust SDK for high-performance Hypermid integrations"
 ---
 
-<Info>
-  The Rust SDK is currently under development. This page documents the planned API. Check the [GitHub repository](https://github.com/Hypermid/sdk-rust) for the latest status.
-</Info>
+The official Rust SDK provides an async, strongly-typed client for the Hypermid API. Built on `reqwest` and `tokio`, with `serde` for serialization. Compatible with stable Rust (2021 edition).
 
-## Planned Installation
-
-Add to your `Cargo.toml`:
+## Installation
 
 ```toml
 [dependencies]
-hypermid-sdk = "0.1"
+hypermid-sdk = "0.2"
 tokio = { version = "1", features = ["full"] }
 ```
 
-## Planned Usage
+## Configuration
 
 ```rust
-use hypermid_sdk::{Hypermid, QuoteRequest};
+use hypermid_sdk::{Hypermid, HypermidConfig};
+
+// Anonymous tier — works immediately, no signup
+let client = Hypermid::anonymous();
+
+// With a partner API key
+let client = Hypermid::new(HypermidConfig {
+    api_key: Some("your-api-key".to_string()),
+    ..Default::default()
+});
+
+// Full custom config
+let client = Hypermid::new(HypermidConfig {
+    api_key:    Some("your-api-key".to_string()),
+    base_url:   Some("https://api.hypermid.io".to_string()),
+    timeout_ms: Some(30_000),
+});
+```
+
+### Configuration fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `api_key` | `Option<String>` | `None` | Partner API key. Omit for anonymous tier. |
+| `base_url` | `Option<String>` | `https://api.hypermid.io` | API base URL |
+| `timeout_ms` | `Option<u64>` | `30000` | Per-request timeout in milliseconds |
+
+`Hypermid::anonymous()` is shorthand for `Hypermid::new(HypermidConfig::default())` — the recommended starting point.
+
+## Methods
+
+All methods are `async` and return `Result<T, HypermidError>`.
+
+### Chains & tokens
+
+```rust
+let chains = client.get_chains().await?;
+
+let tokens = client.get_tokens(Some(TokensParams {
+    chains: Some("1,42161,137".to_string()),
+    keywords: Some("usdc".to_string()),
+})).await?;
+
+let conns = client.get_connections(&ConnectionsParams {
+    from_chain: "1".to_string(),
+    to_chain:   Some("42161".to_string()),
+    ..Default::default()
+}).await?;
+
+let tools = client.get_tools().await?;
+
+let gas = client.get_gas_prices(&GasPricesParams {
+    chains: "1,42161".to_string(),
+}).await?;
+```
+
+### Quote / Execute / Status
+
+```rust
+use hypermid_sdk::types::{QuoteParams, ExecuteParams, LiFiStatusParams};
+
+let quote = client.get_quote(&QuoteParams {
+    from_chain:   "1".to_string(),
+    from_token:   "0x0000000000000000000000000000000000000000".to_string(),
+    from_amount:  "1000000000000000000".to_string(),
+    to_chain:     "42161".to_string(),
+    to_token:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".to_string(),
+    from_address: "0xYourAddress".to_string(),
+    ..Default::default()
+}).await?;
+
+let exec = client.execute(&ExecuteParams {
+    from_chain:   "1".to_string(),
+    from_token:   "0x0000000000000000000000000000000000000000".to_string(),
+    from_amount:  "1000000000000000000".to_string(),
+    to_chain:     "42161".to_string(),
+    to_token:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".to_string(),
+    from_address: "0xYourAddress".to_string(),
+    to_address:   Some("0xYourAddress".to_string()),
+    ..Default::default()
+}).await?;
+
+let status = client.get_status(&LiFiStatusParams {
+    tx_hash:    "0xTxHash".to_string(),
+    from_chain: Some("1".to_string()),
+    to_chain:   Some("42161".to_string()),
+    ..Default::default()
+}).await?;
+```
+
+### Balances
+
+```rust
+use hypermid_sdk::types::BalancesParams;
+
+let balances = client.get_balances(&BalancesParams {
+    address:   "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".to_string(),
+    chain_ids: Some(vec![1, 42161, 137]),
+}).await?;
+
+println!("Total: ${} across {} chains",
+    balances.total_balance_usd, balances.balances.len());
+```
+
+`get_balances` auto-detects the address ecosystem (EVM, Solana, Bitcoin, NEAR, Sui, Tron) and returns priced holdings plus dust classification.
+
+### NEAR Intents deposits
+
+For non-EVM destinations, `execute` returns a deposit address. After the user sends funds:
+
+```rust
+use hypermid_sdk::types::{DepositSubmitParams, DepositStatusParams};
+
+client.submit_deposit(&DepositSubmitParams {
+    deposit_address: exec.deposit_address.clone(),
+    tx_hash: "depositTxHash".to_string(),
+}).await?;
+
+let status = client.get_deposit_status(&DepositStatusParams {
+    deposit_address: exec.deposit_address.clone(),
+}).await?;
+```
+
+### Webhooks
+
+```rust
+use hypermid_sdk::types::CreateWebhookParams;
+
+let created = client.create_webhook(&CreateWebhookParams {
+    url: "https://yourapp.com/webhooks".to_string(),
+    events: vec![
+        "swap.completed".to_string(),
+        "swap.failed".to_string(),
+        "onramp.completed".to_string(),
+    ],
+}).await?;
+println!("Webhook secret (store it): {}", created.secret);
+
+let webhooks = client.list_webhooks().await?;
+
+client.delete_webhook("whk_abc123").await?;
+```
+
+Verify incoming webhook deliveries:
+
+```rust
+use hypermid_sdk::webhook::verify_webhook_signature;
+
+let ok = verify_webhook_signature(body, signature_header, secret);
+if !ok {
+    return Err(MyError::InvalidSignature);
+}
+```
+
+### Fiat on-ramp (RampNow)
+
+```rust
+use hypermid_sdk::types::{OnrampQuoteParams, OnrampCheckoutParams, OnrampAssetsParams};
+
+let config = client.get_onramp_config().await?;
+let assets = client.get_onramp_assets(Some(OnrampAssetsParams {
+    country: Some("US".to_string()),
+})).await?;
+
+let quote = client.get_onramp_quote(&OnrampQuoteParams {
+    fiat_currency:  "USD".to_string(),
+    crypto_asset:   "ETH".to_string(),
+    chain_id:       1,
+    fiat_amount:    100.0,
+    payment_method: "credit_card".to_string(),
+    wallet_address: "0xYourAddress".to_string(),
+}).await?;
+
+let checkout = client.create_onramp_checkout(&OnrampCheckoutParams {
+    fiat_currency:  "USD".to_string(),
+    crypto_asset:   "ETH".to_string(),
+    chain_id:       1,
+    fiat_amount:    100.0,
+    payment_method: "credit_card".to_string(),
+    wallet_address: "0xYourAddress".to_string(),
+    redirect_url:   Some("https://yourapp.com/callback".to_string()),
+}).await?;
+println!("Send user to: {}", checkout.checkout_url);
+
+let status = client.get_onramp_status("ord_abc123").await?;
+```
+
+### Partner endpoints (require API key)
+
+```rust
+use hypermid_sdk::types::{PartnerStatsParams, PaginationParams};
+
+let info  = client.get_partner_info().await?;
+let stats = client.get_partner_stats(Some(PartnerStatsParams {
+    period: Some("30d".to_string()),
+})).await?;
+let txns  = client.get_partner_transactions(Some(PaginationParams {
+    page:  Some(1),
+    limit: Some(50),
+})).await?;
+```
+
+### SuperSwap inbound receiver
+
+For SuperSwap V2 inbound deposits (PulseChain-side outputs):
+
+```rust
+use hypermid_sdk::types::InboundReceiverParams;
+
+let res = client.register_inbound_receiver(&InboundReceiverParams {
+    tx_hash:            "0xDepositTxHash".to_string(),
+    from_address:       "0xSender".to_string(),
+    to_address:         "0xPulseChainRecipient".to_string(),
+    output_token:       "0xOutputTokenOnPulse".to_string(),
+    destination_domain: 369,
+    signature:          "0xEIP712Signature".to_string(),
+}).await?;
+```
+
+### Health check
+
+```rust
+let ping = client.ping().await?;
+println!("API status: {}", ping.status);
+```
+
+## Polling helpers
+
+For long-running flows, the SDK provides `wait_for_*` helpers that poll until a terminal state or timeout:
+
+```rust
+use hypermid_sdk::execution::PollConfig;
+use std::time::Duration;
+
+let result = client.wait_for_deposit_completion(
+    DepositStatusParams { deposit_address: addr },
+    Some(PollConfig {
+        interval: Duration::from_secs(5),
+        timeout:  Duration::from_secs(5 * 60),
+    }),
+).await?;
+
+let result = client.wait_for_lifi_completion(
+    LiFiStatusParams { tx_hash, from_chain, to_chain, ..Default::default() },
+    None, // default poll config
+).await?;
+```
+
+Both return either the final status response or `HypermidError::PollTimeout` if the wait window expires.
+
+## Type guards
+
+Use these to branch on provider/mode without matching the full response struct:
+
+```rust
+use hypermid_sdk::helpers::*;
+
+if is_lifi_route(&exec) {
+    // EVM swap via LI.FI — sign transaction_request
+}
+if is_near_intents_route(&exec) {
+    // NEAR Intents — send to deposit address
+}
+if is_wallet_deposit(&exec) {
+    // Wallet-style deposit (sign + broadcast)
+}
+if is_manual_deposit(&exec) {
+    // Manual deposit (show address + memo to user)
+}
+```
+
+And on statuses:
+
+```rust
+if is_lifi_status_terminal(&status.status) { /* done or failed */ }
+if is_ni_status_terminal(&deposit_status.status) { /* done or failed */ }
+if is_deposit_success(&deposit_status) { /* user got funds */ }
+if is_deposit_refunded(&deposit_status) { /* refunded */ }
+if is_deposit_failed(&deposit_status) { /* failed */ }
+```
+
+## Error handling
+
+All methods return `Result<T, HypermidError>`. The error type is a single enum with variants for each failure mode:
+
+```rust
+use hypermid_sdk::HypermidError;
+
+match client.get_quote(&params).await {
+    Ok(quote) => { /* ... */ }
+    Err(HypermidError::Api { code, message, status, .. }) => {
+        eprintln!("API error {status}: [{code}] {message}");
+    }
+    Err(HypermidError::Timeout(ms)) => {
+        eprintln!("Request timed out after {ms}ms");
+    }
+    Err(HypermidError::Network(e)) => {
+        eprintln!("Network error: {e}");
+    }
+    Err(HypermidError::PollTimeout(msg)) => {
+        eprintln!("Polling exceeded deadline: {msg}");
+    }
+    Err(HypermidError::Json(e)) => {
+        eprintln!("Deserialization error: {e}");
+    }
+}
+```
+
+`HypermidError` implements `std::error::Error` via `thiserror`, so it composes cleanly with `?` and the `anyhow` / `eyre` ecosystems.
+
+## End-to-end example
+
+A complete EVM swap from Ethereum to Arbitrum, anonymous tier:
+
+```rust
+use hypermid_sdk::{Hypermid, types::{QuoteParams, ExecuteParams}};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Hypermid::builder()
-        .api_key("hm_live_abc123def456")
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?;
+    let client = Hypermid::anonymous();
 
-    // Get supported chains
-    let chains = client.get_chains().await?;
-    for chain in &chains.chains {
-        println!("{} (ID: {})", chain.name, chain.id);
+    let quote = client.get_quote(&QuoteParams {
+        from_chain:   "1".to_string(),
+        from_token:   "0x0000000000000000000000000000000000000000".to_string(),
+        from_amount:  "1000000000000000000".to_string(),
+        to_chain:     "42161".to_string(),
+        to_token:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".to_string(),
+        from_address: "0xYourAddress".to_string(),
+        ..Default::default()
+    }).await?;
+    println!("Provider: {} | feeBps: {}", quote.provider, quote.fee_bps);
+
+    let exec = client.execute(&ExecuteParams {
+        from_chain:   "1".to_string(),
+        from_token:   "0x0000000000000000000000000000000000000000".to_string(),
+        from_amount:  "1000000000000000000".to_string(),
+        to_chain:     "42161".to_string(),
+        to_token:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".to_string(),
+        from_address: "0xYourAddress".to_string(),
+        to_address:   Some("0xYourAddress".to_string()),
+        ..Default::default()
+    }).await?;
+
+    if let Some(tx) = exec.transaction_request {
+        println!("Sign and broadcast tx to {}", tx.to);
     }
-
-    // Get a quote
-    let quote = client
-        .get_quote(QuoteRequest {
-            from_chain: 1,
-            to_chain: 42161,
-            from_token: "0x0000000000000000000000000000000000000000".into(),
-            to_token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831".into(),
-            from_amount: "1000000000000000000".into(),
-            from_address: "0xYourAddress".into(),
-            slippage: Some(0.03),
-            ..Default::default()
-        })
-        .await?;
-
-    println!("Output: {} USD", quote.estimate.to_amount_usd);
-    println!("Via: {}", quote.tool);
-
     Ok(())
 }
 ```
-
-## Planned Features
-
-- Fully async with Tokio runtime
-- Strongly typed with serde serialization/deserialization
-- Builder pattern for client and request configuration
-- Automatic retry with exponential backoff
-- Rate limit handling
-- Generated from the OpenAPI spec
-- Zero-copy deserialization where possible
-
-## Interim: Direct HTTP with reqwest
-
-Until the SDK is released, you can use `reqwest` directly:
-
-```rust
-use reqwest::header;
-use serde_json::Value;
-
-#[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
-    let client = reqwest::Client::new();
-
-    let response = client
-        .get("https://api.hypermid.io/v1/chains")
-        .header("X-API-Key", "your-api-key")
-        .send()
-        .await?
-        .json::<Value>()
-        .await?;
-
-    if let Some(data) = response.get("data") {
-        println!("{}", serde_json::to_string_pretty(data).unwrap());
-    }
-
-    if let Some(error) = response.get("error") {
-        if !error.is_null() {
-            eprintln!("Error: {}", error);
-        }
-    }
-
-    Ok(())
-}
-```
-
-## Stay Updated
-
-Follow the [GitHub repository](https://github.com/Hypermid/sdk-rust) for release announcements. You can also reach out on [X](https://x.com/hypermid) or contact support for early access.

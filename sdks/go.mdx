@@ -4,18 +4,344 @@ sidebarTitle: "Go"
 description: "Go SDK for server-side Hypermid integrations"
 ---
 
+The official Go SDK provides a context-based, typed client for the Hypermid API. Requires Go 1.21+.
 
-<Info>
-  The Go SDK is currently under development. This page documents the planned API. Check the [GitHub repository](https://github.com/Hypermid/sdk-go) for the latest status.
-</Info>
-
-## Planned Installation
+## Installation
 
 ```bash
-go get github.com/hypermid/sdk-go
+go get github.com/Hypermid/hypermid-sdk-go@latest
 ```
 
-## Planned Usage
+## Configuration
+
+```go
+import hypermid "github.com/Hypermid/hypermid-sdk-go"
+
+// Anonymous tier — works immediately, no signup
+client := hypermid.New(nil)
+
+// With a partner API key
+client := hypermid.New(&hypermid.Config{
+    APIKey:  "your-api-key",
+    BaseURL: "https://api.hypermid.io",         // optional, default shown
+    Timeout: 30 * time.Second,                   // optional, default shown
+})
+```
+
+### Configuration options
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `APIKey` | `string` | — | Partner API key. Optional — omit for anonymous tier. |
+| `BaseURL` | `string` | `https://api.hypermid.io` | API base URL |
+| `Timeout` | `time.Duration` | `30s` | Per-request timeout |
+| `HTTPClient` | `*http.Client` | new default | Inject a custom HTTP client |
+
+`hypermid.New(nil)` returns a client using all defaults — useful for quick scripts and the anonymous tier.
+
+## Methods
+
+### Chains & tokens
+
+```go
+ctx := context.Background()
+
+// All supported chains
+chains, err := client.GetChains(ctx)
+
+// Token registry, optionally filtered
+tokens, err := client.GetTokens(ctx, &hypermid.TokensParams{
+    Chains:   "1,42161,137",
+    Keywords: "usdc",
+})
+
+// Available connections between chains
+conns, err := client.GetConnections(ctx, hypermid.ConnectionsParams{
+    FromChain: "1",
+    ToChain:   "42161",
+})
+
+// Routing tools (bridges + DEXs)
+tools, err := client.GetTools(ctx)
+
+// Gas prices for chains
+gas, err := client.GetGasPrices(ctx, hypermid.GasPricesParams{
+    Chains: "1,42161",
+})
+```
+
+### Quote / Execute / Status
+
+```go
+quote, err := client.GetQuote(ctx, hypermid.QuoteParams{
+    FromChain:   "1",
+    FromToken:   "0x0000000000000000000000000000000000000000",
+    FromAmount:  "1000000000000000000",
+    ToChain:     "42161",
+    ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    FromAddress: "0xYourAddress",
+})
+
+exec, err := client.Execute(ctx, hypermid.ExecuteParams{
+    FromChain:   "1",
+    FromToken:   "0x0000000000000000000000000000000000000000",
+    FromAmount:  "1000000000000000000",
+    ToChain:     "42161",
+    ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    FromAddress: "0xYourAddress",
+    ToAddress:   "0xYourAddress",
+})
+
+// EVM swaps return a TransactionRequest to sign and broadcast.
+// Non-EVM (NEAR Intents) return a deposit address to send tokens to.
+
+status, err := client.GetStatus(ctx, hypermid.StatusParams{
+    TxHash:    "0xTxHash",
+    FromChain: "1",
+    ToChain:   "42161",
+})
+```
+
+### Balances
+
+```go
+balances, err := client.GetBalances(ctx, hypermid.BalancesParams{
+    Address:  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    ChainIDs: []int{1, 42161, 137}, // optional — restrict EVM coverage
+})
+
+fmt.Printf("Total: $%s across %d chains\n",
+    balances.TotalBalanceUSD, len(balances.Balances))
+```
+
+`GetBalances` auto-detects the address ecosystem (EVM, Solana, Bitcoin, NEAR, Sui, Tron) and returns priced holdings plus dust classification.
+
+### NEAR Intents deposits
+
+For non-EVM destinations, `Execute` returns a deposit address. After the user sends funds:
+
+```go
+// Tell the backend you submitted the deposit
+_, err := client.SubmitDeposit(ctx, hypermid.DepositSubmitParams{
+    DepositAddress: exec.DepositAddress,
+    TxHash:         "depositTxHash",
+})
+
+// Poll deposit status
+status, err := client.GetDepositStatus(ctx, hypermid.DepositStatusParams{
+    DepositAddress: exec.DepositAddress,
+})
+```
+
+### Webhooks
+
+```go
+// Register a webhook
+created, err := client.CreateWebhook(ctx, hypermid.CreateWebhookParams{
+    URL:    "https://yourapp.com/webhooks",
+    Events: []string{"swap.completed", "swap.failed", "onramp.completed"},
+})
+fmt.Println("Webhook secret (store it):", created.Secret)
+
+// List your webhooks
+webhooks, err := client.ListWebhooks(ctx)
+
+// Delete a webhook
+_, err = client.DeleteWebhook(ctx, "whk_abc123")
+```
+
+Verify incoming webhook deliveries:
+
+```go
+import "github.com/Hypermid/hypermid-sdk-go"
+
+ok := hypermid.VerifyWebhookSignature(body, signatureHeader, secret)
+if !ok {
+    http.Error(w, "invalid signature", http.StatusUnauthorized)
+    return
+}
+```
+
+### Fiat on-ramp (RampNow)
+
+```go
+// Get on-ramp config + supported assets
+config, err := client.GetOnrampConfig(ctx)
+assets, err := client.GetOnrampAssets(ctx, hypermid.OnrampAssetsParams{
+    Country: "US",
+})
+
+// Get a quote
+quote, err := client.GetOnrampQuote(ctx, hypermid.OnrampQuoteParams{
+    FiatCurrency:  "USD",
+    CryptoAsset:   "ETH",
+    ChainID:       1,
+    FiatAmount:    100,
+    PaymentMethod: "credit_card",
+    WalletAddress: "0xYourAddress",
+})
+
+// Create a checkout session
+checkout, err := client.CreateOnrampCheckout(ctx, hypermid.OnrampCheckoutParams{
+    FiatCurrency:  "USD",
+    CryptoAsset:   "ETH",
+    ChainID:       1,
+    FiatAmount:    100,
+    PaymentMethod: "credit_card",
+    WalletAddress: "0xYourAddress",
+    RedirectURL:   "https://yourapp.com/callback",
+})
+fmt.Println("Send user to:", checkout.CheckoutURL)
+
+// Check order status
+status, err := client.GetOnrampStatus(ctx, "ord_abc123")
+```
+
+### Partner endpoints (require API key)
+
+```go
+info, err  := client.GetPartnerInfo(ctx)
+stats, err := client.GetPartnerStats(ctx, &hypermid.PartnerStatsParams{
+    Period: "30d",
+})
+txns, err  := client.GetPartnerTransactions(ctx, &hypermid.PaginationParams{
+    Page:  1,
+    Limit: 50,
+})
+```
+
+### SuperSwap inbound receiver
+
+For SuperSwap V2 inbound deposits (PulseChain-side outputs):
+
+```go
+res, err := client.RegisterInboundReceiver(ctx, hypermid.InboundReceiverParams{
+    TxHash:            "0xDepositTxHash",
+    FromAddress:       "0xSender",
+    ToAddress:         "0xPulseChainRecipient",
+    OutputToken:       "0xOutputTokenOnPulse",
+    DestinationDomain: 369,
+    Signature:         "0xEIP712Signature",
+})
+```
+
+## ExecuteSwap helper
+
+The SDK provides a high-level `ExecuteSwap` helper that runs the full swap lifecycle and calls back into your code at each handoff:
+
+```go
+result, err := client.ExecuteSwap(
+    ctx,
+    hypermid.ExecuteParams{ /* same fields as Execute */ },
+    &hypermid.ExecuteSwapHooks{
+        OnExecute: func(resp *hypermid.ExecuteResponse) {
+            fmt.Println("Executed:", resp.Provider)
+        },
+        OnTransactionRequest: func(resp *hypermid.ExecuteResponse) (string, error) {
+            // Sign and broadcast resp.TransactionRequest via your wallet.
+            // Return the on-chain tx hash.
+            return signer.SendTransaction(resp.TransactionRequest)
+        },
+        OnDepositRequired: func(resp *hypermid.ExecuteResponse) (string, error) {
+            // Send tokens to resp.DepositAddress.
+            // Return the on-chain tx hash.
+            return wallet.SendToAddress(resp.DepositAddress, resp.DepositAmount)
+        },
+    },
+    nil, // default poll config
+)
+
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Swap complete. Received:", result.AmountOut)
+```
+
+`ExecuteSwap` handles:
+
+1. Calling `Execute`
+2. Invoking the right hook based on provider (LI.FI tx vs. NEAR Intents deposit)
+3. Polling status via `WaitForLiFiCompletion` / `WaitForDepositCompletion`
+4. Returning the final result
+
+If your flow only needs polling, use the wait helpers directly:
+
+```go
+result, err := client.WaitForDepositCompletion(ctx,
+    hypermid.DepositStatusParams{DepositAddress: addr},
+    &hypermid.PollConfig{Interval: 5 * time.Second, Timeout: 5 * time.Minute},
+)
+```
+
+## Type guards
+
+Use these to branch on the provider/mode of an `ExecuteResponse`:
+
+```go
+if hypermid.IsLiFiRoute(&exec) {
+    // EVM swap via LI.FI — sign transactionRequest
+}
+if hypermid.IsNearIntentsRoute(&exec) {
+    // NEAR Intents — send to deposit address
+}
+if hypermid.IsWalletDeposit(&exec) {
+    // Wallet-style deposit (sign + broadcast)
+}
+if hypermid.IsManualDeposit(&exec) {
+    // Manual deposit (show address + memo to user)
+}
+```
+
+And on statuses:
+
+```go
+if hypermid.IsLiFiStatusTerminal(status.Status) { /* done or failed */ }
+if hypermid.IsNIStatusTerminal(depositStatus.Status) { /* done or failed */ }
+if hypermid.IsDepositSuccess(&depositStatus) { /* user got funds */ }
+if hypermid.IsDepositRefunded(&depositStatus) { /* refunded */ }
+if hypermid.IsDepositFailed(&depositStatus) { /* failed */ }
+```
+
+Chain helpers:
+
+```go
+hypermid.IsNearIntentsChain(chainID)    // true if NEAR Intents handles this chain
+hypermid.SupportsWalletDeposit(chainID) // true if user can sign on this chain
+```
+
+## Error handling
+
+The SDK returns typed errors for the common failure modes:
+
+```go
+import "errors"
+
+_, err := client.GetQuote(ctx, params)
+if err != nil {
+    var apiErr *hypermid.HypermidError
+    var timeoutErr *hypermid.HypermidTimeoutError
+    var netErr *hypermid.HypermidNetworkError
+    var pollErr *hypermid.HypermidPollTimeoutError
+
+    switch {
+    case errors.As(err, &apiErr):
+        fmt.Printf("API error: %s (%s) — request %s\n",
+            apiErr.Code, apiErr.Message, apiErr.RequestID)
+    case errors.As(err, &timeoutErr):
+        fmt.Println("Request timed out after", timeoutErr.Duration)
+    case errors.As(err, &netErr):
+        fmt.Println("Network error:", netErr.Cause)
+    case errors.As(err, &pollErr):
+        fmt.Println("Polling exceeded deadline")
+    default:
+        fmt.Println("Other error:", err)
+    }
+}
+```
+
+## End-to-end example
+
+A complete EVM swap from Ethereum to Arbitrum:
 
 ```go
 package main
@@ -25,107 +351,41 @@ import (
     "fmt"
     "log"
 
-    hypermid "github.com/hypermid/sdk-go"
+    hypermid "github.com/Hypermid/hypermid-sdk-go"
 )
 
 func main() {
-    client := hypermid.NewClient(hypermid.Config{
-        APIKey:  "hm_live_abc123def456",
-        Timeout: 30 * time.Second,
-    })
-
+    client := hypermid.New(nil) // anonymous tier
     ctx := context.Background()
 
-    // Get supported chains
-    chains, err := client.GetChains(ctx)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    for _, chain := range chains.Chains {
-        fmt.Printf("%s (ID: %d)\n", chain.Name, chain.ID)
-    }
-
-    // Get a quote
-    quote, err := client.GetQuote(ctx, &hypermid.QuoteRequest{
-        FromChain:   1,
-        ToChain:     42161,
+    quote, err := client.GetQuote(ctx, hypermid.QuoteParams{
+        FromChain:   "1",
         FromToken:   "0x0000000000000000000000000000000000000000",
-        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
         FromAmount:  "1000000000000000000",
+        ToChain:     "42161",
+        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
         FromAddress: "0xYourAddress",
-        Slippage:    0.03,
     })
     if err != nil {
         log.Fatal(err)
     }
+    fmt.Println("Provider:", quote.Provider, "feeBps:", quote.FeeBps)
 
-    fmt.Printf("Output: %s %s\n", quote.Estimate.ToAmount, quote.Action.ToToken.Symbol)
-    fmt.Printf("Via: %s\n", quote.Tool)
-
-    // Execute the swap
-    exec, err := client.Execute(ctx, &hypermid.ExecuteRequest{
-        FromChain:   1,
-        ToChain:     42161,
+    exec, err := client.Execute(ctx, hypermid.ExecuteParams{
+        FromChain:   "1",
         FromToken:   "0x0000000000000000000000000000000000000000",
-        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
         FromAmount:  "1000000000000000000",
+        ToChain:     "42161",
+        ToToken:     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
         FromAddress: "0xYourAddress",
         ToAddress:   "0xYourAddress",
-        Slippage:    0.03,
     })
     if err != nil {
         log.Fatal(err)
     }
 
     if exec.TransactionRequest != nil {
-        fmt.Printf("Sign and send tx to: %s\n", exec.TransactionRequest.To)
+        fmt.Printf("Sign and broadcast tx to %s\n", exec.TransactionRequest.To)
     }
 }
 ```
-
-## Planned Features
-
-- Full API coverage with strongly typed request/response structs
-- Context-based cancellation and timeouts
-- Automatic retry with exponential backoff
-- Rate limit handling with configurable strategies
-- Thread-safe client
-- Generated from the OpenAPI spec
-
-## Interim: Direct HTTP
-
-Until the SDK is released, you can call the API directly:
-
-```go
-package main
-
-import (
-    "encoding/json"
-    "fmt"
-    "io"
-    "net/http"
-)
-
-func main() {
-    req, _ := http.NewRequest("GET", "https://api.hypermid.io/v1/chains", nil)
-    req.Header.Set("X-API-Key", "your-api-key")
-
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-
-    body, _ := io.ReadAll(resp.Body)
-
-    var result map[string]interface{}
-    json.Unmarshal(body, &result)
-
-    fmt.Println(result["data"])
-}
-```
-
-## Stay Updated
-
-Follow the [GitHub repository](https://github.com/Hypermid/sdk-go) for release announcements. You can also reach out on [X](https://x.com/hypermid) or contact support for early access.

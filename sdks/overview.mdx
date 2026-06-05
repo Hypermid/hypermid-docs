@@ -1,67 +1,56 @@
 ---
 title: "SDK Overview"
 sidebarTitle: "Overview"
-description: "Official SDKs for the Hypermid API"
+description: "Official Hypermid SDKs in TypeScript, Python, Go, and Rust"
 ---
 
-Hypermid provides official SDKs to simplify integration. Each SDK wraps the REST API with typed methods, automatic retries, and helper utilities.
+Hypermid ships official SDKs in **TypeScript, Python, Go, and Rust** — all with the same method surface, same anonymous-tier ergonomics, and the same response shapes. Pick whichever fits your stack.
+
+<Info>
+  **No API key required to start.** Every SDK works anonymously out of the box at the default fee tier. An API key is only needed if you're a partner with negotiated terms (custom fee splits, fee discounts, higher rate limits, scoped webhooks).
+</Info>
 
 ## Available SDKs
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="TypeScript" icon="js" href="/sdks/typescript">
-    Full-featured SDK for Node.js and browser environments. **Recommended for most integrations.**
+    Node 18+ and modern browsers. Dual ESM + CJS build — works in Next.js, Vite, Bun, AWS Lambda.
+  </Card>
+  <Card title="Python" icon="python" href="/sdks/python">
+    Python 3.9+. Sync (`Hypermid`) and async (`AsyncHypermid`) clients. Pydantic v2 typed models.
   </Card>
   <Card title="Go" icon="golang" href="/sdks/go">
-    Go SDK for server-side integrations. **Coming soon.**
+    Go 1.21+. Context-based cancellation, typed request/response structs.
   </Card>
   <Card title="Rust" icon="rust" href="/sdks/rust">
-    Rust SDK for high-performance applications. **Coming soon.**
+    Tokio async runtime. Strongly typed with serde. Builder-pattern config.
   </Card>
 </CardGroup>
 
-## Quick Comparison
+## At a glance
 
-| Feature | TypeScript | Go | Rust |
-|---------|-----------|-----|------|
-| **Status** | Stable | Coming Soon | Coming Soon |
-| **Package** | `@hypermid/sdk` | `github.com/hypermid/sdk-go` | `hypermid-sdk` |
-| **Minimum Version** | Node 18+ | Go 1.21+ | Rust 1.70+ |
-| **Async** | Promise-based | Context-based | async/await |
-| **Types** | Full TypeScript types | Generated structs | Generated types |
-| **Auto-retry** | Yes | Yes | Yes |
-| **Rate limit handling** | Automatic | Automatic | Automatic |
+| | TypeScript | Python | Go | Rust |
+|---|---|---|---|---|
+| **Package** | `@hypermid/sdk` | `hypermid` | `github.com/Hypermid/hypermid-sdk-go` | `hypermid-sdk` |
+| **Install** | `npm install @hypermid/sdk` | `pip install hypermid` | `go get github.com/Hypermid/hypermid-sdk-go` | `cargo add hypermid-sdk` |
+| **Min version** | Node 18+ | Python 3.9+ | Go 1.21+ | Rust 1.70+ |
+| **Async model** | Promise-based | sync + async | Context-based | Tokio async |
+| **Types** | Full TS types | Pydantic v2 | Generated structs | Generated types via serde |
+| **Status** | Stable | Stable | Stable | Stable |
 
-## Direct API Access
+All four SDKs expose the same methods: `getQuote` / `execute` / `getStatus` for the swap pipeline, plus `getChains`, `getTokens`, `getBalances`, `createWebhook`, on-ramp helpers, and `verifyWebhookSignature`. Names match each language's conventions (camelCase in TS, snake_case in Python/Rust, PascalCase in Go).
 
-If there's no SDK for your language yet, you can call the REST API directly. All endpoints use standard HTTP methods and JSON payloads:
+## Direct API access
 
-```python Python
-import requests
+If your stack isn't covered by an SDK, the REST API is plain HTTP + JSON. Every endpoint accepts requests without authentication (anonymous tier) and adds an `X-API-Key` header when set:
 
-response = requests.get(
-    "https://api.hypermid.io/v1/chains",
-    headers={"X-API-Key": "your-api-key"}
-)
-
-data = response.json()
-print(data["data"]["chains"])
+```bash cURL
+curl https://api.hypermid.io/v1/chains
 ```
 
-```ruby Ruby
-require 'net/http'
-require 'json'
-
-uri = URI("https://api.hypermid.io/v1/chains")
-req = Net::HTTP::Get.new(uri)
-req["X-API-Key"] = "your-api-key"
-
-res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http|
-  http.request(req)
-}
-
-data = JSON.parse(res.body)
-puts data["data"]["chains"]
+```javascript Fetch
+const res = await fetch("https://api.hypermid.io/v1/chains");
+const { data } = await res.json();
 ```
 
 See the [API Reference](/api-reference/overview) for complete endpoint documentation.
