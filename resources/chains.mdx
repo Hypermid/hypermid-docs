@@ -79,7 +79,7 @@ const exec = await client.execute({
 });
 
 // Sign and broadcast — that's it
-const tx = await wallet.sendTransaction(exec.data.transactionRequest);
+const tx = await wallet.sendTransaction(exec.transactionRequest);
 ```
 
 ```bash cURL
@@ -154,7 +154,7 @@ const exec = await client.execute({
 
 // Sign with your Solana wallet
 const tx = await solanaWallet.signAndSendTransaction(
-  exec.data.transactionRequest
+  exec.transactionRequest
 );
 ```
 
@@ -191,13 +191,13 @@ const exec = await client.execute({
 });
 
 // Display to user — they send manually from their XRP wallet
-console.log("Send to:", exec.data.depositAddress);
-console.log("Memo:", exec.data.memo);         // Required for XRP
-console.log("Deposit ID:", exec.data.depositId);
+console.log("Send to:", exec.depositAddress);
+console.log("Memo:", exec.memo);         // Required for XRP
+console.log("Deposit ID:", exec.depositId);
 
 // Track with deposit status endpoint
 const status = await client.getDepositStatus({
-  depositId: exec.data.depositId,
+  depositId: exec.depositId,
 });
 ```
 
@@ -238,7 +238,7 @@ const exec = await client.execute({
 });
 
 // Now returns depositAddress instead of transactionRequest
-console.log("Send to:", exec.data.depositAddress);
+console.log("Send to:", exec.depositAddress);
 ```
 
 ---

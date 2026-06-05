@@ -9,6 +9,38 @@ All notable changes to the Hypermid API are documented here. Follow this page to
 
 ---
 
+## June 2026
+
+### 2026-06-04 — Official SDKs in TypeScript, Python, Go, and Rust
+
+Hypermid SDKs are now live across four languages, all with the same method surface and the same **anonymous-tier-by-default** ergonomics. Install and ship a swap without signing up:
+
+```bash
+npm install @hypermid/sdk
+pip install hypermid
+go get github.com/Hypermid/hypermid-sdk-go@latest
+cargo add hypermid-sdk
+```
+
+**What ships in every SDK:**
+
+- Quote → Execute → Status — the swap pipeline
+- `getChains` / `getTokens` — the registry
+- `getBalances(address)` — multi-ecosystem wallet balances + USD totals
+- Webhook events + `verifyWebhookSignature` HMAC helper
+- Fiat on-ramp (RampNow) helpers
+- LI.FI + NEAR Intents + SuperSwap routing, auto-selected per pair
+
+**TypeScript-specific:** dual ESM + CJS build, so it works in modern Node, AWS Lambda, Bun, Deno, Next.js, Vite — anywhere.
+
+**Python-specific:** sync (`Hypermid`) and async (`AsyncHypermid`) clients with identical surface, pydantic v2 typed models, `py.typed` marker.
+
+**Anonymous tier:** every SDK constructor works with no arguments — `new Hypermid()` / `Hypermid()` / `hypermid.New(nil)` / `Hypermid::anonymous()`. API keys are only needed if you're a partner with negotiated fee terms.
+
+See [/sdks/overview](/sdks/overview) for per-language guides. Launch post: <https://dev.to/hypermid/cross-chain-swap-in-10-lines-without-signing-up-for-anything-29pl>.
+
+---
+
 ## April 2026
 
 ### 2026-04-17 — Direct USDCh → USDC outbound bridge (0% fee)

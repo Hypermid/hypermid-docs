@@ -27,9 +27,10 @@ Need help with your Hypermid integration? Here are the best ways to get assistan
 
 ### Partner Support
 
-If you're a partner with an API key, you have access to priority support:
+If you're a partner with an API key, you have access to priority support through the [Partner Portal](https://partner.hypermid.io/login):
 
-- **Email:** partner-support@hypermid.io
+- **In-portal ticketing** — open the **Support** tab in the portal to file a ticket. Tickets are tracked in our internal helpdesk and replies appear in the portal's notification bell.
+- **Email backup:** partner-support@hypermid.io
 - **Response time:** Within 4 business hours
 
 When contacting support, always include:
@@ -58,10 +59,12 @@ This means no provider has a viable route for your specific parameters. Try:
 
 ### Rate limit exceeded
 
-- Anonymous users: 30 requests/min (per IP)
-- Partners: 100 requests/min (per API key)
-- Implement exponential backoff using the `meta.rateLimit.reset` timestamp
-- Consider caching responses for `GET /v1/chains` and `GET /v1/tokens` (they don't change frequently)
+Rate limits are two-bucket — see the [Authentication](/authentication) page for the full table. Common patterns:
+
+- **Anonymous:** 30 req/min on heavy endpoints (`quote`, `execute`, `status`), 240 req/min on cache-friendly reads (`chains`, `tokens`, `balances`).
+- **Partner:** 2,000 req/min heavy, 6,000 req/min reads.
+- Implement exponential backoff using the `meta.rateLimit.reset` timestamp.
+- Cache `GET /v1/chains` and `GET /v1/tokens` — they're cache-friendly and don't change often.
 
 ### Transaction failed after signing
 

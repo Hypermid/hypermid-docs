@@ -54,11 +54,39 @@ Every error response includes a machine-readable `code` field in the error objec
       <td>Compare your request body against the API documentation</td>
     </tr>
     <tr>
+      <td>`INVALID_BODY`</td>
+      <td>400</td>
+      <td>Request body could not be parsed or was empty</td>
+      <td>POST/PUT request with no JSON body; malformed JSON; wrong Content-Type</td>
+      <td>Set `Content-Type: application/json` and send a non-empty JSON body</td>
+    </tr>
+    <tr>
       <td>`SLIPPAGE_ERROR`</td>
       <td>400</td>
       <td>Price moved beyond slippage tolerance</td>
       <td>Market volatility; low liquidity pool; slippage too tight</td>
       <td>Increase the `slippage` parameter or get a fresh quote</td>
+    </tr>
+    <tr>
+      <td>`PARTNER_FEE_EXCEEDS_MAX`</td>
+      <td>400</td>
+      <td>Configured partner fee exceeds the platform maximum</td>
+      <td>Partner fee config has a value above the platform's allowed cap</td>
+      <td>Contact Hypermid support to negotiate higher fee terms</td>
+    </tr>
+    <tr>
+      <td>`PARTNER_WALLET_NOT_REGISTERED`</td>
+      <td>400</td>
+      <td>Partner fee wallet not registered for this ecosystem</td>
+      <td>Swap settles to an ecosystem (e.g. solana, near) where you have no fee wallet</td>
+      <td>Register a wallet via [`PUT /v1/partner/me/fee-wallets`](/api-reference/partner-fee-wallets)</td>
+    </tr>
+    <tr>
+      <td>`ECOSYSTEM_NOT_CONFIGURED`</td>
+      <td>400</td>
+      <td>Requested ecosystem is not configured for this partner</td>
+      <td>Trying to use NEAR Intents / Tron / etc. before the ecosystem is enabled for your account</td>
+      <td>Contact Hypermid support to enable the ecosystem for your partner account</td>
     </tr>
     <tr>
       <td>`UNAUTHORIZED`</td>
@@ -126,9 +154,16 @@ Every error response includes a machine-readable `code` field in the error objec
       <td>Retry after a brief delay</td>
     </tr>
     <tr>
+      <td>`UPSTREAM_MAINTENANCE`</td>
+      <td>503</td>
+      <td>Upstream provider is in scheduled maintenance</td>
+      <td>LI.FI, NEAR Intents, or RampNow announced a maintenance window</td>
+      <td>Wait and retry; check upstream provider status pages for the window</td>
+    </tr>
+    <tr>
       <td>`SERVICE_UNAVAILABLE`</td>
       <td>503</td>
-      <td>Service temporarily unavailable</td>
+      <td>Hypermid is temporarily unavailable</td>
       <td>Maintenance; deployment; overwhelming traffic</td>
       <td>Retry with exponential backoff; check [API status](https://api.hypermid.io/v1/ping)</td>
     </tr>
