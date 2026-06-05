@@ -34,7 +34,7 @@ Deletes a webhook endpoint. After deletion, no further events will be delivered 
 <CodeGroup>
 ```typescript TypeScript
 const result = await client.deleteWebhook("whk_abc123def456");
-console.log("Deleted:", result.data.deleted);
+console.log("Deleted:", result.deleted);
 ```
 
 ```bash cURL

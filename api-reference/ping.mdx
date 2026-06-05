@@ -31,8 +31,8 @@ Simple health check endpoint to verify the API is operational. Does not require 
 <CodeGroup>
 ```typescript TypeScript
 const ping = await client.ping();
-console.log("API status:", ping.data.status);
-console.log("Version:", ping.data.version);
+console.log("API status:", ping.status);
+console.log("Version:", ping.version);
 ```
 
 ```bash cURL
