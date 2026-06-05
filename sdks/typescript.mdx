@@ -1,11 +1,10 @@
 ---
 title: "TypeScript SDK"
 sidebarTitle: "TypeScript"
-description: "Full-featured TypeScript SDK for the Hypermid API"
+description: "TypeScript SDK for the Hypermid API — Node.js, browsers, edge runtimes"
 ---
 
-
-The official TypeScript SDK provides a fully typed, promise-based client for the Hypermid API. It works in both Node.js (18+) and modern browser environments.
+The official TypeScript SDK provides a fully typed, promise-based client for the Hypermid API. Ships as a **dual ESM + CJS build** — works in modern Node.js (18+), browsers, Bun, Deno, Next.js, Vite, AWS Lambda, and edge runtimes.
 
 ## Installation
 
@@ -21,6 +20,10 @@ pnpm add @hypermid/sdk
 ```bash yarn
 yarn add @hypermid/sdk
 ```
+
+```bash bun
+bun add @hypermid/sdk
+```
 </CodeGroup>
 
 ## Configuration
@@ -28,123 +31,161 @@ yarn add @hypermid/sdk
 ```typescript
 import { Hypermid } from "@hypermid/sdk";
 
+// Anonymous tier — works immediately, no signup
+const client = new Hypermid();
+
+// With a partner API key
 const client = new Hypermid({
-  apiKey: "hm_live_abc123def456",     // Optional: omit for anonymous access
-  baseUrl: "https://api.hypermid.io", // Optional: default
-  timeout: 30000,                      // Optional: request timeout in ms (default: 30s)
-  retries: 3,                          // Optional: auto-retry count (default: 3)
+  apiKey: process.env.HYPERMID_API_KEY,
+});
+
+// Full custom config
+const client = new Hypermid({
+  apiKey: process.env.HYPERMID_API_KEY,
+  baseUrl: "https://api.hypermid.io",  // optional, default shown
+  timeout: 30_000,                      // optional, ms, default shown
+  fetch: customFetch,                   // optional, custom fetch impl
 });
 ```
 
-### Configuration Options
+### Configuration options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `apiKey` | `string` | — | Your partner API key |
+|---|---|---|---|
+| `apiKey` | `string` | — | Partner API key. Omit for anonymous tier. |
 | `baseUrl` | `string` | `https://api.hypermid.io` | API base URL |
-| `timeout` | `number` | `30000` | Request timeout in milliseconds |
-| `retries` | `number` | `3` | Number of automatic retries for transient errors |
-| `onRateLimit` | `function` | Auto-wait | Custom rate limit handler |
+| `timeout` | `number` | `30_000` | Per-request timeout in milliseconds |
+| `fetch` | `typeof fetch` | `globalThis.fetch` | Custom fetch implementation (for testing, polyfills, or edge runtimes) |
 
 ## Methods
 
-### Chains & Tokens
+### Chains & tokens
 
 ```typescript
-// Get all supported chains
 const chains = await client.getChains();
 
-// Get tokens for specific chains
-const tokens = await client.getTokens({ chains: [1, 42161, 137] });
+const tokens = await client.getTokens({
+  chains: "1,42161,137",
+  keywords: "usdc",
+});
 
-// Get available connections between chains
-const connections = await client.getConnections({
+const conns = await client.getConnections({
   fromChain: 1,
   toChain: 42161,
 });
 
-// Get available bridge/DEX tools
 const tools = await client.getTools();
 
-// Get gas prices for a chain
-const gas = await client.getGasPrices({ chainId: 1 });
+const gas = await client.getGasPrices({ chains: "1,42161" });
 ```
 
-### Quoting
+### Quote / Execute / Status
 
 ```typescript
-// Get the best single quote
 const quote = await client.getQuote({
   fromChain: 1,
-  toChain: 42161,
   fromToken: "0x0000000000000000000000000000000000000000",
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   fromAmount: "1000000000000000000",
+  toChain: 42161,
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   fromAddress: "0xYourAddress",
-  slippage: 0.03,
 });
 
-// Get multiple routes for comparison
-const routes = await client.getRoutes({
-  fromChain: 1,
-  toChain: 42161,
-  fromToken: "0x0000000000000000000000000000000000000000",
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-  fromAmount: "1000000000000000000",
-  fromAddress: "0xYourAddress",
-  maxRoutes: 5,
-  sortBy: "output",
-});
-```
-
-### Execution
-
-```typescript
-// Execute a swap
 const exec = await client.execute({
   fromChain: 1,
-  toChain: 42161,
   fromToken: "0x0000000000000000000000000000000000000000",
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   fromAmount: "1000000000000000000",
+  toChain: 42161,
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   fromAddress: "0xYourAddress",
   toAddress: "0xYourAddress",
-  slippage: 0.03,
 });
 
-// Submit a manual deposit notification
-await client.submitDeposit({
-  depositId: "dep_abc123",
-  txHash: "0xDepositTxHash",
-});
-```
+// EVM swaps return a transactionRequest to sign and broadcast.
+// Non-EVM (NEAR Intents) return a depositAddress to send tokens to.
 
-### Status Tracking
-
-```typescript
-// Check swap status
 const status = await client.getStatus({
   txHash: "0xTxHash",
   fromChain: 1,
   toChain: 42161,
 });
 
-// Check manual deposit status
-const depositStatus = await client.getDepositStatus({
-  depositId: "dep_abc123",
+// Or get multiple routes for comparison
+const routes = await client.getRoutes({
+  fromChain: 1,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "1000000000000000000",
+  toChain: 42161,
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAddress: "0xYourAddress",
 });
 ```
 
-### On-Ramp
+### Balances
 
 ```typescript
-// Get on-ramp configuration
+const balances = await client.getBalances({
+  address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  chainIds: [1, 42161, 137],  // optional — restrict EVM coverage
+});
+
+console.log(
+  `Total: $${balances.totalBalanceUSD} across ${Object.keys(balances.balances).length} chains`,
+);
+```
+
+`getBalances` auto-detects the address ecosystem (EVM, Solana, Bitcoin, NEAR, Sui, Tron) and returns priced holdings plus dust classification.
+
+### NEAR Intents deposits
+
+For non-EVM destinations, `execute` returns a deposit address. After the user sends funds:
+
+```typescript
+// Tell the backend you submitted the deposit
+await client.submitDeposit({
+  depositAddress: exec.depositAddress,
+  txHash: "depositTxHash",
+});
+
+// Poll deposit status
+const status = await client.getDepositStatus({
+  depositAddress: exec.depositAddress,
+});
+```
+
+### Webhooks
+
+```typescript
+const created = await client.createWebhook({
+  url: "https://yourapp.com/webhooks",
+  events: ["swap.completed", "swap.failed", "onramp.completed"],
+});
+console.log("Webhook secret (store it):", created.secret);
+
+const webhooks = await client.listWebhooks();
+
+await client.deleteWebhook("whk_abc123");
+```
+
+Verify incoming webhook deliveries:
+
+```typescript
+import { verifyWebhookSignature } from "@hypermid/sdk";
+
+const ok = verifyWebhookSignature({
+  body: rawRequestBody,
+  signature: req.headers["x-hypermid-signature"],
+  secret: process.env.HYPERMID_WEBHOOK_SECRET,
+});
+if (!ok) return new Response("invalid signature", { status: 401 });
+```
+
+### Fiat on-ramp (RampNow)
+
+```typescript
 const config = await client.getOnrampConfig();
+const assets = await client.getOnrampAssets({ country: "US" });
 
-// Get purchasable assets
-const assets = await client.getOnrampAssets();
-
-// Get a quote
 const quote = await client.getOnrampQuote({
   fiatCurrency: "USD",
   cryptoAsset: "ETH",
@@ -154,7 +195,6 @@ const quote = await client.getOnrampQuote({
   walletAddress: "0xYourAddress",
 });
 
-// Create a checkout session
 const checkout = await client.createOnrampCheckout({
   fiatCurrency: "USD",
   cryptoAsset: "ETH",
@@ -164,128 +204,277 @@ const checkout = await client.createOnrampCheckout({
   walletAddress: "0xYourAddress",
   redirectUrl: "https://yourapp.com/callback",
 });
+console.log("Send user to:", checkout.checkoutUrl);
 
-// Check order status
-const orderStatus = await client.getOnrampStatus({
-  orderUid: "ord_abc123",
-});
+const orderStatus = await client.getOnrampStatus("ord_abc123");
 ```
 
-### Partner
+### Partner endpoints (require API key)
 
 ```typescript
-// Get your partner profile
-const me = await client.getPartnerProfile();
-
-// Get stats
+const info  = await client.getPartnerInfo();
 const stats = await client.getPartnerStats({ period: "30d" });
-
-// List transactions
-const txns = await client.getPartnerTransactions({
-  page: 1,
-  limit: 20,
-  status: "DONE",
-});
-
-// Manage webhooks
-const webhook = await client.createWebhook({
-  url: "https://yourapp.com/webhooks",
-  events: ["swap.completed", "swap.failed"],
-});
-
-const webhooks = await client.listWebhooks();
-
-await client.deleteWebhook("whk_abc123");
+const txns  = await client.getPartnerTransactions({ page: 1, limit: 50 });
 ```
 
-## Type Guards
+### SuperSwap inbound receiver
 
-The SDK exports type guard functions to help narrow execution response types:
+For SuperSwap V2 inbound deposits (PulseChain-side outputs):
 
 ```typescript
-import { isWalletExecution, isDepositExecution } from "@hypermid/sdk";
-
-const exec = await client.execute({ ... });
-
-if (isWalletExecution(exec.data)) {
-  // Wallet mode: sign and broadcast the transaction
-  const tx = await wallet.sendTransaction(exec.data.transactionRequest);
-}
-
-if (isDepositExecution(exec.data)) {
-  // Manual deposit mode: show the deposit address to the user
-  console.log("Deposit to:", exec.data.depositAddress);
-}
+const res = await client.registerInboundReceiver({
+  txHash: "0xDepositTxHash",
+  fromAddress: "0xSender",
+  toAddress: "0xPulseChainRecipient",
+  outputToken: "0xOutputTokenOnPulse",
+  destinationDomain: 369,
+  signature: "0xEIP712Signature",
+});
 ```
 
-## Execute Swap Helper
-
-The SDK provides a high-level `executeSwap` helper that manages the full lifecycle:
+### Telemetry
 
 ```typescript
-import { Hypermid } from "@hypermid/sdk";
+await client.recordSwapEvent({
+  eventType: "swap.viewed",
+  metadata: { sessionId, walletConnected: true },
+});
 
-const client = new Hypermid({ apiKey: "your-api-key" });
+const ping = await client.ping();
+```
 
-const result = await client.executeSwap({
-  fromChain: 1,
-  toChain: 42161,
-  fromToken: "0x0000000000000000000000000000000000000000",
-  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-  fromAmount: "1000000000000000000",
-  fromAddress: "0xYourAddress",
-  toAddress: "0xYourAddress",
-  signer: wallet,  // ethers.js Signer or compatible wallet
-  onStatus: (status) => {
-    console.log("Status update:", status.status, status.subStatus);
+## ExecuteSwap helper
+
+For the full swap lifecycle in one call, use `executeSwap` (a top-level function, not a class method). It runs `execute`, calls back to you for signing, then polls until completion:
+
+```typescript
+import { Hypermid, executeSwap } from "@hypermid/sdk";
+
+const client = new Hypermid();
+
+const result = await executeSwap(
+  client,
+  {
+    fromChain: 1,
+    fromToken: "0x0000000000000000000000000000000000000000",
+    fromAmount: "1000000000000000000",
+    toChain: 42161,
+    toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    fromAddress: "0xYourAddress",
+    toAddress: "0xYourAddress",
   },
-  pollInterval: 10000, // ms
-});
-
-console.log("Swap complete!");
-console.log("Received:", result.receiving.amount);
+  {
+    onStatusChange: (update) => console.log("Status:", update.status),
+    onTransactionRequest: async (resp) => {
+      // Sign and broadcast resp.transactionRequest via your wallet.
+      // Return the on-chain tx hash.
+      return await wallet.sendTransaction(resp.transactionRequest);
+    },
+    onDepositRequired: async (resp) => {
+      // Send tokens to resp.depositAddress.
+      // Return the on-chain tx hash.
+      return await wallet.send(resp.depositAddress, resp.expectedAmount);
+    },
+  },
+  { pollInterval: 5_000, pollTimeout: 600_000 },
+);
 ```
 
-The `executeSwap` method handles:
-1. Getting a quote
-2. Executing the swap
-3. Signing the transaction
-4. Polling for status until completion
-5. Returning the final result
-
-## Error Handling
+If you only need polling, use the wait helpers directly:
 
 ```typescript
-import { Hypermid, HypermidError, isRateLimitError } from "@hypermid/sdk";
+import { waitForDepositCompletion, waitForLiFiCompletion } from "@hypermid/sdk";
+
+const result = await waitForDepositCompletion(client, { depositAddress }, {
+  pollInterval: 5_000,
+  pollTimeout: 600_000,
+});
+
+const result = await waitForLiFiCompletion(client, { txHash, fromChain, toChain }, {
+  pollInterval: 10_000,
+  pollTimeout: 1_800_000,
+});
+```
+
+For dry-running quotes without signing, use `quoteAndPrepare(client, params)`.
+
+## Type guards
+
+Use these to branch on the provider/mode of an `ExecuteResponse` without checking response shape manually:
+
+```typescript
+import {
+  isLiFiRoute,
+  isNearIntentsRoute,
+  isSuperSwapRoute,
+  isManualDeposit,
+  isWalletDeposit,
+} from "@hypermid/sdk";
+
+const exec = await client.execute({ /* ... */ });
+
+if (isLiFiRoute(exec)) {
+  // EVM swap via LI.FI — sign exec.transactionRequest
+}
+if (isNearIntentsRoute(exec)) {
+  // NEAR Intents — send tokens to exec.depositAddress
+}
+if (isSuperSwapRoute(exec)) {
+  // SuperSwap (PulseChain-native) route
+}
+if (isWalletDeposit(exec)) {
+  // Wallet-style deposit (sign + broadcast)
+}
+if (isManualDeposit(exec)) {
+  // Manual deposit (show address + memo to user)
+}
+```
+
+And on statuses:
+
+```typescript
+import {
+  isLiFiStatusTerminal,
+  isNIStatusTerminal,
+  isDepositSuccess,
+  isDepositRefunded,
+  isDepositFailed,
+} from "@hypermid/sdk";
+
+if (isLiFiStatusTerminal(status.status))      { /* done or failed */ }
+if (isNIStatusTerminal(depositStatus.status)) { /* done or failed */ }
+if (isDepositSuccess(depositStatus))          { /* user got funds */ }
+if (isDepositRefunded(depositStatus))         { /* refunded */ }
+if (isDepositFailed(depositStatus))           { /* failed */ }
+```
+
+Chain helpers:
+
+```typescript
+import { isNearIntentsChain, supportsWalletDeposit, ChainId } from "@hypermid/sdk";
+
+isNearIntentsChain(ChainId.NEAR);     // true
+supportsWalletDeposit(ChainId.ETH);   // true (user can sign on this chain)
+```
+
+For the full chain registry (`CHAIN_REGISTRY`, `resolveChain`, `toLifiChainId`, etc.), see the [chains module exports](https://github.com/Hypermid/hypermid-sdk/blob/main/src/chain-registry.ts).
+
+## Error handling
+
+```typescript
+import {
+  HypermidError,
+  HypermidTimeoutError,
+  HypermidNetworkError,
+} from "@hypermid/sdk";
 
 try {
-  const quote = await client.getQuote({ ... });
-} catch (error) {
-  if (error instanceof HypermidError) {
-    console.error("API Error:", error.code, error.message);
-    console.error("Request ID:", error.requestId);
-
-    if (isRateLimitError(error)) {
-      console.error("Rate limited. Reset at:", error.rateLimit.reset);
-    }
+  const quote = await client.getQuote({ /* ... */ });
+} catch (err) {
+  if (err instanceof HypermidError) {
+    console.error(`API error ${err.status}: [${err.code}] ${err.message}`);
+    console.error("Request ID:", err.requestId);
+  } else if (err instanceof HypermidTimeoutError) {
+    console.error(`Request timed out after ${err.timeoutMs}ms`);
+  } else if (err instanceof HypermidNetworkError) {
+    console.error("Network error:", err.cause);
+  } else {
+    throw err;
   }
 }
 ```
 
-## TypeScript Types
+| Class | Raised when |
+|---|---|
+| `HypermidError` | API returned a non-2xx error response |
+| `HypermidTimeoutError` | A single request exceeded `config.timeout` |
+| `HypermidNetworkError` | Transport-level failure (DNS, TLS, connection reset) |
 
-All request and response types are exported:
+## TypeScript types
+
+All request/response types are exported from the package root:
 
 ```typescript
 import type {
-  QuoteRequest,
-  QuoteResponse,
-  ExecuteRequest,
-  ExecuteResponse,
-  StatusResponse,
-  Chain,
-  Token,
-  Route,
   HypermidConfig,
+  ApiResponse,
+  ApiMeta,
+  RateLimitInfo,
+
+  // Chains / tokens
+  Chain,
+  ChainsResponse,
+  Token,
+  TokensParams,
+  TokensResponse,
+
+  // Quote / execute / status
+  QuoteParams,
+  QuoteResponse,
+  ExecuteParams,
+  ExecuteResponse,
+  LiFiExecuteResponse,
+  NIExecuteResponse,
+  SuperSwapExecuteResponse,
+  TransactionRequest,
+  StatusParams,
+  LiFiStatusParams,
+  NIStatusParams,
+  StatusResponse,
+
+  // Balances
+  BalancesParams,
+  BalancesResponse,
+  TokenBalance,
+
+  // Webhooks
+  WebhookEvent,
+  CreateWebhookParams,
+  WebhookCreated,
+  WebhooksListResponse,
+
+  // On-ramp
+  OnrampQuoteParams,
+  OnrampCheckoutParams,
+  OnrampCheckoutResponse,
+  OnrampStatusResponse,
+
+  // SuperSwap
+  InboundReceiverParams,
+  InboundReceiverResponse,
 } from "@hypermid/sdk";
+```
+
+## End-to-end example
+
+A complete EVM swap from Ethereum to Arbitrum, anonymous tier:
+
+```typescript
+import { Hypermid } from "@hypermid/sdk";
+
+const client = new Hypermid();
+
+const quote = await client.getQuote({
+  fromChain: 1,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "1000000000000000000",
+  toChain: 42161,
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAddress: "0xYourAddress",
+});
+console.log("Provider:", quote.provider, "feeBps:", quote.feeBps);
+
+const exec = await client.execute({
+  fromChain: 1,
+  fromToken: "0x0000000000000000000000000000000000000000",
+  fromAmount: "1000000000000000000",
+  toChain: 42161,
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  fromAddress: "0xYourAddress",
+  toAddress: "0xYourAddress",
+});
+
+if ("transactionRequest" in exec) {
+  console.log("Sign and broadcast tx to:", exec.transactionRequest.to);
+}
 ```
