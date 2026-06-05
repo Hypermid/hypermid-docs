@@ -7,14 +7,36 @@ mode: "wide"
 
 The Hypermid widget playground lets you tune every visual knob — colors, fonts, border radius, modes, chains, layout — and watch a live preview update in real time. When you're happy, copy a single-line iframe or script tag and drop it into your site.
 
-<Card
-  title="Open the Widget Playground →"
+<a
   href="https://app.hypermid.io/widget/playground"
-  icon="palette"
-  horizontal
+  target="_blank"
+  rel="noopener"
+  style={{
+    display: "block",
+    border: "1px solid var(--border, rgba(0,0,0,0.08))",
+    borderRadius: 12,
+    overflow: "hidden",
+    textDecoration: "none",
+    color: "inherit",
+    margin: "16px 0 8px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+  }}
 >
-  Launch the full playground in a new tab. **No signup required.** Tune accents, success/error colors, typography, border radius, chains, and layout — copy the embed code when you're done.
-</Card>
+  <img
+    src="/images/widget-playground.png"
+    alt="Hypermid Widget Playground — three columns: configuration controls on the left, live widget preview in the middle, copyable embed code on the right"
+    style={{ display: "block", width: "100%", height: "auto" }}
+  />
+  <div style={{ padding: "14px 18px", background: "var(--background, #fff)" }}>
+    <div style={{ fontWeight: 600, fontSize: 16 }}>
+      🎨 Open the Widget Playground →
+    </div>
+    <div style={{ fontSize: 14, opacity: 0.75, marginTop: 4 }}>
+      Launch in a new tab. No signup required. Tune accents, success/error colours,
+      typography, border radius, chains, and layout — copy the embed code when you're done.
+    </div>
+  </div>
+</a>
 
 <Tip>
   The playground needs the full browser width to be comfortable to use (three columns: controls, live preview, code export). Opening it in its own tab gives the best experience.
