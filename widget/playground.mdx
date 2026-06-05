@@ -53,8 +53,8 @@ export const WidgetConfiguratorSimple = () => {
   const toChain = chains.find(c => String(c.id) === toChainId);
 
   const code = tab === "iframe"
-    ? '<iframe\n  src="https://www.hypermid.io/widget?embed=1&theme=dark&fromChain=' + fromChainId + '&toChain=' + toChainId + (fromToken ? '&fromToken=' + fromToken : '') + (toToken ? '&toToken=' + toToken : '') + '"\n  width="470" height="700" frameborder="0"\n  allow="clipboard-write; payment; web-share"\n  style="border: none; border-radius: 16px;"\n></iframe>'
-    : '<div id="hypermid-widget"></div>\n\n<script src="https://widget.hypermid.io/v1/embed.js"></script>\n<script>\n  HypermidWidget.init({\n    containerId: "hypermid-widget",\n    theme: "dark",\n    defaultFromChain: ' + fromChainId + ',\n    defaultToChain: ' + toChainId + (fromToken ? ',\n    defaultFromToken: "' + fromToken + '"' : '') + (toToken ? ',\n    defaultToToken: "' + toToken + '"' : '') + '\n  });\n</script>';
+    ? '<iframe\n  src="https://app.hypermid.io/widget?embed=1&theme=dark&fromChain=' + fromChainId + '&toChain=' + toChainId + (fromToken ? '&fromToken=' + fromToken : '') + (toToken ? '&toToken=' + toToken : '') + '"\n  width="470" height="700" frameborder="0"\n  allow="clipboard-write; payment; web-share"\n  style="border: none; border-radius: 16px;"\n></iframe>'
+    : '<div id="hypermid-widget"></div>\n\n<script src="https://hypermid.io/widget/v1/embed.js"></script>\n<script>\n  HypermidWidget.init({\n    containerId: "hypermid-widget",\n    theme: "dark",\n    defaultFromChain: ' + fromChainId + ',\n    defaultToChain: ' + toChainId + (fromToken ? ',\n    defaultFromToken: "' + fromToken + '"' : '') + (toToken ? ',\n    defaultToToken: "' + toToken + '"' : '') + '\n  });\n</script>';
 
   const copyCode = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(null), 2000); };
 
@@ -99,7 +99,7 @@ export const WidgetConfiguratorSimple = () => {
 Use the interactive playground below to customize the widget's appearance — colors, fonts, border radius, modes, chains, and layout. Once you're happy with the result, copy the embed code.
 
 <iframe
-  src="https://www.hypermid.io/widget/playground"
+  src="https://app.hypermid.io/widget/playground"
   width="100%"
   height="850"
   frameborder="0"
@@ -150,7 +150,7 @@ A single `<iframe>` tag — simplest integration, works anywhere:
 
 ```html
 <iframe
-  src="https://www.hypermid.io/widget?embed=1&theme=dark&fromChain=1&toChain=42161"
+  src="https://app.hypermid.io/widget?embed=1&theme=dark&fromChain=1&toChain=42161"
   width="470"
   height="700"
   frameborder="0"
@@ -166,7 +166,7 @@ Uses the embed.js script for programmatic control, event callbacks, and dynamic 
 ```html
 <div id="hypermid-widget"></div>
 
-<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script src="https://hypermid.io/widget/v1/embed.js"></script>
 <script>
   HypermidWidget.init({
     containerId: "hypermid-widget",

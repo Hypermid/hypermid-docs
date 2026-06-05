@@ -4,7 +4,7 @@ sidebarTitle: "Overview"
 description: "Embed the Hypermid swap, bridge & on-ramp widget in your website"
 ---
 
-The Hypermid Widget embeds the full Hypermid experience into any website — **swap**, **bridge**, **gas refuel**, and **buy crypto with card**. It uses the same production app at `hypermid.io`, loaded as an iframe.
+The Hypermid Widget embeds the full Hypermid experience into any website — **swap**, **bridge**, **gas refuel**, and **buy crypto with card**. It loads the production swap app from `app.hypermid.io/widget` inside a sandboxed iframe.
 
 <Info>
   The widget includes **full wallet connection** (550+ wallets via Reown/WalletConnect) supporting EVM, Solana, Bitcoin, TON, TRON, and SUI — no additional setup needed.
@@ -28,7 +28,7 @@ The Hypermid Widget embeds the full Hypermid experience into any website — **s
 ```html
 <div id="hypermid-widget"></div>
 
-<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script src="https://hypermid.io/widget/v1/embed.js"></script>
 <script>
   HypermidWidget.init({
     containerId: "hypermid-widget",
@@ -54,7 +54,7 @@ For even simpler integration — no JavaScript needed:
   data-to-chain="42161"
 ></div>
 
-<script src="https://widget.hypermid.io/v1/embed.js"></script>
+<script src="https://hypermid.io/widget/v1/embed.js"></script>
 ```
 
 ### Direct Iframe
@@ -63,7 +63,7 @@ If you prefer full control, embed the iframe directly:
 
 ```html
 <iframe
-  src="https://www.hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
+  src="https://app.hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
   width="420"
   height="700"
   frameborder="0"
