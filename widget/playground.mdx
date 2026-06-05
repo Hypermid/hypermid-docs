@@ -2,21 +2,22 @@
 title: "Widget Playground"
 sidebarTitle: "Playground"
 description: "Customize, preview, and copy widget embed code with live controls"
+mode: "wide"
 ---
 
 The Hypermid widget playground lets you tune every visual knob — colors, fonts, border radius, modes, chains, layout — and watch a live preview update in real time. When you're happy, copy a single-line iframe or script tag and drop it into your site.
 
-<iframe
-  src="https://app.hypermid.io/widget/playground"
-  width="100%"
-  height="1100"
-  frameborder="0"
-  allow="clipboard-write"
-  style={{ border: "none", borderRadius: 12, marginTop: 8, marginBottom: 24, boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
-></iframe>
+<Card
+  title="Open the Widget Playground →"
+  href="https://app.hypermid.io/widget/playground"
+  icon="palette"
+  horizontal
+>
+  Launch the full playground in a new tab. **No signup required.** Tune accents, success/error colors, typography, border radius, chains, and layout — copy the embed code when you're done.
+</Card>
 
 <Tip>
-  Need more room? Open the playground in its own tab: [app.hypermid.io/widget/playground →](https://app.hypermid.io/widget/playground)
+  The playground needs the full browser width to be comfortable to use (three columns: controls, live preview, code export). Opening it in its own tab gives the best experience.
 </Tip>
 
 ## What you can customize
@@ -56,6 +57,7 @@ If you only need to lock down a chain/token combination — not a full theme —
   title="Open the preset builder →"
   href="https://app.hypermid.io/widget/preset-builder"
   icon="square-up-right"
+  horizontal
 >
   Browse all supported chains (EVM + Solana + Bitcoin + NEAR Intents). Pick a source and destination pair. Copy a ready-made iframe URL or script-tag config.
 </Card>
