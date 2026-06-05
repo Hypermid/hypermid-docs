@@ -1,0 +1,342 @@
+---
+title: "Python SDK"
+sidebarTitle: "Python"
+description: "Python SDK for the Hypermid API — sync and async clients"
+---
+
+The official Python SDK ships **both sync and async clients** with the same method surface. Built on `httpx`, with `pydantic` v2 for typed response models. Fully type-checked (`py.typed`). Requires Python 3.9+.
+
+## Installation
+
+```bash
+pip install hypermid
+```
+
+## Configuration
+
+```python
+from hypermid import Hypermid, HypermidConfig
+
+# Anonymous tier — works immediately, no signup
+hm = Hypermid()
+
+# With a partner API key
+hm = Hypermid(HypermidConfig(api_key="your-api-key"))
+
+# Full custom config
+hm = Hypermid(HypermidConfig(
+    api_key="your-api-key",
+    base_url="https://api.hypermid.io",  # optional, default shown
+    timeout=30.0,                         # optional, seconds, default shown
+))
+```
+
+### Configuration fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `api_key` | `Optional[str]` | `None` | Partner API key. Omit for anonymous tier. |
+| `base_url` | `str` | `https://api.hypermid.io` | API base URL |
+| `timeout` | `float` | `30.0` | Per-request timeout in seconds |
+
+`Hypermid()` with no arguments uses all defaults — the recommended starting point.
+
+## Sync vs. async
+
+Both clients have the **exact same method surface**. Choose based on your stack:
+
+```python
+# Sync — for scripts, Django views, Flask, FastAPI sync endpoints
+from hypermid import Hypermid
+
+hm = Hypermid()
+chains = hm.get_chains()
+hm.close()  # release connection pool
+```
+
+```python
+# Async — for FastAPI async endpoints, asyncio scripts, Trio
+import asyncio
+from hypermid import AsyncHypermid
+
+async def main():
+    async with AsyncHypermid() as hm:
+        chains = await hm.get_chains()
+
+asyncio.run(main())
+```
+
+The sync client also supports context-manager usage:
+
+```python
+with Hypermid() as hm:
+    chains = hm.get_chains()
+# pool released here
+```
+
+The rest of this page shows the **sync** client. For async, prefix the call with `await` inside `async with AsyncHypermid() as hm:`.
+
+## Methods
+
+### Chains & tokens
+
+```python
+chains = hm.get_chains()
+
+tokens = hm.get_tokens(
+    chains="1,42161,137",
+    keywords="usdc",
+)
+```
+
+### Quote / Execute / Status
+
+```python
+quote = hm.get_quote(
+    from_chain=1,
+    from_token="0x0000000000000000000000000000000000000000",
+    from_amount="1000000000000000000",  # base units (wei)
+    to_chain=42161,
+    to_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    from_address="0xYourAddress",
+)
+
+exec = hm.execute(
+    from_chain=1,
+    from_token="0x0000000000000000000000000000000000000000",
+    from_amount="1000000000000000000",
+    to_chain=42161,
+    to_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    from_address="0xYourAddress",
+    to_address="0xYourAddress",
+)
+
+# EVM swaps return a transaction_request to sign and broadcast.
+# Non-EVM (NEAR Intents) return a deposit_address to send tokens to.
+
+status = hm.get_status(
+    tx_hash="0xTxHash",
+    from_chain=1,
+    to_chain=42161,
+)
+```
+
+All numeric chain IDs accept `int` or `str`. Token amounts are always strings in base units (wei-equivalent) to avoid precision loss.
+
+### Balances
+
+```python
+balances = hm.get_balances(
+    address="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    chain_ids=[1, 42161, 137],  # optional — restrict EVM coverage
+)
+
+print(f"Total: ${balances.total_balance_usd} across {len(balances.balances)} chains")
+```
+
+`get_balances` auto-detects the address ecosystem (EVM, Solana, Bitcoin, NEAR, Sui, Tron) and returns priced holdings plus dust classification.
+
+### NEAR Intents deposits
+
+For non-EVM destinations, `execute` returns a deposit address. After the user sends funds, poll status:
+
+```python
+status = hm.get_deposit_status(
+    deposit_address=exec.deposit_address,
+)
+
+if status.status == "completed":
+    print("Funds delivered")
+```
+
+### Webhooks
+
+```python
+created = hm.create_webhook(
+    url="https://yourapp.com/webhooks",
+    events=["swap.completed", "swap.failed", "onramp.completed"],
+)
+print("Webhook secret (store it):", created.secret)
+```
+
+Verify incoming webhook deliveries:
+
+```python
+from hypermid import verify_webhook_signature
+
+ok = verify_webhook_signature(
+    body=request.body,
+    signature=request.headers["X-Hypermid-Signature"],
+    secret=os.environ["HYPERMID_WEBHOOK_SECRET"],
+)
+if not ok:
+    return Response(status_code=401)
+```
+
+### Fiat on-ramp (RampNow)
+
+```python
+quote = hm.get_onramp_quote(
+    fiat_currency="USD",
+    crypto_asset="ETH",
+    chain_id=1,
+    fiat_amount=100,
+    payment_method="credit_card",
+    wallet_address="0xYourAddress",
+)
+
+checkout = hm.get_onramp_checkout(
+    fiat_currency="USD",
+    crypto_asset="ETH",
+    chain_id=1,
+    fiat_amount=100,
+    payment_method="credit_card",
+    wallet_address="0xYourAddress",
+    redirect_url="https://yourapp.com/callback",
+)
+print("Send user to:", checkout.checkout_url)
+
+status = hm.get_onramp_status("ord_abc123")
+```
+
+The on-ramp helpers accept `**kwargs` and forward to the API directly, so any field the API supports works without an SDK upgrade.
+
+### SuperSwap inbound receiver
+
+For SuperSwap V2 inbound deposits (PulseChain-side outputs):
+
+```python
+res = hm.register_inbound_receiver(
+    tx_hash="0xDepositTxHash",
+    from_address="0xSender",
+    to_address="0xPulseChainRecipient",
+    output_token="0xOutputTokenOnPulse",
+    destination_domain=369,
+    signature="0xEIP712Signature",
+)
+```
+
+## Error handling
+
+```python
+from hypermid import (
+    HypermidError,
+    HypermidTimeoutError,
+    HypermidNetworkError,
+)
+
+try:
+    quote = hm.get_quote(...)
+except HypermidError as e:
+    print(f"API error {e.status}: [{e.code}] {e.message}")
+    print(f"Request ID: {e.request_id}")
+except HypermidTimeoutError as e:
+    print(f"Request timed out after {e.timeout_seconds}s")
+except HypermidNetworkError as e:
+    print(f"Network error: {e}")
+```
+
+| Exception | Raised when |
+|---|---|
+| `HypermidError` | The API returned an error response (4xx/5xx) |
+| `HypermidTimeoutError` | A single request exceeded `config.timeout` |
+| `HypermidNetworkError` | Transport-level failure (DNS, connection reset, TLS, etc.) |
+| `HypermidPollTimeoutError` | A poll-until helper exceeded its overall deadline |
+
+All four subclass `Exception` directly — no shared `HypermidBaseError` for unrelated bases.
+
+## Types
+
+Response models are `pydantic` v2 classes with full type hints. Import them from `hypermid.types`:
+
+```python
+from hypermid.types import (
+    ChainsResponse,
+    TokensResponse,
+    QuoteResponse,
+    ExecuteResponse,
+    StatusResponse,
+    DepositStatusResponse,
+    BalancesResponse,
+    TokenBalance,
+    CreateWebhookResponse,
+    OnrampQuoteResponse,
+    OnrampCheckoutResponse,
+    OnrampStatusResponse,
+    InboundReceiverResponse,
+)
+```
+
+All models allow extra fields (`extra="allow"`) so a new API field never breaks consumers — your existing code keeps working when the API expands.
+
+## End-to-end example
+
+A complete EVM swap from Ethereum to Arbitrum, anonymous tier:
+
+```python
+from hypermid import Hypermid
+
+with Hypermid() as hm:
+    # 1. Quote
+    quote = hm.get_quote(
+        from_chain=1,
+        from_token="0x0000000000000000000000000000000000000000",
+        from_amount="1000000000000000000",
+        to_chain=42161,
+        to_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        from_address="0xYourAddress",
+    )
+    print(f"Provider: {quote.provider} | feeBps: {quote.fee_bps}")
+
+    # 2. Execute (returns the tx to sign)
+    exec = hm.execute(
+        from_chain=1,
+        from_token="0x0000000000000000000000000000000000000000",
+        from_amount="1000000000000000000",
+        to_chain=42161,
+        to_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        from_address="0xYourAddress",
+        to_address="0xYourAddress",
+    )
+
+    # Sign and broadcast exec.transaction_request via your wallet,
+    # then poll status with the resulting tx hash:
+    # status = hm.get_status(tx_hash="0x...", from_chain=1, to_chain=42161)
+```
+
+The async equivalent:
+
+```python
+import asyncio
+from hypermid import AsyncHypermid
+
+async def main():
+    async with AsyncHypermid() as hm:
+        quote = await hm.get_quote(
+            from_chain=1,
+            from_token="0x0000000000000000000000000000000000000000",
+            from_amount="1000000000000000000",
+            to_chain=42161,
+            to_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+            from_address="0xYourAddress",
+        )
+        print(quote.provider)
+
+asyncio.run(main())
+```
+
+## What's not in this SDK (yet)
+
+The Python SDK currently covers the **core consumer surface**: swap pipeline, balances, webhooks, on-ramp, inbound receiver. Some endpoints available in TypeScript / Go / Rust are not yet wrapped:
+
+- `get_connections`, `get_routes`, `get_tools`, `get_gas_prices`
+- `submit_deposit` (only `get_deposit_status` is exposed today)
+- `record_swap_event`
+- `get_partner_info`, `get_partner_stats`, `get_partner_transactions`
+- `list_webhooks`, `delete_webhook`
+- High-level `execute_swap` lifecycle helper
+- Type guards (`is_lifi_route`, `is_near_intents_route`, etc.)
+
+You can still call these via the REST API directly with `httpx` or `requests`. See the [API Reference](/api-reference/overview).
+
+These are planned for the next minor release.

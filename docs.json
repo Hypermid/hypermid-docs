@@ -155,7 +155,7 @@
       {
         "tab": "SDKs",
         "icon": "code",
-        "pages": ["sdks/overview", "sdks/typescript", "sdks/go", "sdks/rust"]
+        "pages": ["sdks/overview", "sdks/typescript", "sdks/python", "sdks/go", "sdks/rust"]
       }
     ]
   },
