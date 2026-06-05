@@ -1,0 +1,115 @@
+---
+title: "Get Active Promotions"
+openapi: "GET /v1/partner/me/active-promotions"
+description: "Currently-active fee promotions affecting your traffic"
+---
+
+Returns the set of fee promotions (discounts or flat-fee overrides) that are currently active and applicable to your partner account. Use this to surface promotional banners in your own UI or to forecast effective fees for upcoming swaps.
+
+Promotions can be:
+
+- **Partner-scoped** — created by Hypermid operations specifically for your account
+- **Global** — created by Hypermid operations for all partners
+
+Each promotion may be further filtered by chain, token, provider, or USD-value range. Only promotions matching the current time window (`start_at <= now <= end_at`) are returned.
+
+<Info>
+  Promotions are configured by the Hypermid operations team. Partners cannot create, edit, or delete promotions via the API — this endpoint is read-only.
+</Info>
+
+## Authentication
+
+Requires a partner API key in the `X-API-Key` header.
+
+## Response
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "partnerId": "partner-1718956800-a1b2",
+    "promotions": [
+      {
+        "name": "Q3 2026 Stablecoin Boost",
+        "description": "0 bps on USDC ↔ USDC swaps between Ethereum and Base",
+        "mode": "flat",
+        "flatBps": 0,
+        "discountPct": null,
+        "matchFromChainId": 1,
+        "matchToChainId": 8453,
+        "matchFromToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "matchToToken": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "matchProvider": null,
+        "matchMinUsd": null,
+        "matchMaxUsd": null,
+        "startAt": "2026-07-01 00:00:00",
+        "endAt": "2026-09-30 23:59:59"
+      },
+      {
+        "name": "Welcome Discount",
+        "description": "50% off all platform fees for the first 30 days",
+        "mode": "discount",
+        "flatBps": null,
+        "discountPct": 50,
+        "matchFromChainId": null,
+        "matchToChainId": null,
+        "matchFromToken": null,
+        "matchToToken": null,
+        "matchProvider": null,
+        "matchMinUsd": null,
+        "matchMaxUsd": null,
+        "startAt": "2026-06-05 00:00:00",
+        "endAt": "2026-07-05 00:00:00"
+      }
+    ]
+  },
+  "error": null,
+  "meta": { "requestId": "...", "timestamp": 1718956800, "rateLimit": { "limit": 2000, "remaining": 1999, "reset": 1718956860 } }
+}
+```
+</ResponseExample>
+
+### Response fields
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `string` | Human-readable promotion name |
+| `description` | `string \| null` | Optional longer description |
+| `mode` | `"flat" \| "discount"` | `flat` overrides the fee to `flatBps`; `discount` reduces it by `discountPct` |
+| `flatBps` | `number \| null` | Fee in basis points (when `mode == "flat"`) |
+| `discountPct` | `number \| null` | Discount percentage from the base fee (when `mode == "discount"`) |
+| `matchFromChainId` | `number \| null` | Restrict to swaps originating on this chain |
+| `matchToChainId` | `number \| null` | Restrict to swaps destined for this chain |
+| `matchFromToken` | `string \| null` | Restrict to swaps from this token address |
+| `matchToToken` | `string \| null` | Restrict to swaps to this token address |
+| `matchProvider` | `string \| null` | Restrict to swaps routed via this provider (`lifi`, `near-intents`, `superswap`) |
+| `matchMinUsd` | `number \| null` | Restrict to swaps with USD value ≥ this threshold |
+| `matchMaxUsd` | `number \| null` | Restrict to swaps with USD value ≤ this threshold |
+| `startAt` | `string \| null` | UTC start datetime (`YYYY-MM-DD HH:MM:SS`); `null` = no start bound |
+| `endAt` | `string \| null` | UTC end datetime; `null` = no end bound |
+
+A `null` match filter means "any" — e.g. `matchFromChainId: null` applies the promotion regardless of origin chain.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl https://api.hypermid.io/v1/partner/me/active-promotions \
+  -H "X-API-Key: pk_live_yourkey"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://api.hypermid.io/v1/partner/me/active-promotions",
+  { headers: { "X-API-Key": process.env.HYPERMID_API_KEY! } },
+);
+const { data } = await res.json();
+for (const p of data.promotions) {
+  console.log(`${p.name}: ${p.description ?? p.mode}`);
+}
+```
+</CodeGroup>
+
+<Tip>
+  Surface active promotions in your own UI so users see the effective fee they'll pay — this transparency increases conversion.
+</Tip>

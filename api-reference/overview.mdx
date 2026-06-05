@@ -86,8 +86,14 @@ All responses use the standard [envelope format](/response-format):
 | `/v1/partner/me` | GET | Get partner profile |
 | `/v1/partner/stats` | GET | Get partner statistics |
 | `/v1/partner/transactions` | GET | List partner transactions |
+| `/v1/partner/me/earnings` | GET | Pending and settled fee earnings per ecosystem |
+| `/v1/partner/me/fee-wallets` | GET / PUT | List or upsert partner fee payout wallets |
+| `/v1/partner/me/fee-wallets/:ecosystem` | DELETE | Remove a fee payout wallet |
+| `/v1/partner/me/active-promotions` | GET | Currently-active fee promotions applicable to your traffic |
 | `/v1/partner/webhooks` | POST | Create a webhook |
 | `/v1/partner/webhooks` | GET | List webhooks |
 | `/v1/partner/webhooks/{id}` | DELETE | Delete a webhook |
 | `/v1/swap-event` | POST | Submit a swap event |
+| `/v1/swaps/by-wallet` | GET | Unified swap history for a wallet address (public) |
+| `/v1/superswap/reachable` | GET | Whether SuperSwap can route a given source pair to PulseChain |
 | `/v1/ping` | GET | Health check |

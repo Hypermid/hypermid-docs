@@ -1,0 +1,141 @@
+---
+title: "Partner Fee Wallets"
+sidebarTitle: "Fee Wallets"
+description: "Configure where your fee earnings settle, per ecosystem"
+---
+
+Partner fee wallets are the on-chain addresses where Hypermid pays out your accrued fee earnings during a settlement cycle. You register one wallet per ecosystem — earnings from EVM swaps settle to your EVM wallet, Solana swaps to your Solana wallet, and so on.
+
+<Info>
+  Fee wallets are partner-controlled. You can list, upsert, and delete wallets via the API. The Hypermid operations team uses these addresses to broadcast payouts — addresses that change after a settlement cycle apply only to subsequent payouts.
+</Info>
+
+## Authentication
+
+All three endpoints require a partner API key in the `X-API-Key` header.
+
+## Supported ecosystems
+
+| Ecosystem | Address format |
+|---|---|
+| `evm` | 0x-prefixed hex (40 chars) |
+| `solana` | Base58 (32–44 chars) |
+| `bitcoin` | Legacy (`1…`), SegWit (`bc1…`), or Taproot (`bc1p…`) |
+| `sui` | 0x-prefixed hex (64 chars) |
+| `near` | `account.near` or `account.testnet` |
+
+NEAR Intents settlements (for TON / Tron / XRP / Doge) settle on NEAR via the `near` ecosystem wallet.
+
+---
+
+## List wallets
+
+<ParamField path="" type="GET /v1/partner/me/fee-wallets" />
+
+Returns every fee wallet you've registered.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "partnerId": "partner-1718956800-a1b2",
+    "wallets": [
+      { "ecosystem": "evm",    "address": "0x1234…cafe", "createdAt": "2026-05-10T14:23:01Z", "updatedAt": "2026-05-10T14:23:01Z" },
+      { "ecosystem": "solana", "address": "9xQe…aBcD",   "createdAt": "2026-05-12T09:11:42Z", "updatedAt": "2026-06-01T08:00:00Z" }
+    ]
+  },
+  "error": null,
+  "meta": { "requestId": "...", "timestamp": 1718956800, "rateLimit": { "limit": 2000, "remaining": 1999, "reset": 1718956860 } }
+}
+```
+</ResponseExample>
+
+```bash cURL
+curl https://api.hypermid.io/v1/partner/me/fee-wallets \
+  -H "X-API-Key: pk_live_yourkey"
+```
+
+---
+
+## Register or update a wallet
+
+<ParamField path="" type="PUT /v1/partner/me/fee-wallets" />
+
+Upserts the wallet for the given ecosystem. If a wallet already exists for that ecosystem, this replaces it.
+
+### Request body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `ecosystem` | `string` | ✓ | One of `evm`, `solana`, `bitcoin`, `sui`, `near` |
+| `address` | `string` | ✓ | Address in the ecosystem's native format |
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "partnerId": "partner-1718956800-a1b2",
+    "ecosystem": "evm",
+    "address": "0x1234…cafe"
+  },
+  "error": null,
+  "meta": { ... }
+}
+```
+</ResponseExample>
+
+### Errors
+
+| Code | Cause |
+|---|---|
+| `INVALID_PARAMS` | Missing fields, unsupported ecosystem, or address fails format validation |
+
+```bash cURL
+curl -X PUT https://api.hypermid.io/v1/partner/me/fee-wallets \
+  -H "X-API-Key: pk_live_yourkey" \
+  -H "Content-Type: application/json" \
+  -d '{"ecosystem":"evm","address":"0x1234...cafe"}'
+```
+
+---
+
+## Delete a wallet
+
+<ParamField path="" type="DELETE /v1/partner/me/fee-wallets/:ecosystem" />
+
+Removes the wallet for the given ecosystem. Future settlements in that ecosystem will be held until a new wallet is registered.
+
+### Path parameters
+
+| Param | Required | Description |
+|---|---|---|
+| `:ecosystem` | ✓ | One of `evm`, `solana`, `bitcoin`, `sui`, `near` |
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "partnerId": "partner-1718956800-a1b2",
+    "ecosystem": "evm",
+    "deleted": true
+  },
+  "error": null,
+  "meta": { ... }
+}
+```
+</ResponseExample>
+
+### Errors
+
+| HTTP | Code | Cause |
+|---|---|---|
+| `404` | `INVALID_PARAMS` | No wallet was registered for that ecosystem |
+
+```bash cURL
+curl -X DELETE https://api.hypermid.io/v1/partner/me/fee-wallets/evm \
+  -H "X-API-Key: pk_live_yourkey"
+```
+
+<Warning>
+  Deleting a wallet does **not** affect already-settled payouts — only future settlements in that ecosystem are paused. Pending earnings remain in your ledger and will settle to whichever wallet is registered at the next settlement cycle.
+</Warning>

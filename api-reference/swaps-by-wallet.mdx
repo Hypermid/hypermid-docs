@@ -1,0 +1,123 @@
+---
+title: "Get Swaps by Wallet"
+openapi: "GET /v1/swaps/by-wallet"
+description: "Unified swap history lookup across all providers for a wallet address"
+---
+
+Returns the swap history for a single wallet address, combining results from every provider Hypermid routes through (LI.FI, NEAR Intents, SuperSwap). Useful for partner support tooling, customer-facing transaction views, and reconciliation dashboards.
+
+This endpoint **does not require authentication** — it's the same query that powers the public scan UI at `app.hypermid.io/scan`. Anonymous rate limits apply.
+
+## Query parameters
+
+<ParamField query="address" type="string" required>
+  Wallet address. Supports EVM (`0x…`), Solana (base58), and NEAR account IDs.
+</ParamField>
+
+<ParamField query="limit" type="number" default={50}>
+  Maximum number of swaps to return. Clamped to `[1, 200]`.
+</ParamField>
+
+<ParamField query="status" type="string" default="active">
+  Filter swaps by terminal state:
+
+  - `active` (default) — in-flight swaps + successful completions. The "what happened to my swap" view.
+  - `completed` — only successfully terminal swaps.
+  - `all` — every swap regardless of state (includes expired, failed, refunded).
+</ParamField>
+
+## Response
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+    "limit": 50,
+    "swaps": [
+      {
+        "swapRef": "hm_01HQXM2K8VJN3F5R7Y9ABCDEF1",
+        "provider": "lifi",
+        "status": "completed",
+        "fromChain": "1",
+        "toChain": "8453",
+        "fromToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "toToken": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "fromAmount": "1000000",
+        "toAmount": "999840",
+        "amountUsd": 1000.0,
+        "feeUsd": 0.6,
+        "txHash": "0xa1b2…",
+        "destTxHash": "0xc3d4…",
+        "durationSeconds": 42,
+        "createdAt": "2026-06-04T12:34:56Z"
+      },
+      {
+        "swapRef": "hm_01HQXM5N9KPRS2T4U6BCDEFG23",
+        "provider": "near-intents",
+        "status": "completed",
+        "fromChain": "1",
+        "toChain": "bitcoin",
+        "fromToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "toToken": "btc",
+        "fromAmount": "5000000",
+        "toAmount": "0.00081234",
+        "amountUsd": 5000.0,
+        "feeUsd": 15.0,
+        "txHash": "0xb2c3…",
+        "destTxHash": "abcd1234…",
+        "durationSeconds": 187,
+        "createdAt": "2026-06-03T18:21:09Z"
+      }
+    ]
+  },
+  "error": null,
+  "meta": { "requestId": "...", "timestamp": 1718956800, "rateLimit": { "limit": 240, "remaining": 239, "reset": 1718956860 } }
+}
+```
+</ResponseExample>
+
+### Response fields
+
+| Field | Type | Description |
+|---|---|---|
+| `swapRef` | `string` | Hypermid swap reference (`hm_<ULID>`) — same value used in logs and cross-system tracing |
+| `provider` | `string` | One of `lifi`, `near-intents`, `superswap` |
+| `status` | `string` | `pending`, `in_progress`, `completed`, `failed`, `refunded`, `expired` |
+| `fromChain` / `toChain` | `string` | Chain IDs as strings (or ecosystem names for non-EVM destinations like `bitcoin`) |
+| `fromToken` / `toToken` | `string` | Token addresses (or symbols for non-EVM) |
+| `fromAmount` / `toAmount` | `string` | Amounts in base units (string to avoid precision loss) |
+| `amountUsd` / `feeUsd` | `number` | USD values, snapshotted at quote time |
+| `txHash` | `string` | Source-chain transaction hash |
+| `destTxHash` | `string \| null` | Destination-chain transaction hash (null while in flight) |
+| `durationSeconds` | `number \| null` | End-to-end completion time for terminal swaps |
+| `createdAt` | `string` | ISO-8601 timestamp |
+
+Swaps are deduped by `swapRef` and ordered newest-first.
+
+## Errors
+
+| HTTP | Code | Cause |
+|---|---|---|
+| `400` | `INVALID_PARAMS` | `address` query param missing |
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl "https://api.hypermid.io/v1/swaps/by-wallet?address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&limit=10"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://api.hypermid.io/v1/swaps/by-wallet?" +
+    new URLSearchParams({ address: "0xYourWallet", limit: "20", status: "active" }),
+);
+const { data } = await res.json();
+console.log(`${data.swaps.length} swaps for ${data.address}`);
+```
+</CodeGroup>
+
+<Tip>
+  This endpoint is public for transparency reasons (anyone can audit any wallet's Hypermid history). If you build a customer-facing transaction view, you can call it directly from the browser without exposing any partner credentials.
+</Tip>

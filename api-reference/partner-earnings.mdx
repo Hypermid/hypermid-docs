@@ -1,0 +1,76 @@
+---
+title: "Get Partner Earnings"
+openapi: "GET /v1/partner/me/earnings"
+description: "Pending and settled fee earnings per ecosystem"
+---
+
+Returns your fee earnings broken down by ecosystem and settlement state. Earnings are recorded at swap-quote time and accumulate as `pending` until the Hypermid operations team triggers a settlement payout to your registered fee wallets.
+
+<Info>
+  Settlements are run periodically by the operations team via a Ledger device. Once a row moves from `pending` → `settled`, the corresponding payout has been broadcast on-chain.
+</Info>
+
+## Authentication
+
+Requires a partner API key in the `X-API-Key` header.
+
+## Response
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "partnerId": "partner-1718956800-a1b2",
+    "pending": [
+      { "ecosystem": "evm",     "totalUsd": "1284.50", "rowCount": 312 },
+      { "ecosystem": "solana",  "totalUsd": "172.10",  "rowCount": 41 },
+      { "ecosystem": "near",    "totalUsd": "58.20",   "rowCount": 17 }
+    ],
+    "settled": [
+      { "ecosystem": "evm",     "totalUsd": "9817.30", "rowCount": 2104 },
+      { "ecosystem": "solana",  "totalUsd": "1093.40", "rowCount": 287 }
+    ],
+    "notes": "Earnings are recorded at quote time. 'pending' rows await manual settlement (operations triggers payouts via a Ledger device)."
+  },
+  "error": null,
+  "meta": { "requestId": "...", "timestamp": 1718956800, "rateLimit": { "limit": 2000, "remaining": 1999, "reset": 1718956860 } }
+}
+```
+</ResponseExample>
+
+### Response fields
+
+| Field | Type | Description |
+|---|---|---|
+| `partnerId` | `string` | Your partner ID (echoed from auth) |
+| `pending` | `array` | Earnings awaiting settlement, grouped by ecosystem |
+| `pending[].ecosystem` | `string` | One of `evm`, `solana`, `bitcoin`, `sui`, `near` |
+| `pending[].totalUsd` | `string` | Sum of fees in USD (string to avoid float precision loss) |
+| `pending[].rowCount` | `number` | Number of swap-fee-ledger rows aggregated |
+| `settled` | `array` | Same shape as `pending`, for fees already paid out |
+| `notes` | `string` | Operational note on settlement cadence |
+
+The `pending` and `settled` arrays only include ecosystems where you have non-zero balances — they may be empty.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl https://api.hypermid.io/v1/partner/me/earnings \
+  -H "X-API-Key: pk_live_yourkey"
+```
+
+```typescript TypeScript
+// Not yet wrapped in the SDK — call via fetch
+const res = await fetch("https://api.hypermid.io/v1/partner/me/earnings", {
+  headers: { "X-API-Key": process.env.HYPERMID_API_KEY! },
+});
+const { data } = await res.json();
+console.log("Pending USD:", data.pending);
+console.log("Settled USD:", data.settled);
+```
+</CodeGroup>
+
+<Tip>
+  Earnings rows are paginated implicitly by ecosystem. For a per-swap breakdown, use [`/v1/partner/transactions`](/api-reference/partner-transactions) and filter by `feeUsd > 0`.
+</Tip>

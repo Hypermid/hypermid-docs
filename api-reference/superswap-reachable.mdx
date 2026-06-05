@@ -1,0 +1,150 @@
+---
+title: "Check SuperSwap Reachability"
+openapi: "GET /v1/superswap/reachable"
+description: "Whether SuperSwap can route a given (from-chain, from-token) to PulseChain or back"
+---
+
+SuperSwap is Hypermid's PulseChain-native routing layer (USDCh bridge + PulseChain DEXs). This endpoint tells you whether a given input chain + token has a SuperSwap route to or from PulseChain — so your UI can grey out unreachable pairs before the user attempts a quote.
+
+The endpoint operates in two modes:
+
+- **Snapshot mode** — call with no parameters to get the full matrix metadata and the union of reachable source chain IDs. Useful for populating chain selectors on page load.
+- **Lookup mode** — pass both `fromChain` and `fromToken` to check a specific pair.
+
+This is a public endpoint — no authentication required. Anonymous rate limits apply.
+
+## Query parameters
+
+<ParamField query="fromChain" type="string | number">
+  Source chain ID (e.g. `1`, `8453`, `42161`). Required for lookup mode.
+</ParamField>
+
+<ParamField query="fromToken" type="string">
+  Source token contract address. Required for lookup mode.
+</ParamField>
+
+Both parameters must be provided together, or both omitted.
+
+## Snapshot mode (no parameters)
+
+Returns matrix metadata + reachable chain IDs:
+
+<ResponseExample>
+```json 200 — snapshot mode
+{
+  "data": {
+    "matrix": {
+      "sourceChains": 18,
+      "tokensIndexed": 412,
+      "edgesGenerated": 3641,
+      "lastBuiltAt": "2026-06-05T10:00:00Z"
+    },
+    "reachableChainIds": [1, 8453, 42161, 137, 10, 56, 43114, 250]
+  },
+  "error": null,
+  "meta": { "requestId": "...", "timestamp": 1718956800, "rateLimit": { "limit": 240, "remaining": 239, "reset": 1718956860 } }
+}
+```
+</ResponseExample>
+
+Use `reachableChainIds` to grey out unsupported chains in your chain selector.
+
+## Lookup mode (both parameters)
+
+Returns whether a specific (chain, token) pair can reach PulseChain, and the intermediate routes:
+
+<ResponseExample>
+```json 200 — reachable
+{
+  "data": {
+    "fromChain": 1,
+    "fromToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "intermediates": ["usdch"],
+    "state": "reachable"
+  },
+  "error": null,
+  "meta": { ... }
+}
+```
+
+```json 200 — unreachable
+{
+  "data": {
+    "fromChain": 1,
+    "fromToken": "0xUnknownToken",
+    "intermediates": [],
+    "state": "unreachable"
+  },
+  "error": null,
+  "meta": { ... }
+}
+```
+
+```json 200 — loading (matrix rebuilding)
+{
+  "data": {
+    "fromChain": 1,
+    "fromToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "intermediates": null,
+    "state": "loading"
+  },
+  "error": null,
+  "meta": { ... }
+}
+```
+</ResponseExample>
+
+### Response fields
+
+| Field | Type | Description |
+|---|---|---|
+| `fromChain` | `number` | Echoed input chain ID |
+| `fromToken` | `string` | Echoed input token address (lowercased) |
+| `intermediates` | `string[] \| null` | Intermediate bridge tokens used (e.g. `["usdch"]`). `null` while the matrix is still building. `[]` means definitively unreachable. |
+| `state` | `"reachable" \| "unreachable" \| "loading"` | Convenience derived from `intermediates` |
+
+When `state === "loading"`, the matrix is rebuilding (cold start or scheduled refresh) — show a non-blocking "loading" hint rather than a hard "unsupported" badge. The check will resolve within a few seconds.
+
+## Errors
+
+| HTTP | Code | Cause |
+|---|---|---|
+| `400` | `INVALID_PARAMS` | Only one of `fromChain` / `fromToken` was provided (must be both or neither) |
+| `400` | `INVALID_PARAMS` | `fromChain` is not a valid chain identifier |
+
+## Example
+
+<CodeGroup>
+```bash cURL (snapshot)
+curl https://api.hypermid.io/v1/superswap/reachable
+```
+
+```bash cURL (lookup)
+curl "https://api.hypermid.io/v1/superswap/reachable?fromChain=1&fromToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+```
+
+```typescript TypeScript
+// Snapshot: get the set of reachable source chains
+const snap = await fetch("https://api.hypermid.io/v1/superswap/reachable")
+  .then((r) => r.json());
+const reachable = new Set<number>(snap.data.reachableChainIds);
+
+// Use in your chain selector
+chains.forEach((c) => {
+  c.disabled = !reachable.has(c.id);
+});
+
+// Lookup: check a specific pair before quoting
+const check = await fetch(
+  `https://api.hypermid.io/v1/superswap/reachable?fromChain=1&fromToken=${USDC}`,
+).then((r) => r.json());
+
+if (check.data.state === "reachable") {
+  // proceed to /v1/quote
+}
+```
+</CodeGroup>
+
+<Tip>
+  Call snapshot mode once on app load and cache the `reachableChainIds` list. Call lookup mode only after the user has selected a specific token to validate the choice.
+</Tip>

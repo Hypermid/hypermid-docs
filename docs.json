@@ -92,7 +92,9 @@
               "api-reference/connections",
               "api-reference/tools",
               "api-reference/gas-prices",
-              "api-reference/balances"
+              "api-reference/balances",
+              "api-reference/swaps-by-wallet",
+              "api-reference/superswap-reachable"
             ]
           },
           {
@@ -123,6 +125,9 @@
               "api-reference/partner-me",
               "api-reference/partner-stats",
               "api-reference/partner-transactions",
+              "api-reference/partner-earnings",
+              "api-reference/partner-fee-wallets",
+              "api-reference/partner-active-promotions",
               "api-reference/webhooks-create",
               "api-reference/webhooks-list",
               "api-reference/webhooks-delete",
