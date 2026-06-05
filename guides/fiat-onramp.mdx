@@ -37,10 +37,10 @@ Fetch the available fiat currencies and payment methods:
 ```typescript TypeScript
 const config = await client.getOnrampConfig();
 
-console.log("Supported currencies:", config.data.currencies);
+console.log("Supported currencies:", config.currencies);
 // ["USD", "EUR", "GBP", ...]
 
-console.log("Payment methods:", config.data.paymentMethods);
+console.log("Payment methods:", config.paymentMethods);
 // ["credit_card", "debit_card", "bank_transfer", ...]
 ```
 
@@ -58,7 +58,7 @@ Fetch the list of crypto assets available for purchase:
 ```typescript TypeScript
 const assets = await client.getOnrampAssets();
 
-for (const asset of assets.data.assets) {
+for (const asset of assets.assets) {
   console.log(`${asset.symbol} on chain ${asset.chainId}: min ${asset.minAmount}, max ${asset.maxAmount}`);
 }
 ```
@@ -84,10 +84,10 @@ const quote = await client.getOnrampQuote({
   walletAddress: "0xYourWalletAddress",
 });
 
-console.log("You'll receive:", quote.data.cryptoAmount, "ETH");
-console.log("Exchange rate:", quote.data.exchangeRate);
-console.log("Fees:", quote.data.fees);
-console.log("Total charge:", quote.data.totalFiatAmount, quote.data.fiatCurrency);
+console.log("You'll receive:", quote.cryptoAmount, "ETH");
+console.log("Exchange rate:", quote.exchangeRate);
+console.log("Fees:", quote.fees);
+console.log("Total charge:", quote.totalFiatAmount, quote.fiatCurrency);
 ```
 
 ```bash cURL
@@ -121,11 +121,11 @@ const checkout = await client.createOnrampCheckout({
   redirectUrl: "https://yourapp.com/onramp/callback",
 });
 
-console.log("Checkout URL:", checkout.data.checkoutUrl);
-console.log("Order UID:", checkout.data.orderUid);
+console.log("Checkout URL:", checkout.checkoutUrl);
+console.log("Order UID:", checkout.orderUid);
 
 // Redirect user to the checkout URL
-window.location.href = checkout.data.checkoutUrl;
+window.location.href = checkout.checkoutUrl;
 ```
 
 ```bash cURL
@@ -154,9 +154,9 @@ async function pollOnrampStatus(orderUid: string) {
   while (true) {
     const status = await client.getOnrampStatus({ orderUid });
 
-    console.log("Status:", status.data.status);
+    console.log("Status:", status.status);
 
-    switch (status.data.status) {
+    switch (status.status) {
       case "PENDING":
         console.log("Waiting for payment...");
         break;
@@ -165,17 +165,17 @@ async function pollOnrampStatus(orderUid: string) {
         break;
       case "CRYPTO_SENT":
         console.log("Crypto sent to wallet!");
-        console.log("Tx hash:", status.data.txHash);
+        console.log("Tx hash:", status.txHash);
         break;
       case "COMPLETED":
         console.log("Order complete!");
-        return status.data;
+        return status;
       case "FAILED":
-        console.error("Order failed:", status.data.failureReason);
-        throw new Error(status.data.failureReason);
+        console.error("Order failed:", status.failureReason);
+        throw new Error(status.failureReason);
       case "REFUNDED":
         console.log("Payment was refunded");
-        return status.data;
+        return status;
     }
 
     await new Promise((r) => setTimeout(r, 10000));
@@ -199,7 +199,7 @@ const client = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
   // 1. Check available assets
   const assets = await client.getOnrampAssets();
-  const ethAsset = assets.data.assets.find(
+  const ethAsset = assets.assets.find(
     (a) => a.symbol === "ETH" && a.chainId === 1
   );
 
@@ -215,8 +215,8 @@ async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
     walletAddress,
   });
 
-  console.log(`$${usdAmount} USD = ${quote.data.cryptoAmount} ETH`);
-  console.log(`Fees: $${quote.data.fees.totalFee} USD`);
+  console.log(`$${usdAmount} USD = ${quote.cryptoAmount} ETH`);
+  console.log(`Fees: $${quote.fees.totalFee} USD`);
 
   // 3. Create checkout
   const checkout = await client.createOnrampCheckout({
@@ -231,8 +231,8 @@ async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
 
   // 4. Return checkout URL for the frontend to redirect
   return {
-    checkoutUrl: checkout.data.checkoutUrl,
-    orderUid: checkout.data.orderUid,
+    checkoutUrl: checkout.checkoutUrl,
+    orderUid: checkout.orderUid,
   };
 }
 ```

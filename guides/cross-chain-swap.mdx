@@ -88,7 +88,7 @@ Fetch the list of supported blockchains to populate your chain selector.
 <CodeGroup>
 ```typescript TypeScript
 const chains = await client.getChains();
-console.log(chains.data);
+console.log(chains.chains);
 // [{ id: 1, name: "Ethereum", type: "EVM", nativeToken: {...} }, ...]
 ```
 
@@ -108,8 +108,8 @@ const tokens = await client.getTokens({
   chains: [1, 42161], // Ethereum and Arbitrum
 });
 
-const ethTokens = tokens.data.tokens[1];    // Tokens on Ethereum
-const arbTokens = tokens.data.tokens[42161]; // Tokens on Arbitrum
+const ethTokens = tokens.tokens[1];    // Tokens on Ethereum
+const arbTokens = tokens.tokens[42161]; // Tokens on Arbitrum
 ```
 
 ```bash cURL
@@ -134,15 +134,12 @@ const quote = await client.getQuote({
   slippage: 0.03,                                                 // 3% slippage tolerance
 });
 
-if (quote.error) {
-  console.error("Quote failed:", quote.error.code, quote.error.message);
-  return;
-}
-
-console.log("Estimated output:", quote.data.estimate.toAmount);
-console.log("Estimated USD value:", quote.data.estimate.toAmountUSD);
-console.log("Provider:", quote.data.tool);
-console.log("Execution time:", quote.data.estimate.executionDuration, "seconds");
+// The SDK throws HypermidError on failure — wrap in try/catch if you
+// need to handle specific error codes (see /guides/error-handling).
+console.log("Estimated output:", quote.estimate.toAmount);
+console.log("Estimated USD value:", quote.estimate.toAmountUSD);
+console.log("Provider:", quote.tool);
+console.log("Execution time:", quote.estimate.executionDuration, "seconds");
 ```
 
 ```bash cURL
@@ -179,10 +176,7 @@ const execution = await client.execute({
   slippage: 0.03,
 });
 
-if (execution.error) {
-  console.error("Execution failed:", execution.error.code);
-  return;
-}
+// The SDK throws on failure — `execution` is already the unwrapped response.
 ```
 
 ```bash cURL
@@ -209,8 +203,8 @@ The execution response contains either a `transactionRequest` (wallet mode) or a
 #### Wallet Mode (EVM/Solana)
 
 ```typescript
-if (execution.data.transactionRequest) {
-  const txRequest = execution.data.transactionRequest;
+if (execution.transactionRequest) {
+  const txRequest = execution.transactionRequest;
 
   // Send the transaction using your wallet/signer
   const tx = await wallet.sendTransaction({
@@ -232,16 +226,16 @@ if (execution.data.transactionRequest) {
 #### Manual Deposit Mode
 
 ```typescript
-if (execution.data.depositAddress) {
+if (execution.depositAddress) {
   // For wallet-connected users: use the transactionRequest if available
-  if (execution.data.transactionRequest) {
-    const tx = await wallet.sendTransaction(execution.data.transactionRequest);
+  if (execution.transactionRequest) {
+    const tx = await wallet.sendTransaction(execution.transactionRequest);
   }
 
   // For manual deposits: display the deposit address to the user
-  console.log("Deposit address:", execution.data.depositAddress);
-  console.log("Memo (if required):", execution.data.memo);
-  console.log("Deposit ID:", execution.data.depositId);
+  console.log("Deposit address:", execution.depositAddress);
+  console.log("Memo (if required):", execution.memo);
+  console.log("Deposit ID:", execution.depositId);
 }
 ```
 
@@ -257,16 +251,16 @@ async function pollStatus(txHash: string, fromChain: number, toChain: number) {
   while (true) {
     const status = await client.getStatus({ txHash, fromChain, toChain });
 
-    console.log("Status:", status.data.status);
+    console.log("Status:", status.status);
 
-    if (status.data.status === "DONE") {
+    if (status.status === "DONE") {
       console.log("Swap complete!");
-      console.log("Destination tx:", status.data.receiving?.txHash);
-      return status.data;
+      console.log("Destination tx:", status.receiving?.txHash);
+      return status;
     }
 
-    if (status.data.status === "FAILED") {
-      console.error("Swap failed:", status.data.message);
+    if (status.status === "FAILED") {
+      console.error("Swap failed:", status.message);
       throw new Error("Swap failed");
     }
 
@@ -291,10 +285,10 @@ For manual deposit routes, poll `GET /v1/execute/deposit/status` with the deposi
 
 ```typescript
 const depositStatus = await client.getDepositStatus({
-  depositId: execution.data.depositId,
+  depositId: execution.depositId,
 });
 
-console.log("Deposit status:", depositStatus.data.status);
+console.log("Deposit status:", depositStatus.status);
 ```
 
 ## Complete Example
@@ -317,12 +311,8 @@ async function swap() {
     fromAddress: "0xYourAddress",
   });
 
-  if (quote.error) {
-    throw new Error(`Quote failed: ${quote.error.message}`);
-  }
-
-  console.log(`Swapping ${quote.data.estimate.fromAmountUSD} USD`);
-  console.log(`Estimated receive: ${quote.data.estimate.toAmountUSD} USD`);
+  console.log(`Swapping ${quote.estimate.fromAmountUSD} USD`);
+  console.log(`Estimated receive: ${quote.estimate.toAmountUSD} USD`);
 
   // 2. Execute the swap
   const exec = await client.execute({
@@ -335,13 +325,10 @@ async function swap() {
     toAddress: "0xYourAddress",
   });
 
-  if (exec.error) {
-    throw new Error(`Execute failed: ${exec.error.message}`);
-  }
 
   // 3. Handle based on route type
-  if (exec.data.transactionRequest) {
-    const tx = await wallet.sendTransaction(exec.data.transactionRequest);
+  if (exec.transactionRequest) {
+    const tx = await wallet.sendTransaction(exec.transactionRequest);
     await tx.wait();
 
     // 4. Poll status
@@ -353,12 +340,12 @@ async function swap() {
         fromChain: 1,
         toChain: 42161,
       });
-    } while (status.data.status === "PENDING");
+    } while (status.status === "PENDING");
 
-    console.log("Final status:", status.data.status);
-  } else if (exec.data.depositAddress) {
-    console.log("Send tokens to:", exec.data.depositAddress);
-    if (exec.data.memo) console.log("With memo:", exec.data.memo);
+    console.log("Final status:", status.status);
+  } else if (exec.depositAddress) {
+    console.log("Send tokens to:", exec.depositAddress);
+    if (exec.memo) console.log("With memo:", exec.memo);
   }
 }
 

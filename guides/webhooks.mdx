@@ -33,8 +33,8 @@ const webhook = await client.createWebhook({
   secret: "whsec_your_signing_secret",
 });
 
-console.log("Webhook ID:", webhook.data.id);
-console.log("Created:", webhook.data.createdAt);
+console.log("Webhook ID:", webhook.id);
+console.log("Created:", webhook.createdAt);
 ```
 
 ```bash cURL
