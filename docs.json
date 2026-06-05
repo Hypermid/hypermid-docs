@@ -179,21 +179,21 @@
   "seo": {
     "indexing": "navigable"
   },
-  "metadata": [
-    { "property": "og:type",         "content": "website" },
-    { "property": "og:site_name",    "content": "Hypermid" },
-    { "property": "og:title",        "content": "Hypermid — Cross-chain swap, bridge & on-ramp SDK" },
-    { "property": "og:description",  "content": "One SDK for 90+ chains across EVM, Solana, Bitcoin, NEAR, Sui, Tron, TON. Anonymous tier — no API key required." },
-    { "property": "og:url",          "content": "https://docs.hypermid.io" },
-    { "property": "og:image",        "content": "https://docs.hypermid.io/og-image.png" },
-    { "property": "og:image:width",  "content": "1200" },
-    { "property": "og:image:height", "content": "630" },
-    { "property": "og:image:alt",    "content": "Hypermid — cross-chain swap, bridge and fiat on-ramp SDK, 90+ chains" },
-    { "name": "twitter:card",        "content": "summary_large_image" },
-    { "name": "twitter:site",        "content": "@hypermid" },
-    { "name": "twitter:title",       "content": "Hypermid — Cross-chain swap, bridge & on-ramp SDK" },
-    { "name": "twitter:description", "content": "One SDK for 90+ chains. TypeScript, Python, Go, Rust. Anonymous tier — no API key required." },
-    { "name": "twitter:image",       "content": "https://docs.hypermid.io/og-image.png" },
-    { "name": "twitter:image:alt",   "content": "Hypermid — cross-chain swap, bridge and fiat on-ramp SDK, 90+ chains" }
-  ]
+  "metadata": {
+    "og:type": "website",
+    "og:site_name": "Hypermid",
+    "og:title": "Hypermid — Cross-chain swap, bridge & on-ramp SDK",
+    "og:description": "One SDK for 90+ chains across EVM, Solana, Bitcoin, NEAR, Sui, Tron, TON. Anonymous tier — no API key required.",
+    "og:url": "https://docs.hypermid.io",
+    "og:image": "https://docs.hypermid.io/og-image.png",
+    "og:image:width": "1200",
+    "og:image:height": "630",
+    "og:image:alt": "Hypermid — cross-chain swap, bridge and fiat on-ramp SDK, 90+ chains",
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@hypermid",
+    "twitter:title": "Hypermid — Cross-chain swap, bridge & on-ramp SDK",
+    "twitter:description": "One SDK for 90+ chains. TypeScript, Python, Go, Rust. Anonymous tier — no API key required.",
+    "twitter:image": "https://docs.hypermid.io/og-image.png",
+    "twitter:image:alt": "Hypermid — cross-chain swap, bridge and fiat on-ramp SDK, 90+ chains"
+  }
 }
