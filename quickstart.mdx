@@ -86,11 +86,11 @@ That's it. Three API calls. Every swap follows this pattern.
 ```typescript SDK
 import { Hypermid } from "@hypermid/sdk";
 
-// Anonymous (100 req/min)
+// Anonymous — works immediately, no signup
 const client = new Hypermid();
 
-// With API key (2,000 req/min + analytics)
-const client = new Hypermid({ apiKey: "your-api-key" });
+// With a partner API key — higher rate limits + analytics
+const client = new Hypermid({ apiKey: process.env.HYPERMID_API_KEY });
 ```
 
 ```bash cURL
@@ -103,22 +103,33 @@ curl "https://api.hypermid.io/v1/chains" \
 ```
 </CodeGroup>
 
-Get your API key from the [Partner Dashboard](https://app.hypermid.io).
+**Rate limits depend on tier and endpoint type.** Anonymous: 30 req/min on heavy endpoints (`quote`, `execute`, `status`) and 240 req/min on cache-friendly reads (`chains`, `tokens`, `balances`, etc.). Partner: 2,000 req/min heavy and 6,000 req/min reads. See the [Authentication](/authentication) page for the full table.
 
-## Install the SDK
+Get your API key from the [Partner Dashboard](https://partner.hypermid.io/login).
+
+## Install an SDK
+
+Official SDKs ship in TypeScript, Python, Go, and Rust — same method surface across all four. Pick whichever fits your stack:
 
 <CodeGroup>
-```bash npm
+```bash TypeScript / JS
 npm install @hypermid/sdk
+# or: pnpm add @hypermid/sdk
+# or: yarn add @hypermid/sdk
+# or: bun add @hypermid/sdk
 ```
 
-```bash pnpm
-pnpm add @hypermid/sdk
+```bash Python
+pip install hypermid
 ```
 
-```bash yarn
-yarn add @hypermid/sdk
+```bash Go
+go get github.com/Hypermid/hypermid-sdk-go@latest
+```
+
+```bash Rust
+cargo add hypermid-sdk
 ```
 </CodeGroup>
 
-Or use the API directly with any HTTP client — no SDK required.
+See the [SDK overview](/sdks/overview) for per-language guides. Or skip the SDK entirely and use the REST API directly with any HTTP client — every endpoint is plain HTTP + JSON.
