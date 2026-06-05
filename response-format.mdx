@@ -106,7 +106,7 @@ The `meta` object is always present and contains:
 |-------|------|-------------|
 | `requestId` | `string` | Unique UUID for this request. Include this when contacting support. |
 | `timestamp` | `number` | Unix timestamp of the response. |
-| `rateLimit.limit` | `number` | Maximum requests allowed per minute. |
+| `rateLimit.limit` | `number` | Maximum requests allowed per minute for your current tier and endpoint bucket (heavy vs. read — see [Authentication](/authentication)). |
 | `rateLimit.remaining` | `number` | Requests remaining in the current window. |
 | `rateLimit.reset` | `number` | Unix timestamp when the rate limit window resets. |
 
@@ -115,16 +115,21 @@ The `meta` object is always present and contains:
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
 | `INVALID_PARAMS` | 400 | Missing or invalid request parameters |
-| `VALIDATION_ERROR` | 400 | Request body failed validation |
+| `INVALID_BODY` | 400 | Request body could not be parsed or was empty |
+| `VALIDATION_ERROR` | 400 | Request body failed schema validation |
 | `SLIPPAGE_ERROR` | 400 | Slippage tolerance exceeded |
+| `PARTNER_FEE_EXCEEDS_MAX` | 400 | Configured partner fee exceeds the platform maximum |
+| `PARTNER_WALLET_NOT_REGISTERED` | 400 | Partner fee wallet not registered for this ecosystem |
+| `ECOSYSTEM_NOT_CONFIGURED` | 400 | Requested ecosystem (NEAR, Tron, etc.) is not configured for this partner |
 | `UNAUTHORIZED` | 401 | Invalid or missing API key for a protected endpoint |
 | `NO_ROUTE_FOUND` | 404 | No swap route found for the given parameters |
-| `RATE_LIMIT` | 429 | Rate limit exceeded |
+| `RATE_LIMIT` | 429 | Rate limit exceeded — see `meta.rateLimit.reset` for retry timing |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 | `TRANSACTION_BUILD_FAILED` | 500 | Failed to build the swap transaction |
-| `UPSTREAM_ERROR` | 502 | Error from an upstream provider |
+| `UPSTREAM_ERROR` | 502 | Error from an upstream provider (LI.FI, NEAR Intents, RampNow) |
 | `RPC_FAILURE` | 502 | Blockchain RPC node error |
-| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
+| `UPSTREAM_MAINTENANCE` | 503 | Upstream provider is in scheduled maintenance |
+| `SERVICE_UNAVAILABLE` | 503 | Hypermid is temporarily unavailable |
 | `TIMEOUT` | 504 | Request timed out |
 | `UPSTREAM_TIMEOUT` | 504 | Upstream provider timed out |
 
@@ -134,33 +139,44 @@ For detailed error handling strategies, see the [Error Handling Guide](/guides/e
 
 <CodeGroup>
 ```typescript TypeScript
+// The SDK unwraps the envelope: success returns data directly,
+// errors throw a typed HypermidError.
 import { Hypermid, HypermidError } from "@hypermid/sdk";
 
-const client = new Hypermid({ apiKey: "your-api-key" });
+const client = new Hypermid();
 
 try {
-  const response = await client.getQuote({
+  const quote = await client.getQuote({
     fromChain: 1,
-    toChain: 42161,
     fromToken: "0x0000000000000000000000000000000000000000",
-    toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
     fromAmount: "100000000000000000",
-    fromAddress: "0xYourWalletAddress",
+    toChain: 42161,
+    toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    fromAddress: "0xYourAddress",
   });
 
-  if (response.error) {
-    console.error(`Error [${response.error.code}]: ${response.error.message}`);
-    return;
-  }
-
-  console.log("Quote:", response.data);
-  console.log("Request ID:", response.meta.requestId);
-  console.log("Rate limit remaining:", response.meta.rateLimit.remaining);
+  console.log("Quote:", quote);
 } catch (err) {
   if (err instanceof HypermidError) {
-    console.error("API Error:", err.code, err.message);
+    // err exposes the same fields as the envelope's error object
+    console.error(`API error [${err.code}]: ${err.message}`);
+    console.error("Request ID:", err.requestId);
+  } else {
+    throw err;
   }
-  throw err;
+}
+```
+
+```typescript Raw envelope (fetch)
+// If you'd rather work with the envelope directly:
+const res = await fetch("https://api.hypermid.io/v1/chains");
+const body = await res.json();
+
+if (body.error) {
+  console.error(`Error [${body.error.code}]: ${body.error.message}`);
+} else {
+  console.log("Chains:", body.data.chains);
+  console.log("Rate limit remaining:", body.meta.rateLimit.remaining);
 }
 ```
 
