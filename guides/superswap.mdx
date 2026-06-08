@@ -337,12 +337,12 @@ All fees are included in the quote. `estimate.toAmount` is what you receive — 
 
 | Route | Hypermid fee | DEX slippage | Hyperlane gas |
 |---|---|---|---|
-| Inbound (any → PulseChain) | 0.30% of input | On Piteas leg | Paid from input |
-| Outbound single-step (non-USDCh → USDC) | 0.30% of bridged amount | On Piteas leg | Paid from input |
-| Outbound multi-step (non-USDCh → non-USDC) | 0.30% of bridged amount | On both Piteas + LiFi legs | Paid from input |
+| Inbound (any → PulseChain) | Per partner terms | On Piteas leg | Paid from input |
+| Outbound single-step (non-USDCh → USDC) | Per partner terms | On Piteas leg | Paid from input |
+| Outbound multi-step (non-USDCh → non-USDC) | Per partner terms | On both Piteas + LiFi legs | Paid from input |
 | **Outbound direct (USDCh → USDC)** | **0%** | None (1:1 bridge) | Paid in PLS by user (native gas) |
 
-The direct USDCh → USDC path has no Hypermid fee because the user interacts with the Hyperlane Warp Route contract directly — no Hypermid smart contract is in the path.
+Fee terms are negotiated per partner — contact the team for your account's rates. The direct USDCh → USDC path is fee-free regardless because the user interacts with the Hyperlane Warp Route contract directly — no Hypermid smart contract is in the path.
 
 ## Status Values
 
