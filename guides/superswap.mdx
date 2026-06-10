@@ -8,6 +8,16 @@ description: "Cross-chain swap protocol — bridge any token across chains"
 
 SuperSwap is Hypermid's dedicated cross-chain bridge and swap protocol. It enables token swaps between SuperSwap-supported chains using the same Hypermid API endpoints.
 
+<Note>
+SuperSwap cross-chain is powered by **SuperSwap V2** — an EIP-2535 Diamond
+(`SwapAndBridge` + settlement facets) over Hyperlane Warp Routes. The swap,
+bridge, and any destination unwrap (e.g. WPLS → native PLS) execute from a
+**single signed transaction** to the source-chain DiamondShell — so most swaps
+are one step. Approve `estimate.approvalAddress` for ERC20 inputs, then
+broadcast `transactionRequest`. The status vocabulary is `NOT_FOUND → PENDING →
+DONE | FAILED` (see [Check Status](/api-reference/status)).
+</Note>
+
 ## Supported Chains
 
 | Chain | Chain ID | Status |

@@ -118,24 +118,25 @@ Returns the current status of a cross-chain swap transaction. Use this to track 
 
 ### SuperSwap Status Values
 
-For SuperSwap routes (`provider=superswap`), the `status` field moves through a
-specific sequence. Add `provider=superswap` to the query when polling:
+SuperSwap cross-chain swaps are powered by **SuperSwap V2** (an EIP-2535 Diamond
+plus Hyperlane Warp Routes). Add `provider=superswap` to the query when polling.
+The `status` field uses the same top-level vocabulary as the rest of `/v1/status`:
 
 | Status | Description | Terminal? |
 |--------|-------------|-----------|
-| `INITIATED` | Deposit registered, waiting for bridge | no |
-| `BRIDGING` | Hyperlane message in flight from source chain | no |
-| `BRIDGE_CONFIRMED` | Bridge delivered on PulseChain — preparing DEX swap | no |
-| `SWAPPING` | Piteas DEX swap executing on PulseChain | no |
-| `COMPLETED` | Output token delivered to the user's wallet | yes ✅ |
-| `FAILED` | Unrecoverable failure — funds may need manual recovery | yes ❌ |
-| `FALLBACK_SENT` | DEX swap failed — USDCh sent to user as fallback | yes ⚠️ |
+| `NOT_FOUND` | Source tx not yet indexed — keep polling | no |
+| `PENDING` | Bridge + destination settlement in progress | no |
+| `DONE` | Output token delivered to the recipient | yes ✅ |
+| `FAILED` | Unrecoverable failure — funds recoverable via the fallback path | yes ❌ |
+| `INVALID` | Malformed request (bad hash / chain) | yes ❌ |
 
-Suggested poll interval: 5 seconds. Typical time to `COMPLETED` is 3–5 minutes
-(Hyperlane delivery dominates). Stop polling once a terminal status is reached.
+The response also carries `sending` / `receiving` legs (source + destination tx
+info) and `hyperlaneMessageId` (stable across both legs). Suggested poll
+interval: 5 seconds; typical time to `DONE` is ~2 minutes. Stop polling once a
+terminal status is reached.
 
 ```typescript
-// Poll until complete
+// Poll until terminal
 while (true) {
   const { data } = await client.getStatus({
     provider: "superswap",
@@ -143,7 +144,7 @@ while (true) {
     fromChain,
     toChain,
   });
-  if (["COMPLETED", "FAILED", "FALLBACK_SENT"].includes(data.status)) break;
+  if (["DONE", "FAILED", "INVALID"].includes(data.status)) break;
   await new Promise(r => setTimeout(r, 5000));
 }
 ```

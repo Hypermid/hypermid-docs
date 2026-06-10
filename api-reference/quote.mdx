@@ -58,6 +58,18 @@ Some routes return a `steps` array instead of a single `transactionRequest`. Che
 
 For examples and a walkthrough, see the [PulseChain Swaps guide](/guides/superswap).
 
+<Warning>
+**ERC20 approvals — approve `estimate.approvalAddress`.** Before broadcasting
+`transactionRequest`, approve the quote's **`estimate.approvalAddress`** (not
+`transactionRequest.to`) as the spender for `fromAmount`. For SuperSwap
+cross-chain quotes this is the source-chain Hypermid **DiamondShell** — and the
+backend may report it as a different address than `transactionRequest.to`.
+Approving the wrong address leaves the real spender without allowance and the
+swap reverts. Native-token inputs (zero address) need no approval. On wallets
+that support **EIP-5792 / EIP-7702** you can batch the approval and the swap
+into a single `wallet_sendCalls` interaction.
+</Warning>
+
 <ResponseExample>
 ```json 200
 {
