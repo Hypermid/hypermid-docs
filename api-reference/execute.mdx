@@ -58,6 +58,13 @@ Sign it and broadcast.
 const tx = await wallet.sendTransaction(exec.data.transactionRequest);
 ```
 
+<Tip>
+  **ERC20 input?** Approve `estimate.approvalAddress` (not `transactionRequest.to`)
+  first. On wallets that support **EIP-7702 / EIP-5792** you can collapse the
+  approval and the swap into a single tap — see the
+  [1-Tap Approve + Swap guide](/guides/batched-approval).
+</Tip>
+
 ### Deposit Address (XRP, Dogecoin, Stellar, etc.)
 
 Show the address to the user. They send tokens from their native wallet.

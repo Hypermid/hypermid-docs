@@ -58,6 +58,7 @@
             "group": "Guides",
             "pages": [
               "guides/cross-chain-swap",
+              "guides/batched-approval",
               "guides/superswap",
               "guides/safety-fallback",
               "guides/fiat-onramp",
