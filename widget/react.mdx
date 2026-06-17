@@ -18,7 +18,7 @@ declare global {
 }
 
 interface HypermidWidgetProps {
-  partnerId?: string;
+  apiKey?: string;
   theme?: "dark" | "light";
   mode?: "swap" | "gas" | "fund";
   modes?: string;
@@ -46,7 +46,7 @@ export function HypermidWidget(props: HypermidWidgetProps) {
     script.onload = () => {
       window.HypermidWidget.init({
         containerId: "hypermid-react-widget",
-        partnerId: props.partnerId,
+        apiKey: props.apiKey,
         theme: props.theme || "dark",
         mode: props.mode || "swap",
         modes: props.modes,
@@ -81,7 +81,7 @@ export function HypermidWidget(props: HypermidWidgetProps) {
 
 ```tsx
 <HypermidWidget
-  partnerId="your-partner-id"
+  apiKey="your-api-key"
   theme="dark"
   mode="swap"
   defaultFromChain={1}
@@ -105,7 +105,7 @@ export default function SwapPage() {
   return (
     <div className="flex justify-center items-center min-h-screen">
       <HypermidWidget
-        partnerId="your-partner-id"
+        apiKey="your-api-key"
         theme="dark"
         defaultFromChain={1}
         defaultToChain={42161}
@@ -134,7 +134,7 @@ export default function SwapRoute() {
   return (
     <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
       <HypermidWidget
-        partnerId="your-partner-id"
+        apiKey="your-api-key"
         theme="dark"
         defaultFromChain={1}
         defaultToChain={42161}
@@ -164,7 +164,7 @@ function SwapPage() {
     <div>
       <button onClick={switchToLight}>Light Mode</button>
       <button onClick={() => setChain(42161)}>Arbitrum</button>
-      <HypermidWidget partnerId="your-partner-id" />
+      <HypermidWidget apiKey="your-api-key" />
     </div>
   );
 }

@@ -9,7 +9,7 @@ description: "Full reference for all widget configuration options"
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `containerId` | `string` | **required** | DOM element ID to mount into |
-| `partnerId` | `string` | — | Your partner ID for fee tracking |
+| `apiKey` | `string` | — | Your API key. Optional — attributes swaps to your account for fee tracking |
 | `theme` | `"dark" \| "light"` | `"dark"` | Widget color theme |
 | `mode` | `"swap" \| "gas" \| "fund"` | `"swap"` | Initial active mode |
 | `modes` | `string` | `"swap,gas,fund"` | Comma-separated list of enabled modes |
@@ -165,7 +165,7 @@ Any [Google Font](https://fonts.google.com/) is supported. The widget dynamicall
 ```javascript
 HypermidWidget.init({
   containerId: "swap",
-  partnerId: "trust-wallet",
+  apiKey: "sk_live_your_key",
   theme: "dark",
   defaultFromChain: 1,
   defaultToChain: 42161,

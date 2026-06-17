@@ -32,7 +32,7 @@ The Hypermid Widget embeds the full Hypermid experience into any website — **s
 <script>
   HypermidWidget.init({
     containerId: "hypermid-widget",
-    partnerId: "your-partner-id",
+    apiKey: "your-api-key",
     theme: "dark",
     defaultFromChain: 1,
     defaultToChain: 42161,
@@ -48,7 +48,7 @@ For even simpler integration — no JavaScript needed:
 <div
   id="hypermid-widget"
   data-hypermid-widget
-  data-partner-id="your-partner-id"
+  data-api-key="your-api-key"
   data-theme="dark"
   data-from-chain="1"
   data-to-chain="42161"
@@ -63,7 +63,7 @@ If you prefer full control, embed the iframe directly:
 
 ```html
 <iframe
-  src="https://www.hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
+  src="https://www.hypermid.io/widget?apiKey=your-api-key&theme=dark&fromChain=1&toChain=42161&embed=1"
   width="420"
   height="700"
   frameborder="0"
@@ -83,7 +83,7 @@ If you prefer full control, embed the iframe directly:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `containerId` | `string` | **required** | DOM element ID to mount into |
-| `partnerId` | `string` | — | Your partner ID for fee tracking |
+| `apiKey` | `string` | — | Your API key. Optional — attributes swaps to your account for fee tracking |
 | `theme` | `"dark" \| "light"` | `"dark"` | Widget color theme |
 | `mode` | `"swap" \| "gas" \| "fund"` | `"swap"` | Initial active mode |
 | `width` | `string` | `"420px"` | Widget width |
@@ -129,7 +129,7 @@ Override any visual aspect of the widget to match your brand:
 ```javascript
 HypermidWidget.init({
   containerId: "swap",
-  partnerId: "trust-wallet",
+  apiKey: "sk_live_your_key",
   theme: "dark",
   defaultFromChain: 1,
   defaultToChain: 42161,
@@ -169,7 +169,7 @@ The widget includes a built-in **"Buy Crypto"** tab powered by RampNow. Users ca
 ```javascript
 HypermidWidget.init({
   containerId: "hypermid-widget",
-  partnerId: "your-partner-id",
+  apiKey: "your-api-key",
   mode: "fund",  // Opens Buy Crypto tab
 });
 ```
@@ -191,7 +191,7 @@ Listen for events from the widget:
 ```javascript
 HypermidWidget.init({
   containerId: "hypermid-widget",
-  partnerId: "your-partner-id",
+  apiKey: "your-api-key",
 
   onReady: function () {
     console.log("Widget loaded and ready");
@@ -267,7 +267,7 @@ declare global {
 }
 
 interface HypermidWidgetProps {
-  partnerId?: string;
+  apiKey?: string;
   theme?: "dark" | "light";
   mode?: "swap" | "gas" | "fund";
   defaultFromChain?: number;
@@ -286,7 +286,7 @@ export function HypermidWidget(props: HypermidWidgetProps) {
     script.onload = () => {
       window.HypermidWidget.init({
         containerId: "hypermid-react-widget",
-        partnerId: props.partnerId,
+        apiKey: props.apiKey,
         theme: props.theme || "dark",
         mode: props.mode || "swap",
         defaultFromChain: props.defaultFromChain,
@@ -312,7 +312,7 @@ export function HypermidWidget(props: HypermidWidgetProps) {
 
 ```tsx
 <HypermidWidget
-  partnerId="your-partner-id"
+  apiKey="your-api-key"
   theme="dark"
   mode="swap"
   defaultFromChain={1}
@@ -335,7 +335,7 @@ See [Chain Support](/resources/chains) for the full list.
 ## Best Practices
 
 1. **Set default chains** — Pre-select the most common pair for your users to reduce friction
-2. **Use `partnerId`** — Ensures fee tracking and higher rate limits for your integration
+2. **Use `apiKey`** — Ensures fee tracking and higher rate limits for your integration
 3. **Handle callbacks** — Implement `onExecute` and `onError` to update your app state
 4. **Don't use `sandbox`** — The iframe `sandbox` attribute breaks wallet connections
 5. **Set `height: 700px`** — The widget needs at least 700px height for the on-ramp form

@@ -32,7 +32,7 @@ The Hypermid Widget embeds the full Hypermid experience into any website — **s
 <script>
   HypermidWidget.init({
     containerId: "hypermid-widget",
-    partnerId: "your-partner-id",
+    apiKey: "your-api-key",
     theme: "dark",
     defaultFromChain: 1,
     defaultToChain: 42161,
@@ -48,7 +48,7 @@ For even simpler integration — no JavaScript needed:
 <div
   id="hypermid-widget"
   data-hypermid-widget
-  data-partner-id="your-partner-id"
+  data-api-key="your-api-key"
   data-theme="dark"
   data-from-chain="1"
   data-to-chain="42161"
@@ -63,7 +63,7 @@ If you prefer full control, embed the iframe directly:
 
 ```html
 <iframe
-  src="https://app.hypermid.io/widget?partnerId=your-partner-id&theme=dark&fromChain=1&toChain=42161&embed=1"
+  src="https://app.hypermid.io/widget?apiKey=your-api-key&theme=dark&fromChain=1&toChain=42161&embed=1"
   width="420"
   height="700"
   frameborder="0"
@@ -112,7 +112,7 @@ The widget includes a built-in **"Buy Crypto"** tab powered by RampNow. Users ca
 ```javascript
 HypermidWidget.init({
   containerId: "hypermid-widget",
-  partnerId: "your-partner-id",
+  apiKey: "your-api-key",
   mode: "fund",  // Opens Buy Crypto tab
 });
 ```
@@ -140,7 +140,7 @@ See [Chain Support](/resources/chains) for the full list.
 ## Best Practices
 
 1. **Set default chains** — Pre-select the most common pair for your users to reduce friction
-2. **Use `partnerId`** — Ensures fee tracking and higher rate limits for your integration
+2. **Use `apiKey`** — Ensures fee tracking and higher rate limits for your integration
 3. **Handle callbacks** — Implement `onExecute` and `onError` to update your app state
 4. **Don't use `sandbox`** — The iframe `sandbox` attribute breaks wallet connections
 5. **Set `height: 700px`** — The widget needs at least 700px height for the on-ramp form
