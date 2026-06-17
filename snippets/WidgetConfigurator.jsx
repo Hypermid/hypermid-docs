@@ -96,7 +96,7 @@ export function WidgetConfigurator() {
     const p = ["embed=1", "theme=dark", `fromChain=${fromChainId}`, `toChain=${toChainId}`];
     if (fromToken) p.push(`fromToken=${encodeURIComponent(fromToken)}`);
     if (toToken) p.push(`toToken=${encodeURIComponent(toToken)}`);
-    return `<iframe\n  src="https://www.hypermid.io/widget?${p.join("&")}"\n  width="470"\n  height="700"\n  frameborder="0"\n  allow="clipboard-write; payment; web-share"\n  style="border: none; border-radius: 16px;"\n></iframe>`;
+    return `<iframe\n  src="https://app.hypermid.io/widget?${p.join("&")}"\n  width="470"\n  height="700"\n  frameborder="0"\n  allow="clipboard-write; payment; web-share"\n  style="border: none; border-radius: 16px;"\n></iframe>`;
   }, [fromChainId, toChainId, fromToken, toToken]);
 
   const scriptCode = useMemo(() => {
