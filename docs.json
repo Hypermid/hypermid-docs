@@ -8,8 +8,8 @@
   "styles": ["style.css"],
   "colors": {
     "primary": "#3fadf2",
-    "light": "#3fadf2",
-    "dark": "#3fadf2"
+    "light": "#000913",
+    "dark": "#eef5f9"
   },
   "logo": {
     "light": "/branding/wordmark-light.svg",
@@ -35,8 +35,8 @@
     "light": "#F9F8F5",
     "dark": "#0A0A0A",
     "color": {
-      "light": "#3fadf2",
-      "dark": "#3fadf2"
+      "light": "#eaf3f9",
+      "dark": "#012135"
     }
   },
   "navbar": {
