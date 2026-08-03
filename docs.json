@@ -7,9 +7,9 @@
   },
   "styles": ["style.css"],
   "colors": {
-    "primary": "#5B3CF5",
-    "light": "#7C5CFC",
-    "dark": "#5B3CF5"
+    "primary": "#3fadf2",
+    "light": "#3fadf2",
+    "dark": "#3fadf2"
   },
   "logo": {
     "light": "/branding/wordmark-light.svg",
@@ -20,11 +20,11 @@
   "favicon": "/branding/favicon.svg",
   "fonts": {
     "heading": {
-      "family": "Syne",
+      "family": "Inter",
       "weight": 600
     },
     "body": {
-      "family": "Sora"
+      "family": "Inter"
     }
   },
   "appearance": {
@@ -33,7 +33,11 @@
   "background": {
     "decoration": "gradient",
     "light": "#F9F8F5",
-    "dark": "#0A0A0A"
+    "dark": "#0A0A0A",
+    "color": {
+      "light": "#3fadf2",
+      "dark": "#3fadf2"
+    }
   },
   "navbar": {
     "links": [
