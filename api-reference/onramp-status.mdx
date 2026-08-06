@@ -18,12 +18,12 @@ Returns the current status of a fiat-to-crypto on-ramp order.
     "status": "COMPLETED",
     "fiatCurrency": "USD",
     "fiatAmount": 100,
-    "cryptoAsset": "ETH",
+    "cryptoToken": "ETH",
     "cryptoAmount": "0.029615",
-    "chainId": 1,
+    "cryptoChain": "ethereum",
     "walletAddress": "0xYourAddress",
     "txHash": "0xOnrampTxHash",
-    "paymentMethod": "credit_card",
+    "paymentMode": "card",
     "createdAt": 1711234578,
     "completedAt": 1711234878
   },
@@ -47,12 +47,12 @@ Returns the current status of a fiat-to-crypto on-ramp order.
     "status": "PAYMENT_RECEIVED",
     "fiatCurrency": "USD",
     "fiatAmount": 100,
-    "cryptoAsset": "ETH",
+    "cryptoToken": "ETH",
     "cryptoAmount": null,
-    "chainId": 1,
+    "cryptoChain": "ethereum",
     "walletAddress": "0xYourAddress",
     "txHash": null,
-    "paymentMethod": "credit_card",
+    "paymentMode": "card",
     "createdAt": 1711234578,
     "completedAt": null
   },
@@ -92,7 +92,7 @@ const status = await client.getOnrampStatus({
 console.log("Status:", status.data.status);
 
 if (status.data.status === "COMPLETED") {
-  console.log("Received:", status.data.cryptoAmount, status.data.cryptoAsset);
+  console.log("Received:", status.data.cryptoAmount, status.data.cryptoToken);
   console.log("Tx:", status.data.txHash);
 }
 ```

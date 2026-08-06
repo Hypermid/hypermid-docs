@@ -18,9 +18,9 @@ Returns the available fiat currencies and payment methods for the on-ramp servic
       { "code": "AUD", "name": "Australian Dollar", "symbol": "A$" },
       { "code": "CHF", "name": "Swiss Franc", "symbol": "CHF" }
     ],
-    "paymentMethods": [
+    "paymentModes": [
       {
-        "id": "credit_card",
+        "id": "card",
         "name": "Credit Card",
         "processingTime": "Instant",
         "feePercentage": 3.49
@@ -63,7 +63,7 @@ for (const currency of config.data.currencies) {
 }
 
 console.log("Payment methods:");
-for (const method of config.data.paymentMethods) {
+for (const method of config.data.paymentModes) {
   console.log(`  ${method.name}: ${method.feePercentage}% fee, ${method.processingTime}`);
 }
 ```

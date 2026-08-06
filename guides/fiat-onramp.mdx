@@ -40,8 +40,8 @@ const config = await client.getOnrampConfig();
 console.log("Supported currencies:", config.currencies);
 // ["USD", "EUR", "GBP", ...]
 
-console.log("Payment methods:", config.paymentMethods);
-// ["credit_card", "debit_card", "bank_transfer", ...]
+console.log("Payment methods:", config.paymentModes);
+// ["card", "debit_card", "bank_transfer", ...]
 ```
 
 ```bash cURL
@@ -59,7 +59,7 @@ Fetch the list of crypto assets available for purchase:
 const assets = await client.getOnrampAssets();
 
 for (const asset of assets.assets) {
-  console.log(`${asset.symbol} on chain ${asset.chainId}: min ${asset.minAmount}, max ${asset.maxAmount}`);
+  console.log(`${asset.symbol} on chain ${asset.cryptoChain}: min ${asset.minAmount}, max ${asset.maxAmount}`);
 }
 ```
 
@@ -77,10 +77,10 @@ Request a quote for the fiat-to-crypto conversion:
 ```typescript TypeScript
 const quote = await client.getOnrampQuote({
   fiatCurrency: "USD",
-  cryptoAsset: "ETH",
-  chainId: 1,
+  cryptoToken: "ETH",
+  cryptoChain: "ethereum",
   fiatAmount: 100,            // $100 USD
-  paymentMethod: "credit_card",
+  paymentMode: "card",
   walletAddress: "0xYourWalletAddress",
 });
 
@@ -96,10 +96,10 @@ curl -X POST "https://api.hypermid.io/v1/onramp/quote" \
   -H "X-API-Key: your-api-key" \
   -d '{
     "fiatCurrency": "USD",
-    "cryptoAsset": "ETH",
-    "chainId": 1,
+    "cryptoToken": "ETH",
+    "cryptoChain": "ethereum",
     "fiatAmount": 100,
-    "paymentMethod": "credit_card",
+    "paymentMode": "card",
     "walletAddress": "0xYourWalletAddress"
   }'
 ```
@@ -113,10 +113,10 @@ Create a checkout session to get a payment URL:
 ```typescript TypeScript
 const checkout = await client.createOnrampCheckout({
   fiatCurrency: "USD",
-  cryptoAsset: "ETH",
-  chainId: 1,
+  cryptoToken: "ETH",
+  cryptoChain: "ethereum",
   fiatAmount: 100,
-  paymentMethod: "credit_card",
+  paymentMode: "card",
   walletAddress: "0xYourWalletAddress",
   redirectUrl: "https://yourapp.com/onramp/callback",
 });
@@ -134,10 +134,10 @@ curl -X POST "https://api.hypermid.io/v1/onramp/checkout" \
   -H "X-API-Key: your-api-key" \
   -d '{
     "fiatCurrency": "USD",
-    "cryptoAsset": "ETH",
-    "chainId": 1,
+    "cryptoToken": "ETH",
+    "cryptoChain": "ethereum",
     "fiatAmount": 100,
-    "paymentMethod": "credit_card",
+    "paymentMode": "card",
     "walletAddress": "0xYourWalletAddress",
     "redirectUrl": "https://yourapp.com/onramp/callback"
   }'
@@ -208,10 +208,10 @@ async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
   // 2. Get a quote
   const quote = await client.getOnrampQuote({
     fiatCurrency: "USD",
-    cryptoAsset: "ETH",
-    chainId: 1,
+    cryptoToken: "ETH",
+    cryptoChain: "ethereum",
     fiatAmount: usdAmount,
-    paymentMethod: "credit_card",
+    paymentMode: "card",
     walletAddress,
   });
 
@@ -221,10 +221,10 @@ async function buyEthWithUsd(walletAddress: string, usdAmount: number) {
   // 3. Create checkout
   const checkout = await client.createOnrampCheckout({
     fiatCurrency: "USD",
-    cryptoAsset: "ETH",
-    chainId: 1,
+    cryptoToken: "ETH",
+    cryptoChain: "ethereum",
     fiatAmount: usdAmount,
-    paymentMethod: "credit_card",
+    paymentMode: "card",
     walletAddress,
     redirectUrl: "https://yourapp.com/onramp/complete",
   });

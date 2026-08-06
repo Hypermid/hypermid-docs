@@ -10,20 +10,20 @@ Creates a checkout session for a fiat-to-crypto purchase. Returns a `checkoutUrl
   The fiat currency code (e.g., `USD`, `EUR`, `GBP`).
 </ParamField>
 
-<ParamField body="cryptoAsset" type="string" required>
+<ParamField body="cryptoToken" type="string" required>
   The crypto asset symbol (e.g., `ETH`, `USDC`).
 </ParamField>
 
-<ParamField body="chainId" type="number" required>
-  The chain ID to receive crypto on.
+<ParamField body="cryptoChain" type="string" required>
+  The chain slug to receive crypto on.
 </ParamField>
 
 <ParamField body="fiatAmount" type="number" required>
   The fiat amount to spend.
 </ParamField>
 
-<ParamField body="paymentMethod" type="string" required>
-  Payment method: `credit_card`, `debit_card`, or `bank_transfer`.
+<ParamField body="paymentMode" type="string" required>
+  Payment method: `card` (availability is provider- and region-dependent).
 </ParamField>
 
 <ParamField body="walletAddress" type="string" required>
@@ -46,8 +46,8 @@ Creates a checkout session for a fiat-to-crypto purchase. Returns a `checkoutUrl
     "checkoutUrl": "https://checkout.rampnow.io/session/sess_xyz789",
     "fiatCurrency": "USD",
     "fiatAmount": 100,
-    "cryptoAsset": "ETH",
-    "chainId": 1,
+    "cryptoToken": "ETH",
+    "cryptoChain": "ethereum",
     "estimatedCryptoAmount": "0.029615",
     "walletAddress": "0xYourAddress",
     "expiresAt": 1711236377,
@@ -71,10 +71,10 @@ Creates a checkout session for a fiat-to-crypto purchase. Returns a `checkoutUrl
 ```typescript TypeScript
 const checkout = await client.createOnrampCheckout({
   fiatCurrency: "USD",
-  cryptoAsset: "ETH",
-  chainId: 1,
+  cryptoToken: "ETH",
+  cryptoChain: "ethereum",
   fiatAmount: 100,
-  paymentMethod: "credit_card",
+  paymentMode: "card",
   walletAddress: "0xYourAddress",
   redirectUrl: "https://yourapp.com/onramp/complete",
   externalId: "order-12345",
@@ -91,10 +91,10 @@ curl -X POST "https://api.hypermid.io/v1/onramp/checkout" \
   -H "X-API-Key: your-api-key" \
   -d '{
     "fiatCurrency": "USD",
-    "cryptoAsset": "ETH",
-    "chainId": 1,
+    "cryptoToken": "ETH",
+    "cryptoChain": "ethereum",
     "fiatAmount": 100,
-    "paymentMethod": "credit_card",
+    "paymentMode": "card",
     "walletAddress": "0xYourAddress",
     "redirectUrl": "https://yourapp.com/onramp/complete"
   }'
@@ -103,10 +103,10 @@ curl -X POST "https://api.hypermid.io/v1/onramp/checkout" \
 ```go Go
 body := `{
   "fiatCurrency": "USD",
-  "cryptoAsset": "ETH",
-  "chainId": 1,
+  "cryptoToken": "ETH",
+  "cryptoChain": "ethereum",
   "fiatAmount": 100,
-  "paymentMethod": "credit_card",
+  "paymentMode": "card",
   "walletAddress": "0xYourAddress",
   "redirectUrl": "https://yourapp.com/onramp/complete"
 }`
